@@ -7,7 +7,7 @@
 
   let pendente = null;
   let busy = false;
-  let statusEl, botao;
+  let statusEl, botao, botaoConfirmar;
   const CHAVE_VINCULO_LOCAL = 'pemato_google_v81_vinculo_confirmado_teste22';
 
   // Este registro LOCAL serve apenas como proteção adicional no TESTE22.
@@ -15,10 +15,14 @@
   function memorizarVinculo(uid, zap, user) {
     const google = user?.providerData?.find(p => p.providerId === 'google.com');
     const identificadorGoogle = google?.uid;
-    if (!identificadorGoogle || !uid || !zap) return;
-    localStorage.setItem(CHAVE_VINCULO_LOCAL, JSON.stringify({
-      uid, zap, googleSub: String(identificadorGoogle), salvoEm: Date.now()
-    }));
+    if (!identificadorGoogle || !uid || !/^\d{10,13}$/.test(String(zap))) return false;
+    try {
+      localStorage.setItem(CHAVE_VINCULO_LOCAL, JSON.stringify({
+        uid, zap, googleSub: String(identificadorGoogle), salvoEm: Date.now()
+      }));
+      const salvo = JSON.parse(localStorage.getItem(CHAVE_VINCULO_LOCAL) || 'null');
+      return salvo?.uid === uid && salvo?.googleSub === String(identificadorGoogle);
+    } catch (_) { return false; }
   }
 
   const firebaseDisponivel = () => typeof window.firebase !== 'undefined' && firebase.apps?.length > 0;
@@ -36,14 +40,28 @@
     if (!firebaseDisponivel()) throw new Error('Aguarde o Firebase inicializar.');
     const atual = auth().currentUser;
     if (!atual) throw new Error('Primeiro entre na sua conta atual pelo WhatsApp e senha.');
-    const zap = numero(localStorage.getItem('usuario_zap_salvo'));
-    if (zap.length < 10 || zap.length > 13) {
-      throw new Error('Não foi possível identificar o WhatsApp desta conta. Entre novamente.');
+    let zap = numero(localStorage.getItem('usuario_zap_salvo'));
+    // O site remove usuario_zap_salvo ao desconectar. Reconstruir APENAS
+    // com registro confirmado pelo Firestore (nunca por um número arbitrário).
+    let encontrado = false;
+    if (/^\d{10,13}$/.test(zap)) {
+      const registro = await db().collection('usuarios').doc(zap).get({ source: 'server' });
+      encontrado = registro.exists && registro.data()?.authUid === atual.uid;
     }
-    // Confirma associação no servidor; não usa dados em cache para vinculação.
-    const registro = await db().collection('usuarios').doc(zap).get({ source: 'server' });
-    if (!registro.exists || registro.data()?.authUid !== atual.uid) {
-      throw new Error('A sessão não corresponde ao WhatsApp cadastrado. Não vincule outra conta.');
+    if (!encontrado) {
+      // Requer a regra restrita: authUid == request.auth.uid, limit <= 2.
+      const consulta = await db().collection('usuarios')
+        .where('authUid', '==', atual.uid).limit(2).get({ source: 'server' });
+      if (consulta.size !== 1) {
+        throw new Error('Não foi possível confirmar o vínculo UID/WhatsApp no servidor.');
+      }
+      const doc = consulta.docs[0];
+      const dados = doc.data() || {};
+      zap = numero(dados.whatsapp || doc.id);
+      encontrado = /^\d{10,13}$/.test(zap) && dados.authUid === atual.uid;
+    }
+    if (!encontrado) {
+      throw new Error('A sessão não corresponde à conta registrada. Nenhuma vinculação foi alterada.');
     }
     return { uid: atual.uid, zap, user: atual };
   }
@@ -95,7 +113,8 @@
           throw new Error('Não foi possível confirmar a identidade da conta original.');
         }
         memorizarVinculo(tentativa.uid, tentativa.zap, resultado.user);
-        status('Google vinculado! A conta e sua assinatura continuam com o mesmo UID.');
+        if (botaoConfirmar) botaoConfirmar.style.display = 'block';
+        status('Google vinculado! Toque em Confirmar Google neste aparelho antes de sair.');
       } catch (e) {
         const code = e?.code || '';
         if (code === 'auth/credential-already-in-use' || code === 'auth/email-already-in-use') {
@@ -118,6 +137,31 @@
     }
   };
 
+  // Recupera a confirmação LOCAL de uma conta que já tem o Google
+  // vinculado no Firebase. Não cria usuários, não muda provedor, não grava
+  // em Firestore e não usa o token Google no JavaScript.
+  async function confirmarVinculoNoAparelho() {
+    if (busy) return;
+    busy = true;
+    if (botaoConfirmar) botaoConfirmar.disabled = true;
+    try {
+      if (!firebaseDisponivel() || !auth().currentUser)
+        throw new Error('Entre primeiro pelo WhatsApp e senha.');
+      await auth().currentUser.reload(); // providerData atual, não o cache inicial
+      const sessao = await usuarioValidoParaVincular();
+      if (!sessao.user.providerData?.some(p => p.providerId === 'google.com'))
+        throw new Error('Ainda não existe uma conta Google vinculada neste UID do Firebase.');
+      if (!memorizarVinculo(sessao.uid, sessao.zap, sessao.user))
+        throw new Error('O aparelho não conseguiu salvar a confirmação. Verifique o armazenamento do aplicativo.');
+      status('Google confirmado neste aparelho! Agora desconecte e use Continuar com Google (TESTE22).');
+    } catch (e) {
+      status(e?.message || 'Não foi possível confirmar o Google neste aparelho.', true);
+    } finally {
+      busy = false;
+      if (botaoConfirmar) botaoConfirmar.disabled = false;
+    }
+  }
+
   function montar() {
     const modulo = document.getElementById('moduloConfiguracoes');
     if (!modulo || document.getElementById('pemato-google-vinculo')) return;
@@ -127,26 +171,24 @@
     sec.innerHTML = '<strong style="color:#155e44">Conta Google (migração segura)</strong>' +
       '<p style="margin:8px 0;color:#22543d">Entre primeiro na conta antiga. Depois vincule o Google sem trocar seu UID, WhatsApp, assinatura ou histórico.</p>' +
       '<button id="pemato-btn-vincular-google" type="button" style="background:#319767;color:white;padding:12px 16px;border:0;border-radius:9px;font-weight:700">Vincular minha conta Google</button>' +
+      '<button id="pemato-btn-confirmar-google" type="button" style="display:none;margin:10px 0 0;background:#155e44;color:white;padding:12px 16px;border:0;border-radius:9px;font-weight:700">Confirmar Google neste aparelho</button>' +
       '<p id="pemato-google-vinculo-status" role="status" aria-live="polite" style="margin-top:8px"></p>';
     const cabecalho = modulo.querySelector('.module-head');
     if (cabecalho) cabecalho.insertAdjacentElement('afterend', sec);
     else modulo.prepend(sec);
     statusEl = sec.querySelector('#pemato-google-vinculo-status');
     botao = sec.querySelector('#pemato-btn-vincular-google');
+    botaoConfirmar = sec.querySelector('#pemato-btn-confirmar-google');
     botao.addEventListener('click', iniciar);
+    botaoConfirmar.addEventListener('click', confirmarVinculoNoAparelho);
     if (firebaseDisponivel()) {
       auth().onAuthStateChanged(u => {
-        if (u?.providerData?.some(p => p.providerId === 'google.com')) {
-          // Reconstituir o registro local de quem já vinculou na fase 1,
-          // após verificar no servidor o UID e WhatsApp correspondentes.
-          usuarioValidoParaVincular().then(sessao => {
-            if (sessao.uid === u.uid) memorizarVinculo(sessao.uid, sessao.zap, u);
-          }).catch(() => {});
-        }
+        const temGoogle = !!u?.providerData?.some(p => p.providerId === 'google.com');
         sec.style.display = u ? '' : 'none';
-        if (u?.providerData?.some(p => p.providerId === 'google.com')) {
-          status('Conta Google já vinculada a este usuário.');
+        botaoConfirmar.style.display = temGoogle ? 'block' : 'none';
+        if (temGoogle) {
           botao.disabled = true;
+          if (!busy) status('Google vinculado no Firebase. Toque em Confirmar Google neste aparelho para liberar a entrada direta.');
         } else if (!busy) {
           status('');
           botao.disabled = false;
@@ -209,7 +251,7 @@
         throw new Error('Você já está conectado. Para testar a entrada, saia normalmente da conta.');
       }
       if (!recuperarVinculo()) {
-        throw new Error('Primeiro entre pelo WhatsApp e confirme em Configurações que esta conta Google está vinculada.');
+        throw new Error('Confirmação local ausente. Entre pelo WhatsApp e toque em Confirmar Google neste aparelho nas Configurações.');
       }
       informar('Selecione a mesma conta Google que você vinculou.');
       window.Android.entrarContaGoogleV81();
