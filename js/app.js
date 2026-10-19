@@ -1425,6 +1425,7 @@ function tocarIntroPs2Audio() {
       }
     }
 
+    globalThis.PEMATO_SESSAO_HOTFIX = 'V81-TESTE22-RECONCILIACAO-4';
     let timerExpiracaoSessao = null;
     const AUTH_ACCESS_STATES = Object.freeze({
       BOOTING:'booting', CHECKING:'checking', ACTIVE:'active', EXPIRED:'expired',
@@ -1434,6 +1435,28 @@ function tocarIntroPs2Audio() {
     let acessoConfirmadoEm = 0;
     let ultimoAcessoConfirmado = null;
     let checagemServidorSessao = null;
+    // V81 TESTE22 — hotfix 4: contas com sessão ativa não podem ficar presas
+    // permanentemente em um aviso antigo de expiração após cold start.
+    let timerRechecagemExpiracao = null;
+    let tentativasRechecagemExpiracao = 0;
+
+    function agendarRechecagemExpiracao(zap) {
+      if (timerRechecagemExpiracao || !zap || !auth.currentUser) return;
+      // Uma segunda leitura em 4 s; se o servidor continuar indicando
+      // vencimento verdadeiro, monitorar alterações uma vez por minuto.
+      const esperaMs = tentativasRechecagemExpiracao === 0 ? 4000 : 60000;
+      timerRechecagemExpiracao = setTimeout(async () => {
+        timerRechecagemExpiracao = null;
+        if (authAccessState !== AUTH_ACCESS_STATES.EXPIRED ||
+            !auth.currentUser || usuarioAtualZap !== zap) return;
+        tentativasRechecagemExpiracao++;
+        await confirmarEstadoSessaoNoServidor(zap, 'rechecagem_expiracao_coldstart');
+        if (authAccessState === AUTH_ACCESS_STATES.EXPIRED &&
+            auth.currentUser && usuarioAtualZap === zap) {
+          agendarRechecagemExpiracao(zap);
+        }
+      }, esperaMs);
+    }
 
     function definirEstadoAcesso(estado, detalhe = {}) {
       const validos = new Set(Object.values(AUTH_ACCESS_STATES));
@@ -1441,6 +1464,11 @@ function tocarIntroPs2Audio() {
       globalThis.authAccessState = authAccessState;
       document.body.dataset.pematoAccessState = authAccessState;
       try { queueMicrotask(() => globalThis.dispatchEvent(new CustomEvent('pemato:acesso:estado', { detail: { estado: authAccessState } }))); } catch (_) {}
+      if (authAccessState !== AUTH_ACCESS_STATES.EXPIRED) {
+        if (timerRechecagemExpiracao) clearTimeout(timerRechecagemExpiracao);
+        timerRechecagemExpiracao = null;
+        tentativasRechecagemExpiracao = 0;
+      }
       if (authAccessState === AUTH_ACCESS_STATES.ACTIVE) {
         acessoConfirmadoEm = Date.now();
         if (detalhe?.dados) ultimoAcessoConfirmado = detalhe.dados;
@@ -1611,6 +1639,11 @@ function tocarIntroPs2Audio() {
         return false;
       }
 
+      if (authAccessState === AUTH_ACCESS_STATES.EXPIRED && veioDoCache) {
+        mostrarVerificandoAcesso('Revalidando sua assinatura no servidor…');
+        confirmarEstadoSessaoNoServidor(zap, 'cache_ativo_apos_expiracao');
+        return false;
+      }
       aplicarAcessoAtivo(zap, data);
       return true;
     }
@@ -1657,7 +1690,12 @@ function tocarIntroPs2Audio() {
 
     function desconectarForcado(motivo, opcoes = {}) {
       clearTimeout(timerExpiracaoSessao);
-      if (listenerSessaoRealtime) {
+      const estado = opcoes.estado || AUTH_ACCESS_STATES.SIGNED_OUT;
+      // Correção do defeito: a UI de expiração interrompia o listener realtime.
+      // Isso impedia a restauração mesmo quando o Firestore já indicava ATIVO.
+      // Continuar observando o MESMO documento (UID confirmado) somente quando
+      // o estado é EXPIRED. Usuários bloqueados/desconectados seguem fechados.
+      if (estado !== AUTH_ACCESS_STATES.EXPIRED && listenerSessaoRealtime) {
         listenerSessaoRealtime();
         listenerSessaoRealtime = null;
       }
@@ -1668,7 +1706,6 @@ function tocarIntroPs2Audio() {
       if (ov) ov.style.display = 'none';
       finalizarCameraHardware();
 
-      const estado = opcoes.estado || AUTH_ACCESS_STATES.SIGNED_OUT;
       const zapRenovacao = opcoes.zapRenovacao || null;
       definirEstadoAcesso(estado);
 
@@ -1676,6 +1713,9 @@ function tocarIntroPs2Audio() {
         usuarioAtualZap = zapRenovacao;
         localStorage.setItem('usuario_zap_salvo', zapRenovacao);
         mostrarRenovacao(zapRenovacao, true);
+        // A restauração depende exclusivamente de uma nova leitura autenticada
+        // e da função original contaTemAcessoAtivo. Nunca libera por cache/localStorage.
+        agendarRechecagemExpiracao(zapRenovacao);
       } else {
         limparAvisoRenovacao();
       }
