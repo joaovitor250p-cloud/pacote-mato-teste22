@@ -1596,8 +1596,12 @@ function tocarIntroPs2Audio() {
       }
 
       if (!contaTemAcessoAtivo(data, agora)) {
-        // Um snapshot antigo em cache jamais pode abrir renovação. Confirma no servidor.
-        if (opcoes.confirmadoServidor !== true) {
+        // HOTFIX V81: cold start. O primeiro snapshot do monitor realtime nao e
+        // prova suficiente de expiracao, ainda que diga fromCache=false.
+        // Confirmar com get({source:'server'}) antes de exibir renovacao.
+        // O resultado da leitura pontual entra com motivo != 'monitoramento',
+        // evitando recursao e mantendo bloqueios reais por vencimento.
+        if (opcoes.confirmadoServidor !== true || opcoes.motivo === 'monitoramento') {
           mostrarVerificandoAcesso('Confirmando sua assinatura no servidor…');
           confirmarEstadoSessaoNoServidor(zap, 'expiracao_pendente_confirmacao');
           return false;
