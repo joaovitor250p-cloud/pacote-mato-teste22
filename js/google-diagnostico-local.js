@@ -53,6 +53,20 @@
     if (!botaoEntrar) return;
 
     botaoEntrar.insertAdjacentElement("afterend", area);
+
+    area.style.cssText =
+      "display:block!important;position:relative!important;" +
+      "z-index:10!important;width:100%!important;" +
+      "margin:16px 0!important;padding:8px!important;" +
+      "background:#ecfdf5!important;border:2px solid #10b981!important;" +
+      "border-radius:12px!important;";
+
+    botao.style.cssText =
+      "display:block!important;width:100%!important;" +
+      "padding:14px!important;background:#059669!important;" +
+      "color:white!important;border:0!important;" +
+      "border-radius:10px!important;font-size:16px!important;" +
+      "font-weight:bold!important;";
   }
 
   if (document.readyState === "loading") {
