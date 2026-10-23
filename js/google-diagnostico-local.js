@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   "use strict";
 
   // Apenas informa o resultado. Nunca recebe tokens.
@@ -48,7 +48,11 @@
     area.appendChild(botao);
     area.appendChild(status);
 
-    document.body.appendChild(area);
+    const botaoEntrar = document.getElementById("btnEntrarAuth");
+
+    if (!botaoEntrar) return;
+
+    botaoEntrar.insertAdjacentElement("afterend", area);
   }
 
   if (document.readyState === "loading") {
