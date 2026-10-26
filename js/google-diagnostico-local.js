@@ -52,7 +52,9 @@
 
     if (!botaoEntrar) return;
 
-    botaoEntrar.insertAdjacentElement("afterend", area);
+    const google = document.getElementById("pemato-btn-google-login-v81")?.parentElement;
+    const anchor = google?.parentElement === botaoEntrar.parentElement ? google : botaoEntrar;
+    anchor.insertAdjacentElement("afterend", area);
 
     area.style.cssText =
       "display:block!important;position:relative!important;" +

@@ -98,7 +98,12 @@
   }
   function instalar() {
     if (document.getElementById('pemato-diagnostico-sessao-v81')) return;
-    const anchor = document.getElementById('btnEntrarAuth');
+    const entrar = document.getElementById('btnEntrarAuth');
+    const debug = document.getElementById('pemato-google-diagnostico-btn')?.parentElement;
+    const google = document.getElementById('pemato-btn-google-login-v81')?.parentElement;
+    const anchor = (debug?.parentElement === entrar?.parentElement ? debug : null)
+      || (google?.parentElement === entrar?.parentElement ? google : null)
+      || entrar;
     if (!anchor || !anchor.parentNode) return;
     const container = document.createElement('section');
     container.id = 'pemato-diagnostico-sessao-v81';
