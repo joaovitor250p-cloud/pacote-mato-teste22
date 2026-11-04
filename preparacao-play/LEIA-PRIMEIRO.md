@@ -1,6 +1,6 @@
 # Sobre os arquivos desta branch de TESTES
 
-**Branch proposta para revisão, não implantar nem mesclar ainda.** As alterações web estão em `index.html`, `js/app.js` e `js/assinatura-google-play.js`; os arquivos do servidor estão em `preparacao-play/worker/`. O projeto Android modificado está no ZIP de preparação entregue separadamente e **não** foi enviado para este repositório web. As instruções abaixo descrevem o pacote completo; onde aparecer `worker/`, neste repositório leia `preparacao-play/worker/`. Não ativar `PEMATO_PLAY_CONFIG` nem publicar o Worker enquanto os bloqueios de login/Firebase e a migração de cortesias não forem resolvidos.
+**Branch proposta para revisão, não implantar nem mesclar ainda.** O ambiente de testes permanece **bloqueado por segurança** até configurar Firebase e Worker exclusivos. As alterações web estão em `index.html`, `js/app.js` e `js/assinatura-google-play.js`; os arquivos do servidor estão em `preparacao-play/worker/`. O projeto Android modificado está no ZIP de preparação entregue separadamente e **não** foi enviado para este repositório web. As instruções abaixo descrevem o pacote completo; onde aparecer `worker/`, neste repositório leia `preparacao-play/worker/`. Não ativar `PEMATO_PLAY_CONFIG` nem publicar o Worker enquanto os bloqueios de login/Firebase e a migração de cortesias não forem resolvidos.
 
 ---
 
@@ -35,6 +35,14 @@ Data da preparação: 04/11/2026. **NÃO PUBLICAR ESTA VERSÃO AINDA.**
 - Modo Dono preparado para conceder dias pelo UID Firebase e mostrar as cortesias concedidas, quando o novo backend for ativado.
 - **A configuração `enabled:false` permanece.** Não existe tela de compra operacional até que o servidor e a Play sejam validados.
 
+### Isolamento obrigatório do secundário (nova preparação)
+
+- O site de teste agora carrega `js/ambiente-teste.js` **antes** do app. Esse arquivo exige o Web config de um **novo projeto Firebase de testes** e a URL HTTPS de um **Worker Cloudflare separado**; a URL e o project ID do principal são rejeitados.
+- Até preencher ambos corretamente, o secundário mostra um aviso de ambiente em configuração e **não inicializa Firebase nem o login**. É intencional: evita testes com dados reais.
+- `js/app.js`, `js/google-vinculo-v81.js` e `js/mapa/config.js` foram preparados para usar apenas o Worker configurado em `PEMATO_TEST_ENV`, em vez do Worker principal.
+- Criar/testar regras Firestore próprias para o novo Firebase e **não copiar contas reais ou regras antigas com leitura pública** para o banco de testes. Usar contas fictícias.
+- O Cloudflare Worker de assinatura do pacote exige `FIREBASE_PROJECT_ID` referente ao **Firebase de testes**. Ele não substitui automaticamente o Worker legado de rotas/login; os endpoints necessários precisam ser disponibilizados também num Worker de testes ou divididos em URLs independentes antes de permitir login real.
+
 ### Cloudflare Worker (`worker/`)
 
 - Autentica sessão Firebase via assinatura JWT pública do Google.
@@ -54,7 +62,7 @@ Executado localmente:
 node --test worker/test/*.test.mjs
 ```
 
-**24 testes passaram**, incluindo acesso por cortesia, login autenticado, conta administrativa, revogação de cortesia, compra, token de outra conta, estados de cancelamento e RTDN.
+**27 testes passaram**, incluindo isolamento do ambiente secundário, acesso por cortesia, login autenticado, conta administrativa, revogação de cortesia, compra, token de outra conta, estados de cancelamento e RTDN.
 
 **Não foi possível compilar o Android.** O ambiente não dispõe da distribuição Gradle 9.6.0 em cache nem permite baixá-la. Além disso, o projeto sanitizado não tem `google-services.json`, Android SDK configurado ou chave privada de assinatura. A compilação e os testes no dispositivo/Play Console continuam obrigatórios.
 
@@ -86,7 +94,7 @@ O Modo Dono atual escreve `expiraEm` e `ativo` diretamente no Firestore. O novo 
 
 ### 5. Confirmar o código vivo antes de atualizar serviços
 
-Esta preparação foi feita em **cópias dos ZIPs enviados**. O código de Worker recebido em Markdown não comprova ser exatamente o que está publicado em Cloudflare. Foi possível **ler** o repositório de testes `joaovitor250p-cloud/pacote-mato-teste22` e conferir que o `index.html` remoto recebeu alterações depois do ZIP; as mudanças foram preservadas no planejamento. Ao tentar criar uma branch de preparação, a integração GitHub retornou **403: Resource not accessible by integration**. Portanto, **nenhuma branch, commit ou pull request foi criado** e o GitHub permaneceu inalterado. Antes de qualquer deploy, comparar com o código atual no GitHub, Cloudflare e Firebase. Nunca sobrescrever regras ou Workers de produção com arquivos de teste.
+Esta preparação foi feita em **cópias dos ZIPs enviados**. O código de Worker recebido em Markdown não comprova ser exatamente o que está publicado em Cloudflare. Após a instalação/autorização correta do GitHub App, a preparação do site e do Worker foi enviada à **branch separada `codex/assinatura-play-preparacao-20261104`**, com **PR em rascunho nº 1** no repositório secundário `joaovitor250p-cloud/pacote-mato-teste22`. O `main` não foi alterado. O projeto Android segue no ZIP separado. Antes de qualquer deploy, comparar com o código atual no GitHub, Cloudflare e Firebase. Nunca sobrescrever regras ou Workers de produção com arquivos de teste.
 
 ## Diferença entre cobrança e cortesia
 
