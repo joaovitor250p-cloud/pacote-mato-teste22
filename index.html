@@ -332,10 +332,10 @@
 
           <p class="auth-helper">Crie uma nova senha com no mínimo 6 caracteres. Se este WhatsApp for de uma conta antiga, o sistema pedirá separadamente a senha antiga apenas para confirmar a vinculação.</p>
           <button type="button" class="btn-action-primary auth-main-button" id="btnCriarConta" onclick="criarContaFirebase()">Criar minha conta</button>
-          <button type="button" class="btn-action-trial auth-trial-button" id="btnTesteGratis" onclick="ativarTesteGratis()"> TESTE GRÁTIS — 10 DIAS</button>
+          <button type="button" class="btn-action-trial auth-trial-button" id="btnTesteGratis" onclick="iniciarAssinaturaGooglePlay()"> TESTE GRÁTIS — 14 DIAS PELA PLAY STORE</button>
         </div>
 
-        <div id="avisoRenovacao" role="status" style="display:none;"><strong>Sua assinatura expirou</strong><p>Renove para continuar. Você mantém a mesma conta e o mesmo número.</p><button type="button" onclick="document.getElementById('areaPlanosRenovacao').scrollIntoView({behavior:'smooth',block:'start'})">Ver planos de renovação</button></div>
+        <div id="avisoRenovacao" role="status" style="display:none;"><strong>Seu acesso gratuito terminou</strong><p>Para continuar usando todas as funções, assine pela Google Play. Você mantém a mesma conta e seu histórico.</p><button type="button" onclick="document.getElementById('areaPlanosRenovacao').scrollIntoView({behavior:'smooth',block:'start'})">Ver assinatura</button></div>
         <div id="msgSucessoAuth" class="auth-success-message"></div>
         <div id="msgErro" class="auth-error-message" style="display:none;"></div>
       </div>
@@ -344,42 +344,27 @@
         <div class="auth-plans-header">
           <div>
             <span class="auth-section-eyebrow">ASSINATURA</span>
-            <h3>Escolha seu plano</h3>
+            <h3>Assinatura Pacote É Mato</h3>
           </div>
           <span class="auth-plans-note">Acesso completo</span>
         </div>
 
         <div class="plan-stack auth-plan-stack">
-          <div class="plan-item" id="cardPlano7" onclick="selecionarPlano(7, 4.99, '7 Dias (Semanal)', 'cardPlano7')">
+          <div class="plan-item featured" style="cursor:default" aria-label="Plano mensal com acesso completo">
             <div>
-              <div class="plan-name" data-i18n="plan_weekly_name">Plano Semanal</div>
-              <div class="plan-meta" data-i18n="plan_weekly_meta">7 dias de acesso total</div>
+              <div class="plan-name">Acesso completo</div>
+              <div class="plan-meta">14 dias grátis para contas elegíveis. Depois, R$ 19,90/mês.</div>
             </div>
-            <div class="plan-val">R$ 4,99</div>
-          </div>
-
-          
-          <div class="plan-item featured" id="cardPlano30" onclick="selecionarPlano(30, 9.99, '30 Dias (Mensal)', 'cardPlano30')">
-            <div>
-              <div class="plan-name" data-i18n="plan_monthly_name">Plano Mensal (1 Mês)</div>
-              <div class="plan-meta" data-i18n="plan_monthly_meta">30 dias • Melhor custo-benefício</div>
-            </div>
-            <div class="plan-val">R$ 9,99</div>
-            <div class="plan-badge-top">POPULAR</div>
-          </div>
-
-          <div class="plan-item" id="cardPlano90" onclick="selecionarPlano(90, 24.99, '90 Dias (3 Meses)', 'cardPlano90')">
-            <div>
-              <div class="plan-name" data-i18n="plan_quarterly_name">Plano Trimestral (3 Meses)</div>
-              <div class="plan-meta" data-i18n="plan_quarterly_meta">90 dias com desconto</div>
-            </div>
-            <div class="plan-val">R$ 24,99</div>
+            <div class="plan-val">R$ 19,90</div>
           </div>
         </div>
 
-        <button id="btnConfirmarPagamento" class="btn-gerar-pix-confirm auth-payment-button" onclick="iniciarPixPlanoSelecionado()">
-           <span data-i18n="generate_pix">Gerar Pagamento Pix</span>
+        <button id="btnConfirmarPagamento" type="button" class="btn-gerar-pix-confirm auth-payment-button" onclick="iniciarAssinaturaGooglePlay()">
+          Começar teste grátis / Assinar pela Google Play
         </button>
+        <p style="font-size:.77rem;color:var(--text-muted);line-height:1.5;padding:6px 0">
+          A oferta gratuita depende da elegibilidade informada pela Google Play. O preço e a data da primeira cobrança serão confirmados na tela da Play Store. Cancele pela Play Store quando quiser.
+        </p>
       </div>
 
       <div class="auth-footer-premium">
@@ -666,9 +651,10 @@
              A senha não é mais definida pelo Modo Dono. A conta precisa ser criada pelo usuário no acesso seguro; aqui você apenas libera ou renova o período.
           </div>
 
-          <label class="form-label-pro">Duração do acesso</label><p class="adm-subheading">Escolha 30 dias para Mensal, 90 para Trimestral ou o atalho Vitalício. Outros valores ficam em Outros acessos.</p>
+          <label class="form-label-pro">Duração da cortesia</label><p class="adm-subheading">Defina livremente de 1 a 3650 dias de acesso gratuito. A cortesia termina automaticamente.</p>
+          <p style="font-size:.74rem;color:var(--text-muted);line-height:1.4">Na versão Google Play, esta liberação é uma cortesia de acesso e não adia nenhuma cobrança de assinatura já existente.</p>
           <div style="display:flex; gap:6px;">
-            <input type="number" id="inputDiasCustom" placeholder="Ex: 1, 15, 45, 180" class="input-auth" style="padding-left:14px; flex:1;" min="1" value="30">
+            <input type="number" id="inputDiasCustom" placeholder="Ex: 1, 15, 45, 180" class="input-auth" style="padding-left:14px; flex:1;" min="1" max="3650" value="30">
             <select id="selAtalhosDias" onchange="if(this.value) document.getElementById('inputDiasCustom').value = this.value" class="input-auth" style="width:130px; padding:0 8px;">
               <option value="">Atalhos...</option>
               <option value="1">1 Dia</option>
@@ -676,13 +662,17 @@
               <option value="15">15 Dias</option>
               <option value="30">30 Dias</option>
               <option value="90">90 Dias</option>
-              <option value="365">365 Dias</option><option value="1000000">Vitalício</option>
+              <option value="365">365 Dias</option><option value="3650">10 Anos</option>
             </select>
           </div>
 
           <button onclick="liberarClienteManual()" class="btn-action-primary" style="background:var(--accent-green); color:#fff; margin-top:6px;">
              Salvar e Ativar Acesso
           </button>
+          <button type="button" onclick="listarCortesiasPlayAdmin()" class="btn-action-primary" style="background:var(--surface-2);color:var(--text-primary);margin-top:4px;">
+            Ver cortesias concedidas
+          </button>
+          <div id="listaCortesiasPlay" role="status" style="font-size:.78rem;line-height:1.6;color:var(--text-muted)"></div>
         </div>
 
         <!-- ABA AVISO BROADCAST COM DURAÇÃO -->
@@ -1468,7 +1458,9 @@
 
   <script src="js/state.js?v=20261017-v81-enderecos-navegacao-final"></script>
   <script src="js/ui/dialog.js?v=20261017-v81-enderecos-navegacao-final"></script>
-  <script src="js/app.js?v=20261019-v81-hotfix4-reconciliacao-expiracao"></script>
+  <script>window.PEMATO_PLAY_CONFIG = { enabled: false, apiBase: '' };</script>
+  <script src="js/app.js?v=20261104-play-preparacao"></script>
+  <script src="js/assinatura-google-play.js?v=20261104-preparacao"></script>
   <script src="js/admin-telemetria.js?v=20261017-v81-enderecos-navegacao-final"></script>
   <script src="js/suporte.js?v=20261017-v81-enderecos-navegacao-final"></script>
   <script src="js/diagnosticos/diagnostico-rota.js?v=20261017-v81-enderecos-navegacao-final"></script>
