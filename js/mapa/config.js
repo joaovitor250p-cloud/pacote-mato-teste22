@@ -2,7 +2,8 @@
   'use strict';
 
   const STORAGE_KEY = 'pemato_worker_base_url';
-  const HOLY_FROG_BASE_URL = 'https://holy-frog-272c.joaovitor250p.workers.dev';
+  // O secundário só usará um Worker explicitamente configurado para testes.
+  const HOLY_FROG_BASE_URL = String(global.PEMATO_TEST_ENV?.workerBaseUrl || '');
   const existente = global.PEMATO_MAP_CONFIG || {};
 
   function limparBase(url) {
@@ -64,10 +65,10 @@
   function derivarEndpoints() {
     const b = HOLY_FROG_BASE_URL;
     cfg.workerBaseUrl = b;
-    cfg.geocodingEndpoint = `${b}/geocode`;
-    cfg.optimizeEndpoint = `${b}/optimize`;
-    cfg.routeEndpoint = `${b}/route`;
-    cfg.healthEndpoint = `${b}/health`;
+    cfg.geocodingEndpoint = b ? `${b}/geocode` : '';
+    cfg.optimizeEndpoint = b ? `${b}/optimize` : '';
+    cfg.routeEndpoint = b ? `${b}/route` : '';
+    cfg.healthEndpoint = b ? `${b}/health` : '';
     return cfg;
   }
 

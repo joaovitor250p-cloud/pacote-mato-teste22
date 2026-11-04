@@ -1,0 +1,20 @@
+name = "pacote-emato-subscriptions-staging"
+main = "index.mjs"
+compatibility_date = "2026-11-04"
+
+# Exemplo — NÃO usar o D1 de teste nem o de outro projeto.
+[[d1_databases]]
+binding = "BILLING_DB"
+database_name = "pacote-emato-subscriptions-staging"
+database_id = "COLOQUE-ID-DO-D1-STAGING"
+
+[vars]
+ANDROID_PACKAGE = "com.pacoteemato.app"
+FIREBASE_PROJECT_ID = "pacote-e-mato"
+ALLOWED_ORIGINS = "https://pacoteemato.github.io,https://joaovitor250p-cloud.github.io"
+ADMIN_FIREBASE_UIDS = "COLOQUE-UID-DO-ADMIN"
+PUBSUB_AUDIENCE = "https://SEU-WORKER.workers.dev/api/play/rtdn"
+PUBSUB_PUSH_SA_EMAIL = "COLOQUE-EMAIL-SERVICE-ACCOUNT-PUBSUB"
+
+# Secret (somente servidor, via wrangler secret put):
+# GOOGLE_PLAY_SERVICE_ACCOUNT_JSON

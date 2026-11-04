@@ -3,6 +3,7 @@
  */
 (function () {
   'use strict';
+  if (!window.PEMATO_TEST_ENV?.ready) return;
   if (window.PEMATO_VINCULO_GOOGLE_V81) return;
 
   let pendente = null;
@@ -208,6 +209,7 @@
  */
 (function () {
   'use strict';
+  if (!window.PEMATO_TEST_ENV?.ready) return;
   if (window.PEMATO_LOGIN_GOOGLE_V81) return;
   const CHAVE = 'pemato_google_v81_vinculo_confirmado_teste22';
   let aguardando = false;
