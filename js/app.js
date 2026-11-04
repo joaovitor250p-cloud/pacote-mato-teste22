@@ -634,14 +634,12 @@ function tocarIntroPs2Audio() {
       atualizarVisibilidadeTesteGratis();
     }
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyD-2l3pWZSR8Z_d5jun5lUTuFyROUFa7zY",
-      authDomain: "pacote-e-mato.firebaseapp.com",
-      projectId: "pacote-e-mato",
-      storageBucket: "pacote-e-mato.firebasestorage.app",
-      messagingSenderId: "535255652602",
-      appId: "1:535255652602:web:2881a450c393d22ccc1143"
-    };
+    // A branch de testes NUNCA utiliza as credenciais/URLs do sistema principal.
+    const ambienteTeste = window.PEMATO_TEST_ENV;
+    if (!ambienteTeste || ambienteTeste.mode !== 'staging' || !ambienteTeste.ready) {
+      throw new Error('AMBIENTE_TESTE_NAO_CONFIGURADO: Firebase e Worker de testes são obrigatórios.');
+    }
+    const firebaseConfig = ambienteTeste.firebaseConfig;
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -653,7 +651,7 @@ function tocarIntroPs2Audio() {
     });
     let usuarioAtualZap = localStorage.getItem('usuario_zap_salvo') || '';
 
-    const CLOUDFLARE_WORKER_URL = "https://holy-frog-272c.joaovitor250p.workers.dev";
+    const CLOUDFLARE_WORKER_URL = ambienteTeste.workerBaseUrl;
     
     function mostrarMensagemAuth(tipo, mensagem) {
       const erro = document.getElementById('msgErro');
