@@ -1001,6 +1001,10 @@ function tocarIntroPs2Audio() {
     }
 
     function iniciarPixPlanoSelecionado() {
+      if (window.PEMATO_PLAY_CONFIG?.enabled) {
+        iniciarAssinaturaGooglePlay();
+        return;
+      }
       if (!planoSelecionadoAtual) {
         notificar("Selecione um plano acima primeiro.");
         return;
@@ -1071,6 +1075,10 @@ function tocarIntroPs2Audio() {
     }
 
     async function gerarPixAutomatico(dias, valor, nomePlano, senha) {
+      if (window.PEMATO_PLAY_CONFIG?.enabled) {
+        notificar('Nesta versão, as assinaturas são feitas exclusivamente pela Google Play.');
+        return;
+      }
       let zap = normalizarTelefone(usuarioAtualZap || document.getElementById('inputTel').value || document.getElementById('cadastroTel').value);
       let cupomIndicador = normalizarTelefone((document.getElementById('inputCupomIndicacao') || {}).value || '');
 
@@ -1535,7 +1543,7 @@ function tocarIntroPs2Audio() {
     }
     function limparAvisoRenovacao() {
       document.getElementById('avisoRenovacao').style.display = 'none';
-      document.getElementById('areaPlanosRenovacao').querySelector('h3').textContent = 'Escolha seu plano';
+      document.getElementById('areaPlanosRenovacao').querySelector('h3').textContent = 'Assinatura Pacote É Mato';
       atualizarVisibilidadeTesteGratis();
     }
     async function salvarAcessoPago(zap, dados) {
@@ -1587,6 +1595,48 @@ function tocarIntroPs2Audio() {
       setTimeout(atualizarCamadasSistemaConfig, 0);
     }
 
+    let validacaoPlayEmAndamento = null;
+    async function confirmarAcessoPlayServidor(zap, dadosFirebase) {
+      // O painel do Firestore continua verificando bloqueio/dispositivo.
+      // Direitos da assinatura só são decididos no servidor de billing.
+      if (validacaoPlayEmAndamento) return validacaoPlayEmAndamento;
+      const uid = auth.currentUser?.uid;
+      if (!uid || (dadosFirebase?.authUid && dadosFirebase.authUid !== uid)) return false;
+      validacaoPlayEmAndamento = (async () => {
+        try {
+          if (typeof window.PEMATO_ASSINATURA_PLAY?.confirmarAcesso !== 'function') {
+            throw new Error('PLAY_NAO_CONFIGURADO');
+          }
+          const status = await window.PEMATO_ASSINATURA_PLAY.confirmarAcesso();
+          if (auth.currentUser?.uid !== uid) return false;
+          if (status.active === true && Number(status.until) > Date.now()) {
+            // Os campos abaixo são apenas para a exibição existente.
+            // O direito de acesso segue sendo validado no Worker, não no navegador.
+            const dadosExibicao = {
+              ...dadosFirebase, ativo: true, vitalicio: false,
+              expiraEm: Number(status.until),
+              tipo: status.origin === 'cortesia' ? 'cortesia' : 'assinatura_google_play',
+              plano: status.origin === 'cortesia' ? 'Cortesia do administrador' : 'Google Play - Mensal',
+            };
+            aplicarAcessoAtivo(zap, dadosExibicao);
+            return true;
+          }
+          definirEstadoAcesso(AUTH_ACCESS_STATES.EXPIRED, { confirmado: true, motivo: 'assinatura_play_servidor' });
+          desconectarForcado('Assinatura encerrada.', {
+            estado: AUTH_ACCESS_STATES.EXPIRED, zapRenovacao: zap, encerrarAuth: false,
+          });
+          return false;
+        } catch (erro) {
+          console.warn('Pacote É Mato: acesso Play indisponível.', erro?.message || erro);
+          mostrarErroTemporarioAcesso('Não foi possível confirmar sua assinatura agora. Tente novamente.');
+          return false;
+        } finally {
+          validacaoPlayEmAndamento = null;
+        }
+      })();
+      return validacaoPlayEmAndamento;
+    }
+
     function avaliarDocumentoSessao(zap, doc, opcoes = {}) {
       const veioDoCache = doc?.metadata?.fromCache === true;
       if (!doc?.exists) {
@@ -1620,6 +1670,12 @@ function tocarIntroPs2Audio() {
           return false;
         }
         desconectarForcado('Esta conta foi conectada em outro aparelho!', { estado:AUTH_ACCESS_STATES.SIGNED_OUT, encerrarAuth:true });
+        return false;
+      }
+
+      if (window.PEMATO_PLAY_CONFIG?.enabled) {
+        mostrarVerificandoAcesso('Conferindo assinatura ou cortesia com o servidor…');
+        confirmarAcessoPlayServidor(zap, data);
         return false;
       }
 
@@ -2546,9 +2602,27 @@ function tocarIntroPs2Audio() {
         return;
       }
 
-      if (!Number.isFinite(diasInput) || diasInput <= 0) {
+      if (!Number.isFinite(diasInput) || diasInput <= 0 || (window.PEMATO_PLAY_CONFIG?.enabled && diasInput > 3650)) {
         notificar(' Informe uma quantidade de dias válida.');
         return;
+      }
+
+      if (window.PEMATO_PLAY_CONFIG?.enabled) {
+        try {
+          const cliente = listaUsuariosCache.find(u => String(u.whatsapp || '').replace(/\D/g, '') === zap);
+          if (!cliente?.authUid) {
+            notificar('Conta não localizada. Atualize a lista e confirme se o usuário já fez o primeiro login.');
+            return;
+          }
+          const resposta = await window.PEMATO_ASSINATURA_PLAY.liberarDias(cliente.authUid, diasInput);
+          const data = new Date(resposta.manualUntil);
+          notificar(`Cortesia de ${diasInput} dias concedida. Vencimento: ${data.toLocaleDateString('pt-BR')}.`);
+          document.getElementById('inputClienteZap').value = '';
+          return;
+        } catch (erro) {
+          notificar('Não foi possível conceder a cortesia: ' + (erro?.message || 'tente novamente'));
+          return;
+        }
       }
 
       try {
@@ -2581,6 +2655,53 @@ function tocarIntroPs2Audio() {
         await carregarUsuariosAdmin();
       } catch (e) {
         notificar(e.message || 'Erro ao liberar/renovar acesso.');
+      }
+    }
+
+    async function listarCortesiasPlayAdmin() {
+      const saida = document.getElementById('listaCortesiasPlay');
+      if (!saida) return;
+      if (!window.PEMATO_PLAY_CONFIG?.enabled) {
+        saida.textContent = 'A lista de cortesias da Google Play ficará disponível após a configuração do servidor.';
+        return;
+      }
+      saida.textContent = 'Carregando cortesias...';
+      try {
+        const grants = await window.PEMATO_ASSINATURA_PLAY.listarCortesias();
+        if (!grants.length) { saida.textContent = 'Nenhuma cortesia cadastrada.'; return; }
+        const agora = Date.now();
+        saida.replaceChildren();
+        for (const grant of grants) {
+          const cliente = listaUsuariosCache.find(u => u.authUid === grant.uid);
+          const linha = document.createElement('div');
+          linha.style.borderBottom = '1px solid var(--surface-border)';
+          linha.style.padding = '7px 0';
+          const destino = cliente?.whatsapp || `UID: ${String(grant.uid).slice(0, 12)}…`;
+          linha.textContent = `${destino} — até ${new Date(grant.until).toLocaleDateString('pt-BR')} (${grant.until > agora ? 'ativo' : 'encerrado'})`;
+          if (grant.until > agora) {
+            const revogar = document.createElement('button');
+            revogar.type = 'button';
+            revogar.textContent = 'Revogar cortesia';
+            revogar.style.marginLeft = '8px';
+            revogar.addEventListener('click', async () => {
+              const confirmou = await window.PacoteEMatoDialog?.confirmar?.({
+                titulo: 'Revogar esta cortesia?',
+                mensagem: `Usuário: ${destino}. Uma assinatura Google Play que esteja ativa continuará válida.`,
+                confirmar: 'Revogar', cancelar: 'Voltar', perigo: true,
+              });
+              if (!confirmou) return;
+              try {
+                await window.PEMATO_ASSINATURA_PLAY.revogarCortesia(grant.uid);
+                notificar('Cortesia revogada.');
+                await listarCortesiasPlayAdmin();
+              } catch (e) { notificar(e?.message || 'Erro ao revogar cortesia.'); }
+            });
+            linha.appendChild(revogar);
+          }
+          saida.appendChild(linha);
+        }
+      } catch (erro) {
+        saida.textContent = 'Não foi possível consultar as cortesias: ' + (erro?.message || 'erro de rede');
       }
     }
 
