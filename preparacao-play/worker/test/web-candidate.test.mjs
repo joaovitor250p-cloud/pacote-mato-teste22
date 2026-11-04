@@ -1,10 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
-const html = readFileSync(new URL('../../web/index.html', import.meta.url), 'utf8');
-const app = readFileSync(new URL('../../web/js/app.js', import.meta.url), 'utf8');
-const play = readFileSync(new URL('../../web/js/assinatura-google-play.js', import.meta.url), 'utf8');
+// Funciona tanto no ZIP de preparação quanto na branch do repositório web.
+const webRoot = existsSync(new URL('../../web/index.html', import.meta.url))
+  ? new URL('../../web/', import.meta.url)
+  : new URL('../../../', import.meta.url);
+const html = readFileSync(new URL('index.html', webRoot), 'utf8');
+const app = readFileSync(new URL('js/app.js', webRoot), 'utf8');
+const play = readFileSync(new URL('js/assinatura-google-play.js', webRoot), 'utf8');
 
 test('a tela de pagamento de acesso agora apresenta apenas Google Play', () => {
   assert.match(html, /R\$ 19,90\/mês/);
