@@ -315,7 +315,7 @@
     const numero = String(ordem);
     // Largura fixa mantém a ponta alinhada à coordenada da entrega e não
     // transforma pacotes múltiplos em uma cápsula que encobre outras ruas.
-    const larguraCss = 46, alturaCss = 47;
+    const larguraCss = 40, alturaCss = 42;
     canvas.width = Math.round(larguraCss * ratio);
     canvas.height = Math.round(alturaCss * ratio);
     const c = contexto2d(canvas);
@@ -324,19 +324,19 @@
     c.clearRect(0, 0, larguraCss, alturaCss);
 
     const cores = paleta(status, selecionado);
-    const centro = larguraCss / 2, topo = 3, raio = 16;
+    const centro = larguraCss / 2, topo = 3, raio = 14;
 
     c.save();
-    c.shadowColor = 'rgba(24,48,83,0.24)';
-    c.shadowBlur = 4;
-    c.shadowOffsetY = 2;
+    c.shadowColor = 'rgba(24,48,83,0.14)';
+    c.shadowBlur = 2;
+    c.shadowOffsetY = 1;
     c.fillStyle = cores.fundo;
     c.strokeStyle = cores.borda;
     c.lineWidth = selecionado ? 3.2 : 2.5;
     c.beginPath();
     c.moveTo(centro, topo);
     c.quadraticCurveTo(centro + raio, topo, centro + raio, topo + raio);
-    c.quadraticCurveTo(centro + raio, topo + raio * 1.65, centro, alturaCss - 2);
+    c.quadraticCurveTo(centro + raio, topo + raio * 1.65, centro, alturaCss - 4);
     c.quadraticCurveTo(centro - raio, topo + raio * 1.65, centro - raio, topo + raio);
     c.quadraticCurveTo(centro - raio, topo, centro, topo);
     c.closePath();
@@ -349,14 +349,14 @@
     c.textAlign = 'center';
     c.font = `800 ${numero.length >= 4 ? 10.5 : numero.length === 3 ? 12 : 14}px Arial, sans-serif`;
     c.fillStyle = cores.numero;
-    c.fillText(numero, centro, topo + 16.3);
+    c.fillText(numero, centro, topo + 14.2);
 
     // Quantidade por endereço fica num selo discreto. Não é o agrupamento
     // dinâmico do mapa: o número central continua sendo a ordem da parada.
     if (quantidade > 1) {
       const selo = quantidade > 99 ? '99+' : String(quantidade);
       c.beginPath();
-      c.arc(37, 9, 8, 0, Math.PI * 2);
+      c.arc(33, 8, 7, 0, Math.PI * 2);
       c.fillStyle = '#ffffff';
       c.fill();
       c.strokeStyle = cores.fundo;
@@ -364,7 +364,7 @@
       c.stroke();
       c.fillStyle = '#223449';
       c.font = `800 ${selo.length > 2 ? 7 : 9}px Arial, sans-serif`;
-      c.fillText(selo, 37, 9.4);
+      c.fillText(selo, 33, 8.4);
     }
 
     try {

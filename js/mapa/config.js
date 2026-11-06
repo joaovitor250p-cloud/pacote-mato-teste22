@@ -132,11 +132,11 @@
 
   function coresViaClean(categoria, casing) {
     const cores = {
-      rodovia:   {base:'#fff0db', borda:'#dfc8a7'},
-      primary:   {base:'#fff4e6', borda:'#e3d2bd'},
-      secondary: {base:'#ffffff', borda:'#dce0e0'},
-      tertiary:  {base:'#ffffff', borda:'#e1e3e1'},
-      local:     {base:'#ffffff', borda:'#e1e3e1'}
+      rodovia:   {base:'#f9fafc', borda:'#bac6d2'},
+      primary:   {base:'#fafbfc', borda:'#c2ccd6'},
+      secondary: {base:'#ffffff', borda:'#ccd4dd'},
+      tertiary:  {base:'#ffffff', borda:'#d1d8e0'},
+      local:     {base:'#ffffff', borda:'#d5dce4'}
     };
     const c = cores[categoria] || cores.local;
     return casing ? c.borda : c.base;
@@ -154,25 +154,26 @@
       const txt = textoLayer(layer);
 
       if (layer.type === 'background') {
-        setPaintSeguro(mapa, layer, 'background-color', '#f7f8fa');
+        setPaintSeguro(mapa, layer, 'background-color', '#f5f6f8');
         setPaintSeguro(mapa, layer, 'background-opacity', 1);
         return;
       }
 
       if (layer.type === 'fill') {
         if (/(water|ocean|lake|river|waterway)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'fill-color', '#cfe6f6');
+          setPaintSeguro(mapa, layer, 'fill-color', '#dceaf3');
           setPaintSeguro(mapa, layer, 'fill-opacity', 0.94);
         } else if (/(park|grass|wood|forest|green|nature|landcover)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'fill-color', '#dfeeda');
-          setPaintSeguro(mapa, layer, 'fill-opacity', 0.87);
+          // Parques permanecem identificáveis, mas sem dominar a malha urbana.
+          setPaintSeguro(mapa, layer, 'fill-color', '#f0f2f1');
+          setPaintSeguro(mapa, layer, 'fill-opacity', 0.78);
         } else if (/(building)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'fill-color', '#e8eaed');
-          setPaintSeguro(mapa, layer, 'fill-opacity', 0.46);
-          setPaintSeguro(mapa, layer, 'fill-outline-color', '#dfe3e7');
+          setPaintSeguro(mapa, layer, 'fill-color', '#f8f8fa');
+          setPaintSeguro(mapa, layer, 'fill-opacity', 0.88);
+          setPaintSeguro(mapa, layer, 'fill-outline-color', '#d9dee5');
         } else if (/(landuse|industrial|commercial|retail|residential-area)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'fill-color', '#f1f3f5');
-          setPaintSeguro(mapa, layer, 'fill-opacity', 0.32);
+          setPaintSeguro(mapa, layer, 'fill-color', '#f4f5f7');
+          setPaintSeguro(mapa, layer, 'fill-opacity', 0.22);
         }
         return;
       }
@@ -215,8 +216,8 @@
       if (ehRoadLabel) {
         setLayoutSeguro(mapa, layer, 'visibility', 'visible');
         setLayoutSeguro(mapa, layer, 'text-size', ['interpolate', ['linear'], ['zoom'], 11, 11.0, 14, 12.9, 16, navegacaoAtiva ? 15.2 : 14.5, 19, navegacaoAtiva ? 17.3 : 16.5]);
-        setPaintSeguro(mapa, layer, 'text-color', '#394650');
-        setPaintSeguro(mapa, layer, 'text-halo-color', '#fffefa');
+        setPaintSeguro(mapa, layer, 'text-color', '#526070');
+        setPaintSeguro(mapa, layer, 'text-halo-color', '#ffffff');
         setPaintSeguro(mapa, layer, 'text-halo-width', navegacaoAtiva ? 2.05 : 1.75);
         setPaintSeguro(mapa, layer, 'text-halo-blur', 0.12);
         setPaintSeguro(mapa, layer, 'text-opacity', 1);

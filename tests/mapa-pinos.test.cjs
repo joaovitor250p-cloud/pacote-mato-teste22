@@ -21,11 +21,12 @@ for (const codigo of [planejamento, navegacao]) {
 assert.match(planejamento, /numbered:\s*1/);
 assert.match(planejamento, /order:\s*ordem\(p\)/);
 assert.match(config, /mapStyleUrl:\s*'https:\/\/tiles\.openfreemap\.org\/styles\/bright'/);
-assert.match(marcadores, /const larguraCss = 46, alturaCss = 47/);
+assert.match(marcadores, /const larguraCss = 40, alturaCss = 42/);
+assert.match(config, /fill-color', '#f0f2f1'/);
+assert.match(config, /fill-outline-color', '#d9dee5'/);
 
-for (const arquivo of ['config', 'marcadores', 'mapa']) {
-  assert.ok(html.includes(`js/mapa/${arquivo}.js?v=20261106-teste22-mapa-pinos-2`));
-}
+for (const arquivo of ['config', 'marcadores']) assert.ok(html.includes(`js/mapa/${arquivo}.js?v=20261106-circuit-clean-3`));
+assert.ok(html.includes('js/mapa/mapa.js?v=20261106-teste22-mapa-pinos-2'));
 assert.ok(html.includes('js/navegacao/navegacao.js?v=20261106-teste22-mapa-pinos-2'));
 
 console.log('PASSOU: mapa de ruas, marcadores numerados sem agrupamento e cache atualizado.');
