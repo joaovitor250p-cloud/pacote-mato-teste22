@@ -23,9 +23,12 @@ assert.match(planejamento, /order:\s*ordem\(p\)/);
 assert.match(config, /mapStyleUrl:\s*'https:\/\/tiles\.openfreemap\.org\/styles\/bright'/);
 assert.match(marcadores, /const larguraCss = 40, alturaCss = 42/);
 assert.match(config, /fill-color', '#f0f2f1'/);
-assert.match(config, /fill-outline-color', '#d9dee5'/);
+assert.match(config, /fill-outline-color', '#c5cbd5'/);
+assert.match(config, /base:'#d7e2ed'/);
+assert.match(config, /oneway\|one-way\|direction\|arrow/);
 
-for (const arquivo of ['config', 'marcadores']) assert.ok(html.includes(`js/mapa/${arquivo}.js?v=20261106-circuit-clean-3`));
+assert.ok(html.includes('js/mapa/config.js?v=20261106-ruas-urbanas-4'));
+assert.ok(html.includes('js/mapa/marcadores.js?v=20261106-circuit-clean-3'));
 assert.ok(html.includes('js/mapa/mapa.js?v=20261106-teste22-mapa-pinos-2'));
 assert.ok(html.includes('js/navegacao/navegacao.js?v=20261106-teste22-mapa-pinos-2'));
 

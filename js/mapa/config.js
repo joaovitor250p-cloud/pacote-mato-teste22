@@ -117,14 +117,14 @@
     const extra = navegacaoAtiva ? 0.28 : 0;
     const tabela = {
       // HOTFIX FINAL 7: malha mais definida sem transformar o mapa em desenho pesado.
-      rodovia:   [10,1.75,13,3.35,16,5.95,19,9.20],
-      primary:   [10,1.48,13,2.88,16,5.15,19,8.05],
-      secondary: [10,1.18,13,2.38,16,4.30,19,6.80],
-      tertiary:  [10,0.98,13,1.98,16,3.58,19,5.58],
-      local:     [10,0.82,13,1.62,16,3.02,19,4.68]
+      rodovia:   [10,2.1,13,4.2,16,8.4,19,15.0],
+      primary:   [10,1.8,13,3.7,16,7.4,19,13.0],
+      secondary: [10,1.5,13,3.2,16,6.8,19,12.0],
+      tertiary:  [10,1.3,13,2.9,16,6.2,19,11.0],
+      local:     [10,1.1,13,2.6,16,5.8,19,10.0]
     };
     const valores = tabela[categoria] || tabela.local;
-    const casingExtra = casing ? ({rodovia:2.35,primary:2.08,secondary:1.76,tertiary:1.56,local:1.38}[categoria] || 1.38) : 0;
+    const casingExtra = casing ? ({rodovia:2.8,primary:2.5,secondary:2.2,tertiary:2.0,local:1.8}[categoria] || 1.8) : 0;
     const expr = ['interpolate', ['linear'], ['zoom']];
     for (let i = 0; i < valores.length; i += 2) expr.push(valores[i], valores[i + 1] + extra + casingExtra);
     return expr;
@@ -132,11 +132,11 @@
 
   function coresViaClean(categoria, casing) {
     const cores = {
-      rodovia:   {base:'#f9fafc', borda:'#bac6d2'},
-      primary:   {base:'#fafbfc', borda:'#c2ccd6'},
-      secondary: {base:'#ffffff', borda:'#ccd4dd'},
-      tertiary:  {base:'#ffffff', borda:'#d1d8e0'},
-      local:     {base:'#ffffff', borda:'#d5dce4'}
+      rodovia:   {base:'#c6d6e6', borda:'#a8bed2'},
+      primary:   {base:'#ccdbe9', borda:'#b0c3d6'},
+      secondary: {base:'#d0deeb', borda:'#b6c7d8'},
+      tertiary:  {base:'#d3e0ec', borda:'#bdcddb'},
+      local:     {base:'#d7e2ed', borda:'#c2d0dd'}
     };
     const c = cores[categoria] || cores.local;
     return casing ? c.borda : c.base;
@@ -154,7 +154,7 @@
       const txt = textoLayer(layer);
 
       if (layer.type === 'background') {
-        setPaintSeguro(mapa, layer, 'background-color', '#f5f6f8');
+        setPaintSeguro(mapa, layer, 'background-color', '#f9f9fb');
         setPaintSeguro(mapa, layer, 'background-opacity', 1);
         return;
       }
@@ -168,9 +168,9 @@
           setPaintSeguro(mapa, layer, 'fill-color', '#f0f2f1');
           setPaintSeguro(mapa, layer, 'fill-opacity', 0.78);
         } else if (/(building)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'fill-color', '#f8f8fa');
-          setPaintSeguro(mapa, layer, 'fill-opacity', 0.88);
-          setPaintSeguro(mapa, layer, 'fill-outline-color', '#d9dee5');
+          setPaintSeguro(mapa, layer, 'fill-color', '#f7f7fa');
+          setPaintSeguro(mapa, layer, 'fill-opacity', 0.96);
+          setPaintSeguro(mapa, layer, 'fill-outline-color', '#c5cbd5');
         } else if (/(landuse|industrial|commercial|retail|residential-area)/i.test(txt)) {
           setPaintSeguro(mapa, layer, 'fill-color', '#f4f5f7');
           setPaintSeguro(mapa, layer, 'fill-opacity', 0.22);
@@ -206,6 +206,14 @@
       }
 
       if (layer.type !== 'symbol') return;
+
+      // Preserve directional arrows: they are essential for urban delivery routes.
+      if (/(oneway|one-way|direction|arrow)/i.test(txt)) {
+        setLayoutSeguro(mapa, layer, 'visibility', 'visible');
+        setPaintSeguro(mapa, layer, 'icon-opacity', 0.88);
+        setPaintSeguro(mapa, layer, 'text-opacity', 0.88);
+        return;
+      }
 
       const ehRoadLabel = /(road|street|transportation_name|highway|motorway|trunk|primary|secondary|tertiary|residential)/i.test(txt)
         && !/(shield|route.?number|road.?number|highway.?ref|motorway.?ref)/i.test(txt);
@@ -290,8 +298,8 @@
       mapa.addLayer({
         id, type:'fill', source:base.source, 'source-layer':base['source-layer'], minzoom:14,
         layout:{visibility:'visible'},
-        paint:{'fill-color':'#f0efed', 'fill-outline-color':'#b5b9bd',
-          'fill-opacity':['interpolate',['linear'],['zoom'],14,0.45,16,0.85]}
+        paint:{'fill-color':'#f7f7fa', 'fill-outline-color':'#c5cbd5',
+          'fill-opacity':['interpolate',['linear'],['zoom'],14,0.6,16,0.96]}
       }, antes);
       bases.filter(l => l.source === base.source && l['source-layer'] === base['source-layer'])
         .forEach(l => mapa.setLayoutProperty(l.id, 'visibility', 'none'));
