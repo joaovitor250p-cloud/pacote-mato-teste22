@@ -3885,7 +3885,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
     // dentro dessa mesma faixa, endereço + todos os códigos BR válidos.
     //
     // Se a coluna # não existir, os leitores universais antigos continuam como
-    // fallback. Dessa forma preservamos Spoke com # vazio sem reintroduzir
+    // fallback. Dessa forma preservamos arquivos com # vazio sem reintroduzir
     // associações arriscadas nos PDFs que já fornecem uma linha numerada.
 
     function removerAcentosPdfV71(valor) {
@@ -4290,7 +4290,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
       });
       itens.forEach(i => extrairCodigosBrFlexiveis(i.str).forEach(c => codigos.add(c)));
 
-      // 2) Circuit: BR + 12 dígitos em uma linha e caractere final logo abaixo.
+      // 2) Código BR dividido entre uma linha e o caractere final logo abaixo.
       const prefixos = itens
         .map((item, indice) => {
           const m = String(item?.str || '').toUpperCase().match(/(?:^|[^A-Z0-9])(BR\d{12})(?=$|[^A-Z0-9])/);
@@ -4451,7 +4451,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
 
 
     // V71B - fallback determinístico para relatórios em que a coluna "#" existe,
-    // mas vem vazia (alguns exports do Spoke). Cada código BR completo vira a
+    // mas vem vazia (alguns arquivos exportados). Cada código BR completo vira a
     // âncora da própria faixa visual; o endereço precisa estar dentro dessa mesma
     // faixa. Não procuramos "endereço vizinho" fora da entrega.
     function extrairRegistrosPdfV71PorCodigo(itensOriginais, pagina, larguraPagina, sequenciaInicial = 0) {
@@ -4590,7 +4590,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
         if (!atual || ancora.origem === 'completo') porCodigo.set(normal, ancora);
       };
 
-      // 1) Codigo completo na propria linha visual (Spoke e muitos exports Circuit).
+      // 1) Codigo completo na propria linha visual de muitos arquivos exportados.
       agruparItensEmLinhasPdfV71(itens).forEach(linha => {
         extrairCodigosBrFlexiveis(linha.texto).forEach(codigo => {
           const itemCodigo = linha.itens.find(i => extrairCodigosBrFlexiveis(i.str).includes(codigo));
@@ -4598,7 +4598,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
         });
       });
 
-      // 2) Circuit pode desenhar BR+12 digitos e o ultimo caractere em outra linha.
+      // 2) Alguns PDFs dividem BR+12 digitos e o ultimo caractere em outra linha.
       // O caractere final so e aceito quando esta praticamente na MESMA coluna X
       // e muito perto verticalmente. Assim o numero da parada nunca completa um BR.
       const prefixos = itens
@@ -4620,7 +4620,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
             const dx = Math.abs(item.x - pfx.item.x);
             const dy = Math.abs(item.y - pfx.item.y);
             if (dx > limiteX || dy < 1 || dy > limiteY) return null;
-            // Em Circuit o final costuma estar logo abaixo do prefixo. Se vier
+            // Em PDFs de duas linhas, o final pode estar abaixo do prefixo. Se vier
             // acima ainda pode ser valido, mas recebe penalidade para desempate.
             const penalidadeDirecao = item.y > pfx.item.y ? 12 : 0;
             return { char: m[1], item, score: (dx * 5) + dy + penalidadeDirecao };
@@ -5132,7 +5132,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
       return registros.sort((a,b)=>b.ordemY-a.ordemY);
     }
 
-    // V50 - leitor universal de PDFs de rota (Spoke, Circuit e layouts semelhantes).
+    // V50 - leitor de PDFs de rota em diferentes layouts.
     // Não depende da coluna #. A fonte de verdade passa a ser a associação visual/textual
     // entre um código de pacote e um endereço próximo na tabela.
     function extrairRegistrosPdfUniversal(linhas) {
@@ -5151,7 +5151,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
 
         /*
          * V69 - fallback textual para códigos quebrados em linhas diferentes.
-         * Circuit pode extrair:
+         * Um PDF pode extrair:
          *   BR265691124855
          *   1 Rua Machado Bitencourt, 220 ... 06:11
          *   W;
@@ -5186,7 +5186,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
         // Remove códigos/Notes mesmo quando o PDF separa o BR em fragmentos.
         const posCodigo = t.search(/\bBR(?:[\s._-]*[0-9])/i);
         if (posCodigo >= 0) t = t.slice(0, posCodigo).trim();
-        // Remove prefixos de parada do Circuit/Spoke quando existirem.
+        // Remove prefixos de parada do arquivo importado quando existirem.
         t = t.replace(/^\s*(?:stop|parada)\s*#?\s*\d{1,4}\s*[:\-]?\s*/i, '');
         t = t.replace(/^\s*\d{1,4}\s+(?=(?:Rua|R\.?|Avenida|Av\.?|Alameda|Travessa|Estrada|Rodovia|Pra[cç]a|Largo|Viela|Passagem)\b)/i, '');
         // Remove horários/ETAs no fim.
@@ -5203,7 +5203,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
         const codigos = codigosDaLinha(item.texto, pos).slice(0, 1);
         if (!codigos.length) return;
 
-        // 1) Preferência: endereço está na própria linha (Spoke clássico).
+        // 1) Preferência: endereço está na própria linha do PDF.
         let candidato = limparCandidatoEndereco(item.texto);
 
         // 2) Se Notes/código saiu em outra linha no PDF.js, procura linhas vizinhas.
@@ -5229,7 +5229,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
         novosCodigos.forEach(codigo => usados.add(codigo));
 
         // Se a linha trouxer um número de parada explícito, preserva. Caso contrário,
-        // cria sequência 1..N na ordem visual do PDF (caso do Spoke enviado pelo usuário).
+        // cria sequência 1..N na ordem visual do PDF importado.
         let numero = null;
         const n1 = item.texto.match(/^\s*(\d{1,4})\s+(?=(?:Rua|R\.?|Avenida|Av\.?|Alameda|Travessa|Estrada|Rodovia|Pra[cç]a|Largo|Viela|Passagem)\b)/i);
         const n2 = item.texto.match(/\b(?:stop|parada)\s*#?\s*(\d{1,4})\b/i);
@@ -5487,7 +5487,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
               });
 
             // V51 — leitura direta por linha visual.
-            // Esta é a estratégia principal para Spoke/Circuit com coluna # vazia.
+            // Esta é a estratégia principal para arquivos com coluna # vazia.
             gruposLinhaFallback
               .slice()
               .sort((a, b) => b.y - a.y)
@@ -5618,9 +5618,9 @@ document.getElementById('cardRetomarRota').style.display = 'none';
                 .trim();
 
               /*
-               * V69 - Circuit com código quebrado dentro da coluna Notes.
+               * V69 - código quebrado dentro da coluna Notes.
                *
-               * Alguns exports do Circuit desenham o código em DUAS linhas no
+               * Alguns arquivos exportados desenham o código em DUAS linhas no
                * mesmo campo, por exemplo:
                *
                *   BR265691124855
@@ -5696,7 +5696,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
               }
 
               // Remove eventual número da coluna # e pequenas quebras de palavra
-              // vistas em exports do Circuit ("São Paul o" -> "São Paulo").
+              // vistas em PDFs exportados ("São Paul o" -> "São Paulo").
               endereco = endereco
                 .replace(/^\d{1,3}\s+/, '')
                 .replace(/\bS(?:ã|a)o\s+Paul\s+o\b/gi, 'São Paulo')

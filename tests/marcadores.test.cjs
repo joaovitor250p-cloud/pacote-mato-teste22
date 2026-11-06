@@ -50,8 +50,8 @@ for (const entry of [pendente, selecionada, parcial, concluida, falhou]) {
 assert.equal(rascunho.data.height / rascunho.options.pixelRatio, 33);
 assert.ok(selecionada.data.width > pendente.data.width);
 assert.ok(pendente.data.fills.includes('#ffffff'));
-assert.ok(selecionada.data.fills.includes('#2563eb'));
-assert.ok(parcial.data.fills.includes('#fffbeb'));
+assert.ok(selecionada.data.fills.includes('#a6532c'));
+assert.ok(parcial.data.fills.includes('#fff4e5'));
 assert.ok(concluida.data.fills.includes('#166534'));
 assert.ok(falhou.data.fills.includes('#dc2626'));
 

@@ -17,13 +17,13 @@
   }
 
   function paleta(status, selecionado) {
-    // Teste22: azul identifica a rota ativa; verde e vermelho ficam reservados
-    // para os resultados reais das entregas, mesmo quando selecionadas.
+    // Identidade cobre para a parada ativa; verde e vermelho representam
+    // exclusivamente o resultado real de cada entrega.
     if (status === 'nao_entregue') return { fundo: selecionado ? '#b91c1c' : '#dc2626', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
     if (status === 'concluida') return { fundo: selecionado ? '#15803d' : '#166534', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
-    if (status === 'parcial') return { fundo: selecionado ? '#b45309' : '#fffbeb', borda: selecionado ? '#ffffff' : '#d97706', numero: selecionado ? '#ffffff' : '#92400e', multi: selecionado ? '#ffffff' : '#92400e', simbolo: selecionado ? '#ffffff' : '#92400e' };
-    if (selecionado) return { fundo: '#2563eb', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
-    return { fundo: '#ffffff', borda: '#2563eb', numero: '#0f172a', multi: '#1d4ed8', simbolo: '#1d4ed8' };
+    if (status === 'parcial') return { fundo: selecionado ? '#a16207' : '#fff4e5', borda: selecionado ? '#ffffff' : '#c88b32', numero: selecionado ? '#ffffff' : '#85520d', multi: selecionado ? '#ffffff' : '#85520d', simbolo: selecionado ? '#ffffff' : '#85520d' };
+    if (selecionado) return { fundo: '#a6532c', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
+    return { fundo: '#ffffff', borda: '#a6532c', numero: '#24313b', multi: '#8b421f', simbolo: '#8b421f' };
   }
 
   function simboloStatus(status) {
@@ -346,9 +346,9 @@
     const r = 11;
 
     c.save();
-    c.shadowColor = 'rgba(15,23,42,0.24)';
-    c.shadowBlur = 4;
-    c.shadowOffsetY = 2;
+    c.shadowColor = 'rgba(36,49,59,0.24)';
+    c.shadowBlur = 5;
+    c.shadowOffsetY = 3;
     c.fillStyle = cores.fundo;
     c.strokeStyle = cores.borda;
     c.lineWidth = borda;
@@ -387,7 +387,7 @@
     if (badge) {
       px += divisorGap;
       c.strokeStyle = 'rgba(255,255,255,0.45)';
-      if (status === 'pendente' && !selecionado) c.strokeStyle = 'rgba(37,99,235,0.28)';
+      if (status === 'pendente' && !selecionado) c.strokeStyle = 'rgba(166,83,44,0.28)';
       c.lineWidth = 1;
       c.beginPath();
       c.moveTo(px + 0.5, y + 8);

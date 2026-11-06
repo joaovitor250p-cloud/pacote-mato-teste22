@@ -9,8 +9,6 @@
   let rotaImportacaoPendente = null;
   let resultadoImportacaoPendente = null;
   let resolverDecisaoReotimizacao = null;
-  let importacaoPendente = null;
-  let resolverMapeamentoImportacao = null;
   let resolverModoImportacao = null;
   let modoImportacaoAtual = 'substituir';
   let estadoPainel = (()=>{try{return sessionStorage.getItem('pemato_route_sheet')||'collapsed';}catch(_){return 'collapsed';}})();
@@ -1062,96 +1060,16 @@
     return rotaAtual;
   }
 
-  function renderizarPreviewImportacao(inspecao, headerIndex) {
-    const table = $('routeImportPreview');
-    if (!table) return;
-    table.replaceChildren();
-    const headers = (inspecao.matriz?.[headerIndex] || []).map(v => String(v ?? '').trim());
-    const thead = document.createElement('thead');
-    const trh = document.createElement('tr');
-    headers.forEach((h, i) => { const th = document.createElement('th'); th.textContent = h || `Coluna ${i + 1}`; trh.appendChild(th); });
-    thead.appendChild(trh); table.appendChild(thead);
-    const tbody = document.createElement('tbody');
-    (inspecao.matriz || []).slice(headerIndex + 1, headerIndex + 5).forEach(row => {
-      const tr = document.createElement('tr');
-      headers.forEach((_, i) => { const td = document.createElement('td'); td.textContent = String(row?.[i] ?? ''); tr.appendChild(td); });
-      tbody.appendChild(tr);
-    });
-    table.appendChild(tbody);
-  }
-
-  function preencherMapeamentoImportacao(inspecao, headerIndex) {
-    const headers = (inspecao.matriz?.[headerIndex] || []).map(v => String(v ?? '').trim());
-    const auto = global.PacoteEMatoImportacaoXLSX.identificarColunas(headers);
-    // O mapeamento técnico continua automático. A tela mostra apenas as opções úteis ao motorista.
-    importacaoPendente.mapeamentoAutomatico = auto;
-    const vis = $('routeImportVisibleFields');
-    if (vis) {
-      vis.replaceChildren();
-      const principais = [
-        ['atId','AT ID'],['sequenceOrigem','Sequence'],['stopOrigem','Stop'],['pacote','SPX TN'],
-        ['endereco','Destination Address'],['bairro','Bairro'],['cidade','City'],['cep','Zipcode/Postal code'],['latitude','Latitude'],['longitude','Longitude']
-      ];
-      principais.forEach(([campo,label]) => {
-        const item=document.createElement('label'); item.className='route-import-visible-item';
-        const input=document.createElement('input'); input.type='checkbox'; input.dataset.importVisible=campo; input.checked=['pacote','endereco','bairro','cidade'].includes(campo);
-        const copy=document.createElement('span'); const st=document.createElement('strong'); st.textContent=label; const sm=document.createElement('small');
-        const idx=auto[campo]; sm.textContent=idx!=null ? String((inspecao.matriz?.[headerIndex+1]||[])[idx] ?? 'Campo reconhecido') : 'Opcional';
-        copy.append(st,sm); item.append(input,copy); vis.appendChild(item);
-      });
-    }
-    renderizarPreviewImportacao(inspecao, headerIndex);
-  }
-
-  function concluirMapeamentoImportacao(valor) {
-    const modal = $('routeImportMappingModal');
-    if (modal) modal.style.display = 'none';
-    const resolver = resolverMapeamentoImportacao;
-    resolverMapeamentoImportacao = null;
-    if (resolver) resolver(valor);
-  }
-
-  function abrirMapeamentoImportacao(inspecao) {
-    const modal = $('routeImportMappingModal');
-    if (!modal) return Promise.resolve(null);
-    importacaoPendente = inspecao;
-    if ($('routeImportFileName')) $('routeImportFileName').textContent = inspecao.nomeArquivo || 'Planilha';
-    if ($('routeImportSheetInfo')) $('routeImportSheetInfo').textContent = `${inspecao.sheetName || 'Planilha'} · ${inspecao.totalLinhasDados || 0} linha(s) de dados`;
-    preencherMapeamentoImportacao(inspecao, inspecao.headerIndex);
-    if ($('routeImportMappingError')) { $('routeImportMappingError').style.display = 'none'; $('routeImportMappingError').textContent = ''; }
-    modal.style.display = 'flex';
-    return new Promise(resolve => { resolverMapeamentoImportacao = resolve; });
-  }
-
-  function confirmarMapeamentoImportacao() {
-    if (!importacaoPendente) return concluirMapeamentoImportacao(null);
-    const headerIndex = Number(importacaoPendente.headerIndex || 0);
-    const headers = (importacaoPendente.matriz?.[headerIndex] || []).map(v => String(v ?? '').trim());
-    const columnMapping = importacaoPendente.mapeamentoAutomatico || global.PacoteEMatoImportacaoXLSX.identificarColunas(headers);
-    if (columnMapping.endereco == null && columnMapping.logradouro == null) {
-      const err = $('routeImportMappingError');
-      if (err) { err.textContent = 'Não consegui reconhecer a coluna de endereço nesta planilha.'; err.style.display = 'block'; }
-      return;
-    }
-    const visibleFields = [...document.querySelectorAll('[data-import-visible]:checked')].map(el => el.dataset.importVisible).filter(Boolean);
-    concluirMapeamentoImportacao({ headerIndex, columnMapping, visibleFields });
-  }
-
   async function lerPlanilhaComMapeamento(file) {
     if (!file) throw new Error('Arquivo não informado.');
     if (!global.PacoteEMatoImportacaoXLSX) throw new Error('Módulo de importação não carregado.');
-    const inspecao = await global.PacoteEMatoImportacaoXLSX.inspecionarArquivo(file);
     try {
-      return await global.PacoteEMatoImportacaoXLSX.lerArquivo(file, { inspecao });
+      return await global.PacoteEMatoImportacaoXLSX.lerArquivo(file);
     } catch (erroAuto) {
-      if (erroAuto?.code !== 'MAPEAMENTO_NECESSARIO') throw erroAuto;
-      const mapeamento = await abrirMapeamentoImportacao(inspecao);
-      if (!mapeamento) {
-        const erro = new Error('Seleção da planilha cancelada.');
-        erro.code = 'IMPORTACAO_CANCELADA';
-        throw erro;
+      if (erroAuto?.code === 'MAPEAMENTO_NECESSARIO') {
+        throw new Error('Não foi possível identificar a coluna de endereço. Use um cabeçalho como Endereço, Destination Address ou Logradouro e tente novamente.');
       }
-      return global.PacoteEMatoImportacaoXLSX.lerArquivo(file, Object.assign({ inspecao }, mapeamento));
+      throw erroAuto;
     }
   }
 
@@ -1203,18 +1121,13 @@
       const modo = await escolherModoImportacao();
       if (!modo) { fluxo?.fechar?.(); definirStatusImportacao('Importação cancelada. Nenhuma parada foi alterada.', 'warning'); return false; }
       modoImportacaoAtual = modo;
-      let opcoes = { inspecao };
-      fluxo?.atualizarEtapa?.('Confira AT ID, Sequence, Stop, SPX TN, endereço, bairro, cidade, CEP, latitude e longitude.');
-      const mapeamento = await abrirMapeamentoImportacao(inspecao);
-      if (!mapeamento) {
-        fluxo?.fechar?.();
-        definirStatusImportacao('Importação cancelada. Nenhuma parada foi alterada.', 'warning');
-        return;
+      fluxo?.atualizarEtapa?.('Identificando endereços e códigos automaticamente.');
+      let resultado;
+      try { resultado = await global.PacoteEMatoImportacaoXLSX.lerArquivo(file, { inspecao }); }
+      catch (erroAuto) {
+        if (erroAuto?.code === 'MAPEAMENTO_NECESSARIO') throw new Error('A planilha não possui uma coluna de endereço reconhecível. Renomeie para Endereço, Destination Address ou Logradouro.');
+        throw erroAuto;
       }
-      opcoes = Object.assign(opcoes, mapeamento);
-
-      fluxo?.atualizarEtapa?.('Convertendo as linhas em paradas e preservando pacotes e observações.');
-      const resultado = await global.PacoteEMatoImportacaoXLSX.lerArquivo(file, opcoes);
       const cfg = global.PacoteEMatoConfiguracoes?.obter?.() || {};
       const candidata = global.PacoteEMatoRotaStore.criarRota({
         nome: file.name.replace(/\.(xlsx|xls|csv)$/i, ''),
@@ -1223,7 +1136,7 @@
         tempoParadaSegundos: Number(cfg.tempoParadaSegundos ?? 0), pontoInicial: cfg.pontoInicial || null,
         retornarAoInicio: cfg.retornarAoInicio === true, paradas: resultado.paradas, ordem: resultado.paradas.map(p => p.id),
         perfilImportacao: resultado.perfil || 'generico', arquivoOrigem: file.name,
-        camposVisiveisParada: Array.isArray(opcoes.visibleFields) ? opcoes.visibleFields.slice() : ['pacote','endereco','bairro','cidade']
+        camposVisiveisParada: ['pacote','endereco','bairro','cidade']
       });
       rotaImportacaoPendente = candidata;
       resultadoImportacaoPendente = resultado;
@@ -2615,10 +2528,6 @@
       if ($('routingRouteName')) $('routingRouteName').value = $('routingRouteNameMirror').value;
       await alterarNomeRota();
     });
-
-    $('routeImportMappingClose')?.addEventListener('click', () => concluirMapeamentoImportacao(null));
-    $('routeImportMappingCancel')?.addEventListener('click', () => concluirMapeamentoImportacao(null));
-    $('routeImportMappingConfirm')?.addEventListener('click', confirmarMapeamentoImportacao);
 
     global.addEventListener('pemato:import:confirmar', () => confirmarImportacaoPendente());
     global.addEventListener('pemato:import:cancelar', cancelarImportacaoPendente);

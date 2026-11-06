@@ -15,6 +15,9 @@
   const LAYER_ROUTE_STATUS_CASE = 'pemato-route-status-case';
   const LAYER_ROUTE_STATUS = 'pemato-route-status-layer';
   const SOURCE_STOPS = 'pemato-stops';
+  const SOURCE_STOPS_SELECTED = 'pemato-stops-selected';
+  const LAYER_STOPS_CLUSTER = 'pemato-stops-cluster';
+  const LAYER_STOPS_CLUSTER_COUNT = 'pemato-stops-cluster-count';
   const LAYER_STOPS_GROUP_RING = 'pemato-stops-group-ring';
   const LAYER_STOPS = 'pemato-stops-simple';
   const LAYER_STOPS_MULTI = 'pemato-stops-multi';
@@ -240,10 +243,13 @@
   }
 
   function adicionarSourceParadas() {
-    if (!mapa || mapa.getSource(SOURCE_STOPS)) return;
-    mapa.addSource(SOURCE_STOPS, {
-      type: 'geojson',
-      data: featureCollection([])
+    if (!mapa) return;
+    if (!mapa.getSource(SOURCE_STOPS)) mapa.addSource(SOURCE_STOPS, {
+      type: 'geojson', data: featureCollection([]),
+      cluster: true, clusterRadius: 56, clusterMaxZoom: 15
+    });
+    if (!mapa.getSource(SOURCE_STOPS_SELECTED)) mapa.addSource(SOURCE_STOPS_SELECTED, {
+      type: 'geojson', data: featureCollection([])
     });
   }
 
@@ -265,7 +271,7 @@
     if (!mapa.getLayer(LAYER_ROUTE)) mapa.addLayer({
       id: LAYER_ROUTE, type: 'line', source: SOURCE_ROUTE,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': '#38bdf8', 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 1.9, 12, 2.7, 14, 3.6, 16, 5], 'line-opacity': .82, 'line-blur': 0 }
+      paint: { 'line-color': '#c8743b', 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 1.9, 12, 2.7, 14, 3.6, 16, 5], 'line-opacity': .88, 'line-blur': 0 }
     }, before);
     if (!mapa.getLayer(LAYER_ROUTE_STATUS_CASE)) mapa.addLayer({
       id: LAYER_ROUTE_STATUS_CASE, type: 'line', source: SOURCE_ROUTE_STATUS,
@@ -276,23 +282,40 @@
       id: LAYER_ROUTE_STATUS, type: 'line', source: SOURCE_ROUTE_STATUS,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
       paint: {
-        'line-color': ['match', ['get', 'status'], 'passado', '#94a3b8', 'proxima', '#2563eb', '#2563eb'],
+        'line-color': ['match', ['get', 'status'], 'passado', '#9ba5aa', 'proxima', '#a6532c', '#a6532c'],
         'line-width': ['interpolate', ['linear'], ['zoom'], 9, 2.4, 12, 3.4, 14, 4.7, 16, 6.4],
         'line-opacity': ['match', ['get', 'status'], 'passado', 0.36, 'proxima', 1, 0.9]
       }
     }, before);
+    if (!mapa.getLayer(LAYER_STOPS_CLUSTER)) mapa.addLayer({
+      id: LAYER_STOPS_CLUSTER, type: 'circle', source: SOURCE_STOPS,
+      filter: ['has', 'point_count'],
+      paint: {
+        'circle-color': '#a6532c',
+        'circle-radius': ['step', ['get', 'point_count'], 21, 8, 25, 25, 30],
+        'circle-stroke-color': '#fff', 'circle-stroke-width': 3,
+        'circle-opacity': .97
+      }
+    });
+    if (mapa.getStyle()?.glyphs && !mapa.getLayer(LAYER_STOPS_CLUSTER_COUNT)) mapa.addLayer({
+      id: LAYER_STOPS_CLUSTER_COUNT, type: 'symbol', source: SOURCE_STOPS,
+      filter: ['has', 'point_count'],
+      layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 12,
+        'text-font': ['Noto Sans Regular'], 'text-allow-overlap': true },
+      paint: { 'text-color': '#fff', 'text-halo-color': '#87401e', 'text-halo-width': .3 }
+    });
     if (!mapa.getLayer(LAYER_STOPS_GROUP_RING)) mapa.addLayer({
       id: LAYER_STOPS_GROUP_RING, type: 'circle', source: SOURCE_STOPS,
       filter: ['==', ['get', 'groupSelected'], 1],
-      paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 21, 17, 26], 'circle-color': 'rgba(56,189,248,.13)', 'circle-stroke-color': '#2563eb', 'circle-stroke-width': 2 }
+      paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 21, 17, 26], 'circle-color': 'rgba(200,116,59,.13)', 'circle-stroke-color': '#a6532c', 'circle-stroke-width': 2 }
     });
     const layoutMarcadorV12 = {
       'icon-image': ['get', 'iconV12'],
       'icon-anchor': 'bottom',
       'icon-size': ['interpolate', ['linear'], ['zoom'], 9, .74, 12, .84, 14, .95, 16, 1.08, 18, 1.12],
       'icon-offset': ['get','markerOffset'],
-      'icon-allow-overlap': false,
-      'icon-ignore-placement': false,
+      'icon-allow-overlap': true,
+      'icon-ignore-placement': true,
       'icon-padding': 3,
       'symbol-sort-key': ['get', 'order']
     };
@@ -307,12 +330,12 @@
       layout: { ...layoutMarcadorV12 }
     });
     if (!mapa.getLayer(LAYER_STOPS_ACTIVE)) mapa.addLayer({
-      id: LAYER_STOPS_ACTIVE, type: 'symbol', source: SOURCE_STOPS,
+      id: LAYER_STOPS_ACTIVE, type: 'symbol', source: SOURCE_STOPS_SELECTED,
       filter: ['all', ['<=', ['get','multi'], 1], ['==', ['get','selected'], 1]],
       layout: { ...layoutMarcadorV12, 'icon-allow-overlap': true, 'icon-ignore-placement': true }
     });
     if (!mapa.getLayer(LAYER_STOPS_MULTI_ACTIVE)) mapa.addLayer({
-      id: LAYER_STOPS_MULTI_ACTIVE, type: 'symbol', source: SOURCE_STOPS,
+      id: LAYER_STOPS_MULTI_ACTIVE, type: 'symbol', source: SOURCE_STOPS_SELECTED,
       filter: ['all', ['>', ['get','multi'], 1], ['==', ['get','selected'], 1]],
       layout: { ...layoutMarcadorV12, 'icon-allow-overlap': true, 'icon-ignore-placement': true }
     });
@@ -321,10 +344,10 @@
     // Em estilo raster puro não há servidor de glyphs. O círculo de partida continua visível
     // e evita que uma camada de texto impeça a montagem das demais camadas do mapa.
     if (mapa.getStyle()?.glyphs && !mapa.getLayer(LAYER_START_TEXT)) mapa.addLayer({ id: LAYER_START_TEXT, type: 'symbol', source: SOURCE_START, layout: { 'text-field': 'P', 'text-size': 10, 'text-allow-overlap': true }, paint: { 'text-color': '#ffffff' } });
-    if (!mapa.getLayer(LAYER_END)) mapa.addLayer({ id: LAYER_END, type: 'circle', source: SOURCE_END, paint: { 'circle-radius': 11, 'circle-color': '#111827', 'circle-stroke-color': '#38bdf8', 'circle-stroke-width': 4 } });
+    if (!mapa.getLayer(LAYER_END)) mapa.addLayer({ id: LAYER_END, type: 'circle', source: SOURCE_END, paint: { 'circle-radius': 11, 'circle-color': '#24313b', 'circle-stroke-color': '#c8743b', 'circle-stroke-width': 4 } });
     if (mapa.getStyle()?.glyphs && !mapa.getLayer(LAYER_END_TEXT)) mapa.addLayer({ id: LAYER_END_TEXT, type: 'symbol', source: SOURCE_END, layout: { 'text-field': 'F', 'text-size': 10, 'text-allow-overlap': true }, paint: { 'text-color': '#ffffff' } });
-    if (!mapa.getLayer(LAYER_DRIVER_RING)) mapa.addLayer({ id: LAYER_DRIVER_RING, type: 'circle', source: SOURCE_DRIVER, paint: { 'circle-radius': 12, 'circle-color': 'rgba(37,99,235,.14)', 'circle-stroke-color':'rgba(37,99,235,.34)', 'circle-stroke-width':1 } });
-    if (!mapa.getLayer(LAYER_DRIVER)) mapa.addLayer({ id: LAYER_DRIVER, type: 'circle', source: SOURCE_DRIVER, paint: { 'circle-radius': 6, 'circle-color': '#2563eb', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 } });
+    if (!mapa.getLayer(LAYER_DRIVER_RING)) mapa.addLayer({ id: LAYER_DRIVER_RING, type: 'circle', source: SOURCE_DRIVER, paint: { 'circle-radius': 12, 'circle-color': 'rgba(166,83,44,.14)', 'circle-stroke-color':'rgba(166,83,44,.34)', 'circle-stroke-width':1 } });
+    if (!mapa.getLayer(LAYER_DRIVER)) mapa.addLayer({ id: LAYER_DRIVER, type: 'circle', source: SOURCE_DRIVER, paint: { 'circle-radius': 6, 'circle-color': '#a6532c', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 } });
   }
 
   function bindEventosMapa() {
@@ -344,6 +367,12 @@
       mapa.on('mouseenter', layerId, () => { try { mapa.getCanvas().style.cursor = 'pointer'; } catch (_) {} });
       mapa.on('mouseleave', layerId, () => { try { mapa.getCanvas().style.cursor = ''; } catch (_) {} });
     });
+    mapa.on('click', LAYER_STOPS_CLUSTER, event => {
+      const coord = event?.features?.[0]?.geometry?.coordinates;
+      if (Array.isArray(coord)) mapa.easeTo({ center: coord, zoom: Math.min(18, Math.max(16.2, mapa.getZoom() + 2)), duration: 350 });
+    });
+    mapa.on('mouseenter', LAYER_STOPS_CLUSTER, () => { mapa.getCanvas().style.cursor = 'pointer'; });
+    mapa.on('mouseleave', LAYER_STOPS_CLUSTER, () => { mapa.getCanvas().style.cursor = ''; });
     mapa.on('move', agendarRenderGruposDesenho);
     mapa.on('resize', agendarRenderGruposDesenho);
   }
@@ -456,7 +485,8 @@
   function renderizarMarcadores() {
     const data = stopsGeoJSON();
     prepararIconesParadasV12(data.features);
-    atualizarSource(SOURCE_STOPS, data);
+    atualizarSource(SOURCE_STOPS, featureCollection(data.features.filter(f => f.properties?.selected !== 1)));
+    atualizarSource(SOURCE_STOPS_SELECTED, featureCollection(data.features.filter(f => f.properties?.selected === 1)));
   }
   function renderizarPartida() { atualizarSource(SOURCE_START, pointGeoJSON(state()?.pontoInicial, { type: 'start' })); }
   function renderizarDestinoFinal() { atualizarSource(SOURCE_END, pointGeoJSON(state()?.pontoFinal, { type: 'end' })); }

@@ -29,7 +29,7 @@
   const inicial = HOLY_FROG_BASE_URL;
 
   const cfg = global.PEMATO_MAP_CONFIG = Object.assign({
-    mapStyleUrl: 'https://tiles.openfreemap.org/styles/liberty',
+    mapStyleUrl: 'https://tiles.openfreemap.org/styles/positron',
     fallbackMapStyle: {
       version: 8,
       glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
@@ -130,11 +130,11 @@
 
   function coresViaClean(categoria, casing) {
     const cores = {
-      rodovia:   {base:'#efd39a', borda:'#cbae6d'},
-      primary:   {base:'#f4e2ba', borda:'#d2bb87'},
-      secondary: {base:'#f7ead2', borda:'#d9caa8'},
-      tertiary:  {base:'#fcf8ed', borda:'#d7d7cf'},
-      local:     {base:'#ffffff', borda:'#cfd6d9'}
+      rodovia:   {base:'#fff0db', borda:'#dfc8a7'},
+      primary:   {base:'#fff4e6', borda:'#e3d2bd'},
+      secondary: {base:'#ffffff', borda:'#dce0e0'},
+      tertiary:  {base:'#ffffff', borda:'#e1e3e1'},
+      local:     {base:'#ffffff', borda:'#e1e3e1'}
     };
     const c = cores[categoria] || cores.local;
     return casing ? c.borda : c.base;
@@ -152,24 +152,24 @@
       const txt = textoLayer(layer);
 
       if (layer.type === 'background') {
-        setPaintSeguro(mapa, layer, 'background-color', '#f7f8f7');
+        setPaintSeguro(mapa, layer, 'background-color', '#f6f5f2');
         setPaintSeguro(mapa, layer, 'background-opacity', 1);
         return;
       }
 
       if (layer.type === 'fill') {
         if (/(water|ocean|lake|river|waterway)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'fill-color', '#e5f2f7');
+          setPaintSeguro(mapa, layer, 'fill-color', '#dfebee');
           setPaintSeguro(mapa, layer, 'fill-opacity', 0.94);
         } else if (/(park|grass|wood|forest|green|nature|landcover)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'fill-color', '#edf5ed');
+          setPaintSeguro(mapa, layer, 'fill-color', '#e7eee6');
           setPaintSeguro(mapa, layer, 'fill-opacity', 0.78);
         } else if (/(building)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'fill-color', '#e9ecee');
+          setPaintSeguro(mapa, layer, 'fill-color', '#e9e8e4');
           setPaintSeguro(mapa, layer, 'fill-opacity', 0.42);
-          setPaintSeguro(mapa, layer, 'fill-outline-color', '#dfe3e5');
+          setPaintSeguro(mapa, layer, 'fill-outline-color', '#dededb');
         } else if (/(landuse|industrial|commercial|retail|residential-area)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'fill-color', '#f4f5f3');
+          setPaintSeguro(mapa, layer, 'fill-color', '#f2f1ee');
           setPaintSeguro(mapa, layer, 'fill-opacity', 0.32);
         }
         return;
@@ -213,7 +213,7 @@
       if (ehRoadLabel) {
         setLayoutSeguro(mapa, layer, 'visibility', 'visible');
         setLayoutSeguro(mapa, layer, 'text-size', ['interpolate', ['linear'], ['zoom'], 11, 11.0, 14, 12.9, 16, navegacaoAtiva ? 15.2 : 14.5, 19, navegacaoAtiva ? 17.3 : 16.5]);
-        setPaintSeguro(mapa, layer, 'text-color', '#2f3438');
+        setPaintSeguro(mapa, layer, 'text-color', '#394650');
         setPaintSeguro(mapa, layer, 'text-halo-color', '#fffefa');
         setPaintSeguro(mapa, layer, 'text-halo-width', navegacaoAtiva ? 2.05 : 1.75);
         setPaintSeguro(mapa, layer, 'text-halo-blur', 0.12);
@@ -224,7 +224,7 @@
 
       if (ehPlaceLabel) {
         setLayoutSeguro(mapa, layer, 'visibility', 'visible');
-        setPaintSeguro(mapa, layer, 'text-color', '#687177');
+        setPaintSeguro(mapa, layer, 'text-color', '#65717a');
         setPaintSeguro(mapa, layer, 'text-halo-color', '#f6f7f7');
         setPaintSeguro(mapa, layer, 'text-halo-width', 1.25);
         setPaintSeguro(mapa, layer, 'text-opacity', /neigh|suburb/i.test(txt) ? 0.72 : 0.62);

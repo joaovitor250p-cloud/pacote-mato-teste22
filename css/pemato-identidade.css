@@ -1,0 +1,185 @@
+/* Teste22: identidade clara e legível para uso na rua.
+   Cores de situação (entregue/falha/parcial) não são cores da marca. */
+:root {
+  --pemato-cobre: #a6532c;
+  --pemato-cobre-hover: #87401e;
+  --pemato-cobre-realce: #c8743b;
+  --pemato-cobre-suave: #fff0e5;
+  --pemato-grafite: #24313b;
+  --pemato-cinza: #64717b;
+  --pemato-fundo: #f6f5f2;
+  --pemato-borda: #dedfdc;
+  --primary: var(--pemato-cobre) !important;
+  --primary-2: var(--pemato-cobre-hover) !important;
+  --primary-light: var(--pemato-cobre-suave) !important;
+  --primary-gradient: linear-gradient(135deg, #a6532c, #bd703b) !important;
+  --accent-green: var(--pemato-cobre) !important;
+  --accent-green-gradient: var(--primary-gradient) !important;
+  --accent-green-soft: #d99865 !important;
+  /* Compatibilidade com seletores do tema legado. */
+  --pemato-green: var(--pemato-cobre);
+  --pemato-green-dark: var(--pemato-cobre-hover);
+  --pemato-green-soft: var(--pemato-cobre-suave);
+  --pemato-ink: var(--pemato-grafite);
+  --pemato-muted: var(--pemato-cinza);
+  --pemato-line: var(--pemato-borda);
+  --pemato-shadow: 0 12px 30px rgba(36, 49, 59, .09);
+  --surface-1: #ffffff !important;
+  --surface-2: #fbfaf8 !important;
+  --surface-border: var(--pemato-borda) !important;
+  --surface-border-hover: #c2c4c2 !important;
+  --text-main: var(--pemato-grafite) !important;
+  --text-muted: var(--pemato-cinza) !important;
+  --bg-body: var(--pemato-fundo) !important;
+  --shadow-card: var(--pemato-shadow);
+}
+
+html, body,
+body[data-pemato-module="roteirizacao"],
+body[data-pemato-module="bipagem"],
+body[data-pemato-module="operacoes-pacotes"],
+body[data-pemato-module="navegacao"] {
+  background: var(--pemato-fundo) !important;
+  color: var(--pemato-grafite) !important;
+}
+#telaBloqueio, .auth-wrapper, .auth-wrapper-premium,
+.pemato-module, .package-operation-module,
+body[data-pemato-module] .pemato-module,
+.navigation-panel { background: var(--pemato-fundo) !important; color: var(--pemato-grafite) !important; }
+.home-panel, .settings-card, .history-route-card, .history-route-card-v2,
+.auth-access-card, .auth-plans-card, .auth-plan-stack .plan-item, .login-card,
+.routing-list-pane, .routing-actions-menu, .routing-review-card,
+.route-editor-modal-card, .route-decision-card, .route-import-modal-card,
+.nav-next-card, .nav-stats, .nav-instructions-card, .nav-route-actions-card,
+.nav-completion-card, .nav-extras-panel, .modal-card,
+.bipagem-area-head, .bipagem-section-title, .bipagem-history-card, .bipagem-config-card,
+.pkg-op-result-card, .pkg-op-review-card, .quick-card, .settings-card {
+  background: #fff !important;
+  color: var(--pemato-grafite) !important;
+  border-color: var(--pemato-borda) !important;
+  box-shadow: 0 5px 22px rgba(36, 49, 59, .055) !important;
+}
+.top-nav { background: rgba(255,255,255,.97) !important; border-color: var(--pemato-borda) !important; box-shadow: 0 3px 16px rgba(36,49,59,.07) !important; }
+.module-kicker, .eyebrow, .routing-optimized-flag, .home-route-status,
+.auth-kicker, .auth-section-eyebrow, .auth-inline-link, .auth-support-link strong,
+.nav-maneuver-distance, .nav-route-eta strong, .nav-next-card .eyebrow,
+.nav-action-group-title, .routing-action-group-title, .nav-card-navigation,
+.pkg-op-kicker, .pkg-op-banner-head strong {
+  color: var(--pemato-cobre-hover) !important;
+}
+.auth-logo-shell, .auth-mode-tabs, .auth-plan-stack .plan-item.featured,
+.nav-instruction > span, .nav-map-controls button.active, .routing-stop-card.is-selected,
+.bipagem-tabs, .settings-required-card, .settings-location-card,
+.routing-optimized-flag[data-optimized="true"] {
+  background: var(--pemato-cobre-suave) !important;
+  border-color: #ebc2a6 !important;
+}
+.auth-access-card .input-auth:focus, .input-auth:focus,
+input:focus, select:focus, textarea:focus, .pemato-field:focus,
+.routing-stop-search-wrap input:focus {
+  border-color: var(--pemato-cobre) !important;
+  box-shadow: 0 0 0 3px rgba(166, 83, 44, .13) !important;
+}
+.pemato-primary, .btn-action-primary, .routing-start-route-btn,
+.auth-main-button, .auth-payment-button, .auth-mode-btn.active,
+.route-import-choice, .bipagem-tabs button.active, .segmented-btn.active,
+.routing-review-number, .pemato-dialog-confirm:not(.is-danger),
+.gps-option-btn:first-of-type {
+  background: var(--pemato-cobre) !important;
+  border-color: var(--pemato-cobre) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 16px rgba(166, 83, 44, .18) !important;
+}
+.pemato-primary:hover, .btn-action-primary:hover, .routing-start-route-btn:hover,
+.auth-main-button:hover, .route-import-choice:hover, .auth-mode-btn.active:hover {
+  background: var(--pemato-cobre-hover) !important;
+  border-color: var(--pemato-cobre-hover) !important;
+}
+.pemato-secondary, .routing-action-row, .routing-map-icon,
+.nav-map-controls button, .nav-back-btn, .nav-more-btn,
+.auth-trial-button, .auth-secondary-button, .quick-card {
+  color: var(--pemato-grafite) !important;
+  background: #fff !important;
+  border-color: var(--pemato-borda) !important;
+}
+.routing-stop-card.is-selected { box-shadow: inset 3px 0 var(--pemato-cobre-realce), 0 6px 18px rgba(36,49,59,.06) !important; }
+.routing-map-status-chip, .routing-selected-stop, .nav-route-eta,
+.nav-maneuver-card, .nav-gps-status {
+  border-color: var(--pemato-borda) !important;
+  box-shadow: 0 6px 22px rgba(36,49,59,.10) !important;
+}
+.nav-maneuver-card { background: rgba(255,255,255,.97) !important; color: var(--pemato-grafite) !important; }
+.nav-maneuver-copy span, .nav-next-card p, .nav-next-packages,
+.pkg-op-file, .settings-required-text, .module-copy,
+.routing-import-status, .nav-route-eta span { color: var(--pemato-cinza) !important; }
+.nav-map-controls button.active, .nav-instruction > span { color: var(--pemato-cobre-hover) !important; }
+.routing-map-icon:focus-visible, .nav-map-controls button:focus-visible,
+.routing-stop-card:focus-visible, #sidebar button:focus-visible,
+#sidebar a:focus-visible { outline: 3px solid #ce8859 !important; outline-offset: 2px; }
+.routing-busy-spinner { border-top-color: var(--pemato-cobre); }
+
+/* Menu claro, sem faixa escura, inclusive no celular. */
+#sidebar {
+  background: linear-gradient(160deg, #fff6ef, #fff 44%) !important;
+  box-shadow: 16px 0 52px rgba(36,49,59,.16) !important;
+}
+.sidebar-brand { border-color: var(--pemato-borda) !important; }
+.sidebar-brand strong { color: var(--pemato-grafite) !important; }
+.sidebar-brand span, .sidebar-label, .sidebar-version,
+.sidebar-nav small, .sidebar-support { color: var(--pemato-cinza) !important; }
+#sidebar .sidebar-nav button:hover, #sidebar .sidebar-nav button.active,
+.sidebar-nav a:hover, .sidebar-nav a.active {
+  color: var(--pemato-cobre-hover) !important;
+  background: var(--pemato-cobre-suave) !important;
+  border-color: #ebc2a6 !important;
+}
+#sidebar .sidebar-nav svg, #sidebar .sidebar-arrow { color: var(--pemato-cobre) !important; }
+.sidebar-support { background: #fffaf6 !important; border-color: var(--pemato-borda) !important; }
+.sidebar-support strong { color: var(--pemato-cobre-hover) !important; }
+.top-nav .nav-btn, .top-nav .nav-btn svg { color: var(--pemato-grafite) !important; }
+.top-nav .nav-btn span[aria-hidden="true"],
+.top-nav .nav-btn span[aria-hidden="true"]::before,
+.top-nav .nav-btn span[aria-hidden="true"]::after { background: var(--pemato-grafite) !important; }
+
+/* Scanner e importação com superfícies de baixo brilho. */
+.pkg-op-banner, #pkgOpBannerHost .pkg-op-banner {
+  background: #fffaf6 !important; color: var(--pemato-grafite) !important;
+  border: 1px solid #ecd6c6 !important; box-shadow: 0 5px 18px rgba(36,49,59,.06) !important;
+}
+.pkg-op-stats > div, #pkgOpBannerHost .pkg-op-stats > div,
+.bipagem-history-metrics > div, .nav-stat { background: #f9f8f5 !important; }
+.bipagem-area-head, .bipagem-tabs { border-color: var(--pemato-borda) !important; }
+.bipagem-history-progress { background: #ece6e1 !important; }
+.bipagem-history-progress i, .pkg-op-review-number { background: var(--pemato-cobre) !important; }
+.bipagem-config-card input { accent-color: var(--pemato-cobre) !important; }
+.pemato-bipagem-quick { background: #fff8f2 !important; color: var(--pemato-grafite) !important; border-color: #e9c7b2 !important; }
+.pemato-bipagem-quick-icon { background: var(--pemato-cobre) !important; }
+.route-import-indeterminate span, .route-import-kicker { color: var(--pemato-cobre-hover) !important; }
+
+/* O mapa em si permanece claro: ruas visíveis e contraste estável ao sol. */
+#mapaRoteirizacao, #mapaNavegacao, .routing-map-pane,
+.navigation-map-wrap, .maplibregl-map { background: #edeff0 !important; }
+.routing-map-pane, .navigation-map-wrap { border-color: var(--pemato-borda) !important; }
+
+/* Status reais conservam significado e não seguem a cor da marca. */
+.nav-stop-status-badge.is-delivered,
+.nav-next-card[data-status="entregue"] .nav-stop-status-badge,
+.routing-import-status[data-tone="success"] {
+  color: #166534 !important; background: #eff9f0 !important; border-color: #a7d9b1 !important;
+}
+.nav-stop-status-badge.is-failed,
+.nav-next-card[data-status="nao_entregue"] .nav-stop-status-badge,
+.settings-inline-status[data-status="error"] {
+  color: #b42318 !important; background: #fff3f1 !important; border-color: #f0b9b3 !important;
+}
+.nav-stop-status-badge.is-pending { color: var(--pemato-grafite) !important; background: #f1f3f3 !important; }
+.routing-import-status[data-tone="warning"], .settings-inline-status[data-status="warning"] { color: #995f13 !important; }
+.pemato-danger, #navNotDeliveredBtn, .pemato-dialog-confirm.is-danger {
+  background: #b42318 !important; color: #fff !important; border-color: #b42318 !important;
+}
+
+/* A abertura também usa a mesma identidade; nada de tela preta piscando. */
+#splashScreenPs2 { background: var(--pemato-fundo) !important; }
+.ps2-title { color: var(--pemato-grafite) !important; text-shadow: none !important; }
+.ps2-subtitle { color: var(--pemato-cinza) !important; }
+.ps2-cube-rotating { filter: drop-shadow(0 9px 18px rgba(166,83,44,.18)) !important; }
