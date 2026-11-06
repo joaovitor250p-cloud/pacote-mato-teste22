@@ -144,6 +144,89 @@
     return casing ? c.borda : c.base;
   }
 
+  // Desenho único das ruas: usa a classe geográfica da fonte vetorial,
+  // e não os nomes heterogêneos das camadas do tema Bright.
+  const CLASSES_RUAS = [
+    'motorway', 'trunk', 'primary', 'secondary', 'tertiary',
+    'minor', 'residential', 'living_street', 'street', 'service',
+    'unclassified', 'road'
+  ];
+  const FILTRO_RUAS = ['match', ['get', 'class'], CLASSES_RUAS, true, false];
+  const PINTURA_RUA = '#d2dfed';
+  const PINTURA_BORDA_RUA = '#bbcbdc';
+  const CAMADA_RUA_BORDA = 'pemato-streets-casing';
+  const CAMADA_RUA_PREENCHIMENTO = 'pemato-streets-solid';
+
+  function larguraRuasPorClasse(navegacaoAtiva) {
+    const extra = navegacaoAtiva ? 1.08 : 1;
+    const porClasse = (principal, secundaria, local) => [
+      'match', ['get', 'class'],
+      ['motorway', 'trunk'], principal * extra,
+      ['primary', 'secondary'], secundaria * extra,
+      ['tertiary'], (secundaria * .92) * extra,
+      local * extra
+    ];
+    return ['interpolate', ['linear'], ['zoom'],
+      10, porClasse(2.3, 1.8, 1.0),
+      13, porClasse(5.0, 4.0, 2.5),
+      16, porClasse(9.5, 7.9, 5.7),
+      18, porClasse(15.0, 12.1, 9.4),
+      20, porClasse(23.0, 17.5, 13.8)
+    ];
+  }
+
+  function garantirRuasAzuisUniformes(mapa, navegacaoAtiva) {
+    if (!mapa?.getStyle || !mapa?.addLayer) return false;
+    const layers = mapa.getStyle()?.layers || [];
+    const transporte = layers.find(l =>
+      l.type === 'line' && l['source-layer'] === 'transportation' &&
+      l.source && (!mapa.getSource || mapa.getSource(l.source))
+    );
+    if (!transporte) return false; // Raster de emergência não tem essa fonte.
+
+    const antesDosRotulos = layers.find(l => l.type === 'symbol' && !/^pemato-/i.test(l.id || ''))?.id;
+    const largura = larguraRuasPorClasse(navegacaoAtiva);
+    const comum = {
+      type: 'line',
+      source: transporte.source,
+      'source-layer': 'transportation',
+      filter: FILTRO_RUAS,
+      layout: { 'line-cap': 'round', 'line-join': 'round' }
+    };
+
+    try {
+      if (!mapa.getLayer?.(CAMADA_RUA_BORDA)) {
+        mapa.addLayer({
+          ...comum, id: CAMADA_RUA_BORDA,
+          paint: {
+            'line-color': PINTURA_BORDA_RUA,
+            'line-width': ['+', largura, 1.8],
+            'line-opacity': .70
+          }
+        }, antesDosRotulos);
+      } else {
+        mapa.setPaintProperty(CAMADA_RUA_BORDA, 'line-width', ['+', largura, 1.8]);
+      }
+      if (!mapa.getLayer?.(CAMADA_RUA_PREENCHIMENTO)) {
+        mapa.addLayer({
+          ...comum, id: CAMADA_RUA_PREENCHIMENTO,
+          paint: {
+            'line-color': PINTURA_RUA,
+            'line-width': largura,
+            'line-opacity': 1
+          }
+        }, antesDosRotulos);
+      } else {
+        mapa.setPaintProperty(CAMADA_RUA_PREENCHIMENTO, 'line-width', largura);
+      }
+      return true;
+    } catch (error) {
+      // Um tema vetorial incompatível não pode derrubar a navegação.
+      try { console.warn('Pacote É Mato: camada visual de ruas indisponível', error); } catch (_) {}
+      return false;
+    }
+  }
+
   // HOTFIX FINAL 2: identidade base única para OVERVIEW e NAVIGATION-ACTIVE.
   // A classificação usa id + source-layer; nenhum ID específico do Liberty é obrigatório.
   function aplicarEstiloMapaClean(mapa, opcoes = {}) {
@@ -246,11 +329,10 @@
 
       if (layer.type !== 'symbol') return;
 
-      // Preserve directional arrows: they are essential for urban delivery routes.
+      // Evitar centenas de setas decorativas de mão única na visão do mapa.
+      // As instruções e setas reais das manobras (camadas pemato-*) continuam.
       if (/(oneway|one-way|direction|arrow)/i.test(txt)) {
-        setLayoutSeguro(mapa, layer, 'visibility', 'visible');
-        setPaintSeguro(mapa, layer, 'icon-opacity', 0.88);
-        setPaintSeguro(mapa, layer, 'text-opacity', 0.88);
+        setLayoutSeguro(mapa, layer, 'visibility', 'none');
         return;
       }
 
@@ -268,7 +350,7 @@
         setPaintSeguro(mapa, layer, 'text-halo-width', navegacaoAtiva ? 2.05 : 1.75);
         setPaintSeguro(mapa, layer, 'text-halo-blur', 0.12);
         setPaintSeguro(mapa, layer, 'text-opacity', 1);
-        setPaintSeguro(mapa, layer, 'icon-opacity', 0.38);
+        setPaintSeguro(mapa, layer, 'icon-opacity', 0);
         return;
       }
 
@@ -294,6 +376,9 @@
       }
     });
 
+    // Desenhar as vias uniformemente por cima das ruas heterogêneas da base,
+    // mantendo rótulos legíveis e sem alterar dados de roteirização.
+    garantirRuasAzuisUniformes(mapa, navegacaoAtiva);
     estiloCleanAplicado.add(mapa);
     return true;
   }

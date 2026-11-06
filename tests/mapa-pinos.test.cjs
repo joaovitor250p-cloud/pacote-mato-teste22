@@ -30,8 +30,10 @@ assert.match(config, /'line-dasharray', \[1, 0\]/);
 assert.doesNotMatch(config, /'line-dasharray', null/);
 assert.doesNotMatch(config, /mapa\.addLayer\(\{\s*id, type:'fill', source:base\.source/);
 
-assert.ok(html.includes('js/mapa/config.js?v=20261106-trilhas-suaves-8'));
+assert.ok(html.includes('js/mapa/config.js?v=20261106-vias-uniformes-9'));
 assert.match(config, /const camadaPedestre/);
+assert.match(config, /garantirRuasAzuisUniformes\(mapa, navegacaoAtiva\)/);
+assert.match(config, /'pemato-streets-solid'/);
 assert.ok(html.includes('js/mapa/marcadores.js?v=20261106-circuit-clean-3'));
 assert.ok(html.includes('js/mapa/mapa.js?v=20261106-teste22-mapa-pinos-2'));
 assert.ok(html.includes('js/navegacao/navegacao.js?v=20261106-teste22-mapa-pinos-2'));
@@ -71,3 +73,45 @@ assert.equal(layersTeste[2].paint['line-opacity'], 0.32, 'passagens não dominam
 assert.equal(layersTeste[3].paint['fill-outline-color'], '#cdd5de', 'contornos das casas com melhor legibilidade');
 assert.equal(layersTeste[4].layout.visibility, 'none', 'mantém construções sem 3D');
 console.log('PASSOU: ruas sem quadradinhos e casas sem camadas duplicadas.');
+
+
+// Teste das ruas em todo o mapa com uma fonte vetorial do estilo base.
+const viasReais = [
+  { id: 'minor_roads', type: 'line', source: 'vector', 'source-layer': 'transportation', paint: { 'line-color': '#ffffff' }, layout: {} },
+  { id: 'oneway_arrows', type: 'symbol', source: 'vector', 'source-layer': 'transportation_name', layout: {}, paint: {} },
+  { id: 'street_names', type: 'symbol', source: 'vector', 'source-layer': 'transportation_name', layout: {}, paint: {} }
+];
+let camadaCriada = 0;
+const mapaRuas = {
+  getStyle() { return { layers: viasReais }; },
+  getLayer(id) { return viasReais.find(x => x.id === id); },
+  getSource(id) { return id === 'vector' ? {} : undefined; },
+  addLayer(layer, before) {
+    camadaCriada++;
+    const index = viasReais.findIndex(x => x.id === before);
+    viasReais.splice(index < 0 ? viasReais.length : index, 0, layer);
+  },
+  setLayoutProperty(id, prop, value) {
+    const l = this.getLayer(id);
+    l.layout = l.layout || {};
+    l.layout[prop] = value;
+  },
+  setPaintProperty(id, prop, value) {
+    const l = this.getLayer(id);
+    l.paint = l.paint || {};
+    l.paint[prop] = value;
+  }
+};
+estilo.aplicarEstiloMapaClean(mapaRuas);
+assert.equal(camadaCriada, 2, 'cria um contorno e um preenchimento continuo para todas as ruas');
+const ruasAzuis = mapaRuas.getLayer('pemato-streets-solid');
+assert.equal(ruasAzuis.source, 'vector', 'usa a propria base vetorial do mapa');
+assert.equal(ruasAzuis['source-layer'], 'transportation');
+assert.ok(ruasAzuis.filter[2].includes('minor'), 'inclui ruas locais');
+assert.ok(ruasAzuis.filter[2].includes('service'), 'inclui vias de acesso');
+assert.equal(ruasAzuis.paint['line-color'], '#d2dfed');
+assert.equal(mapaRuas.getLayer('oneway_arrows').layout.visibility, 'none', 'sem setas decorativas repetidas');
+assert.equal(mapaRuas.getLayer('street_names').layout.visibility, 'visible', 'nomes das ruas permanecem');
+estilo.aplicarEstiloNavegacaoAtiva(mapaRuas);
+assert.equal(camadaCriada, 2, 'trocar de modo nao duplica ruas');
+console.log('PASSOU: ruas azul-acinzentadas uniformes, sem setas de mao unica e sem alterar fonte.');
