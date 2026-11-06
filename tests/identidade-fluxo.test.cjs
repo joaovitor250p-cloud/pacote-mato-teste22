@@ -25,14 +25,14 @@ assert.equal(manifest.theme_color, '#a6532c');
 assert.equal(manifest.background_color, '#f6f5f2');
 
 for (const codigo of [mapa, navegacao]) {
-  assert.ok(codigo.includes('clusterRadius:'));
-  assert.ok(codigo.includes('clusterMaxZoom:'));
+  assert.ok(!codigo.includes('clusterRadius:'));
+  assert.ok(!codigo.includes('clusterMaxZoom:'));
   assert.ok(codigo.includes('SOURCE_STOPS_SELECTED'));
-  assert.ok(codigo.includes('point_count_abbreviated'));
+  assert.ok(!codigo.includes('point_count_abbreviated'));
 }
 assert.ok(html.includes('Abrir no Waze'));
 assert.ok(html.includes('Abrir no Google Maps'));
 for (const codigo of [ler('app.js'), ler('js/app.js')]) {
   assert.ok(!/\b(spoke|circuit)\b/i.test(codigo));
 }
-console.log('PASSOU: identidade, importação direta, agrupamentos e integrações de navegação.');
+console.log('PASSOU: identidade, importação direta, pinos individuais e integrações de navegação.');

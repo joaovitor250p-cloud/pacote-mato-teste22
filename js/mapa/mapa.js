@@ -16,8 +16,6 @@
   const LAYER_ROUTE_STATUS = 'pemato-route-status-layer';
   const SOURCE_STOPS = 'pemato-stops';
   const SOURCE_STOPS_SELECTED = 'pemato-stops-selected';
-  const LAYER_STOPS_CLUSTER = 'pemato-stops-cluster';
-  const LAYER_STOPS_CLUSTER_COUNT = 'pemato-stops-cluster-count';
   const LAYER_STOPS_GROUP_RING = 'pemato-stops-group-ring';
   const LAYER_STOPS = 'pemato-stops-simple';
   const LAYER_STOPS_MULTI = 'pemato-stops-multi';
@@ -122,7 +120,8 @@
 
     const ocupacaoVisual = new Map();
     const features = [];
-    const numerada = state()?.rotaOtimizada === true && state()?.precisaRecalculo !== true;
+    // Mesmo antes da otimização, o entregador vê cada parada pelo seu número.
+    // A otimização só altera a ordem; não controla a visibilidade do pino.
     grupos.forEach(grupo => {
       grupo.sort((a,b) => ordem(a) - ordem(b));
       const ativos = grupo.filter(item => !['entregue','concluida','nao_entregue'].includes(String(item.statusEntrega || '')));
@@ -147,8 +146,8 @@
         properties: {
           id: String(p.id),
           ids: ids.join(','),
-          order: numerada ? ordem(p) : 0,
-          numbered: numerada ? 1 : 0,
+          order: ordem(p),
+          numbered: 1,
           status: statusEntrega(p),
           selected: ids.includes(String(selectedId)) ? 1 : 0,
           groupSelected: grupoVisual.some(item => idsSelecaoDesenho.has(String(item.id)) || idsGruposDesenho.has(String(item.id))) ? 1 : 0,
@@ -244,9 +243,10 @@
 
   function adicionarSourceParadas() {
     if (!mapa) return;
+    // Cada endereço permanece um marcador numerado em qualquer nível de zoom.
+    // Agrupar por proximidade criava círculos enormes com contadores no zoom distante.
     if (!mapa.getSource(SOURCE_STOPS)) mapa.addSource(SOURCE_STOPS, {
-      type: 'geojson', data: featureCollection([]),
-      cluster: true, clusterRadius: 56, clusterMaxZoom: 15
+      type: 'geojson', data: featureCollection([])
     });
     if (!mapa.getSource(SOURCE_STOPS_SELECTED)) mapa.addSource(SOURCE_STOPS_SELECTED, {
       type: 'geojson', data: featureCollection([])
@@ -271,7 +271,7 @@
     if (!mapa.getLayer(LAYER_ROUTE)) mapa.addLayer({
       id: LAYER_ROUTE, type: 'line', source: SOURCE_ROUTE,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': '#c8743b', 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 1.9, 12, 2.7, 14, 3.6, 16, 5], 'line-opacity': .88, 'line-blur': 0 }
+      paint: { 'line-color': '#2876e6', 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 2.2, 12, 3.2, 14, 4.2, 16, 5.7], 'line-opacity': .94, 'line-blur': 0 }
     }, before);
     if (!mapa.getLayer(LAYER_ROUTE_STATUS_CASE)) mapa.addLayer({
       id: LAYER_ROUTE_STATUS_CASE, type: 'line', source: SOURCE_ROUTE_STATUS,
@@ -282,37 +282,20 @@
       id: LAYER_ROUTE_STATUS, type: 'line', source: SOURCE_ROUTE_STATUS,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
       paint: {
-        'line-color': ['match', ['get', 'status'], 'passado', '#9ba5aa', 'proxima', '#a6532c', '#a6532c'],
+        'line-color': ['match', ['get', 'status'], 'passado', '#a4adb9', 'proxima', '#1761d1', '#2876e6'],
         'line-width': ['interpolate', ['linear'], ['zoom'], 9, 2.4, 12, 3.4, 14, 4.7, 16, 6.4],
         'line-opacity': ['match', ['get', 'status'], 'passado', 0.36, 'proxima', 1, 0.9]
       }
     }, before);
-    if (!mapa.getLayer(LAYER_STOPS_CLUSTER)) mapa.addLayer({
-      id: LAYER_STOPS_CLUSTER, type: 'circle', source: SOURCE_STOPS,
-      filter: ['has', 'point_count'],
-      paint: {
-        'circle-color': '#a6532c',
-        'circle-radius': ['step', ['get', 'point_count'], 21, 8, 25, 25, 30],
-        'circle-stroke-color': '#fff', 'circle-stroke-width': 3,
-        'circle-opacity': .97
-      }
-    });
-    if (mapa.getStyle()?.glyphs && !mapa.getLayer(LAYER_STOPS_CLUSTER_COUNT)) mapa.addLayer({
-      id: LAYER_STOPS_CLUSTER_COUNT, type: 'symbol', source: SOURCE_STOPS,
-      filter: ['has', 'point_count'],
-      layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 12,
-        'text-font': ['Noto Sans Regular'], 'text-allow-overlap': true },
-      paint: { 'text-color': '#fff', 'text-halo-color': '#87401e', 'text-halo-width': .3 }
-    });
     if (!mapa.getLayer(LAYER_STOPS_GROUP_RING)) mapa.addLayer({
       id: LAYER_STOPS_GROUP_RING, type: 'circle', source: SOURCE_STOPS,
       filter: ['==', ['get', 'groupSelected'], 1],
-      paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 21, 17, 26], 'circle-color': 'rgba(200,116,59,.13)', 'circle-stroke-color': '#a6532c', 'circle-stroke-width': 2 }
+      paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 19, 17, 24], 'circle-color': 'rgba(49,121,239,.12)', 'circle-stroke-color': '#3179ef', 'circle-stroke-width': 2 }
     });
     const layoutMarcadorV12 = {
       'icon-image': ['get', 'iconV12'],
       'icon-anchor': 'bottom',
-      'icon-size': ['interpolate', ['linear'], ['zoom'], 9, .74, 12, .84, 14, .95, 16, 1.08, 18, 1.12],
+      'icon-size': ['interpolate', ['linear'], ['zoom'], 8, .62, 11, .76, 14, .94, 17, 1.06],
       'icon-offset': ['get','markerOffset'],
       'icon-allow-overlap': true,
       'icon-ignore-placement': true,
@@ -367,12 +350,6 @@
       mapa.on('mouseenter', layerId, () => { try { mapa.getCanvas().style.cursor = 'pointer'; } catch (_) {} });
       mapa.on('mouseleave', layerId, () => { try { mapa.getCanvas().style.cursor = ''; } catch (_) {} });
     });
-    mapa.on('click', LAYER_STOPS_CLUSTER, event => {
-      const coord = event?.features?.[0]?.geometry?.coordinates;
-      if (Array.isArray(coord)) mapa.easeTo({ center: coord, zoom: Math.min(18, Math.max(16.2, mapa.getZoom() + 2)), duration: 350 });
-    });
-    mapa.on('mouseenter', LAYER_STOPS_CLUSTER, () => { mapa.getCanvas().style.cursor = 'pointer'; });
-    mapa.on('mouseleave', LAYER_STOPS_CLUSTER, () => { mapa.getCanvas().style.cursor = ''; });
     mapa.on('move', agendarRenderGruposDesenho);
     mapa.on('resize', agendarRenderGruposDesenho);
   }

@@ -17,13 +17,13 @@
   }
 
   function paleta(status, selecionado) {
-    // Identidade cobre para a parada ativa; verde e vermelho representam
-    // exclusivamente o resultado real de cada entrega.
+    // Marcadores compactos de navegação: azul para paradas e cores operacionais
+    // apenas para os estados reais de entrega.
     if (status === 'nao_entregue') return { fundo: selecionado ? '#b91c1c' : '#dc2626', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
-    if (status === 'concluida') return { fundo: selecionado ? '#15803d' : '#166534', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
-    if (status === 'parcial') return { fundo: selecionado ? '#a16207' : '#fff4e5', borda: selecionado ? '#ffffff' : '#c88b32', numero: selecionado ? '#ffffff' : '#85520d', multi: selecionado ? '#ffffff' : '#85520d', simbolo: selecionado ? '#ffffff' : '#85520d' };
-    if (selecionado) return { fundo: '#a6532c', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
-    return { fundo: '#ffffff', borda: '#a6532c', numero: '#24313b', multi: '#8b421f', simbolo: '#8b421f' };
+    if (status === 'concluida') return { fundo: selecionado ? '#15803d' : '#16a34a', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
+    if (status === 'parcial') return { fundo: selecionado ? '#b45309' : '#e59b24', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
+    if (selecionado) return { fundo: '#1649bc', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
+    return { fundo: '#3179ef', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
   }
 
   function simboloStatus(status) {
@@ -313,23 +313,9 @@
     }
 
     const numero = String(ordem);
-    const badge = quantidade > 1 ? `${quantidade}x` : '';
-    const simbolo = simboloStatus(status);
-    const alturaCss = 43;
-
-    ctx.font = '900 14px Arial, sans-serif';
-    const numeroW = Math.ceil(ctx.measureText(numero).width);
-    ctx.font = '800 10.5px Arial, sans-serif';
-    const badgeW = badge ? Math.ceil(ctx.measureText(badge).width) : 0;
-    ctx.font = '900 12px Arial, sans-serif';
-    const simboloW = simbolo ? Math.ceil(ctx.measureText(simbolo).width) : 0;
-    const divisor = badge ? 1 : 0;
-    const gap = badge ? 10 : 0;
-    const statusGap = simbolo ? 6 : 0;
-    const conteudoW = simboloW + statusGap + numeroW + badgeW + gap + divisor;
-    const larguraMin = badge ? (simbolo ? 62 : 54) : (simbolo ? 48 : 39);
-    const larguraCss = Math.max(larguraMin, conteudoW + 22);
-
+    // Largura fixa mantém a ponta alinhada à coordenada da entrega e não
+    // transforma pacotes múltiplos em uma cápsula que encobre outras ruas.
+    const larguraCss = 46, alturaCss = 47;
     canvas.width = Math.round(larguraCss * ratio);
     canvas.height = Math.round(alturaCss * ratio);
     const c = contexto2d(canvas);
@@ -338,66 +324,47 @@
     c.clearRect(0, 0, larguraCss, alturaCss);
 
     const cores = paleta(status, selecionado);
-    const borda = selecionado ? 2.8 : 2.2;
-    const x = 3;
-    const y = 2;
-    const w = larguraCss - 6;
-    const h = 32;
-    const r = 11;
+    const centro = larguraCss / 2, topo = 3, raio = 16;
 
     c.save();
-    c.shadowColor = 'rgba(36,49,59,0.24)';
-    c.shadowBlur = 5;
-    c.shadowOffsetY = 3;
+    c.shadowColor = 'rgba(24,48,83,0.24)';
+    c.shadowBlur = 4;
+    c.shadowOffsetY = 2;
     c.fillStyle = cores.fundo;
     c.strokeStyle = cores.borda;
-    c.lineWidth = borda;
-    desenharBalao(c, x, y, w, h, r, 8);
+    c.lineWidth = selecionado ? 3.2 : 2.5;
+    c.beginPath();
+    c.moveTo(centro, topo);
+    c.quadraticCurveTo(centro + raio, topo, centro + raio, topo + raio);
+    c.quadraticCurveTo(centro + raio, topo + raio * 1.65, centro, alturaCss - 2);
+    c.quadraticCurveTo(centro - raio, topo + raio * 1.65, centro - raio, topo + raio);
+    c.quadraticCurveTo(centro - raio, topo, centro, topo);
+    c.closePath();
     c.fill();
     c.shadowColor = 'transparent';
     c.stroke();
     c.restore();
 
-    const cy = y + h / 2 + .3;
     c.textBaseline = 'middle';
-    c.textAlign = 'left';
-    c.font = '900 14px Arial, sans-serif';
-    const nw = c.measureText(numero).width;
-    c.font = '800 10.5px Arial, sans-serif';
-    const bw = badge ? c.measureText(badge).width : 0;
-    c.font = '900 12px Arial, sans-serif';
-    const sw = simbolo ? c.measureText(simbolo).width : 0;
-    const divisorGap = badge ? 5 : 0;
-    const statusGapTexto = simbolo ? 6 : 0;
-    const total = sw + statusGapTexto + nw + (badge ? divisorGap + 1 + divisorGap + bw : 0);
-    let px = (larguraCss - total) / 2;
-
-    if (simbolo) {
-      c.fillStyle = cores.simbolo || cores.numero;
-      c.font = '900 12px Arial, sans-serif';
-      c.fillText(simbolo, px, cy + 0.1);
-      px += sw + statusGapTexto;
-    }
-
+    c.textAlign = 'center';
+    c.font = `800 ${numero.length >= 4 ? 10.5 : numero.length === 3 ? 12 : 14}px Arial, sans-serif`;
     c.fillStyle = cores.numero;
-    c.font = '900 14px Arial, sans-serif';
-    c.fillText(numero, px, cy);
-    px += nw;
+    c.fillText(numero, centro, topo + 16.3);
 
-    if (badge) {
-      px += divisorGap;
-      c.strokeStyle = 'rgba(255,255,255,0.45)';
-      if (status === 'pendente' && !selecionado) c.strokeStyle = 'rgba(166,83,44,0.28)';
-      c.lineWidth = 1;
+    // Quantidade por endereço fica num selo discreto. Não é o agrupamento
+    // dinâmico do mapa: o número central continua sendo a ordem da parada.
+    if (quantidade > 1) {
+      const selo = quantidade > 99 ? '99+' : String(quantidade);
       c.beginPath();
-      c.moveTo(px + 0.5, y + 8);
-      c.lineTo(px + 0.5, y + h - 8);
+      c.arc(37, 9, 8, 0, Math.PI * 2);
+      c.fillStyle = '#ffffff';
+      c.fill();
+      c.strokeStyle = cores.fundo;
+      c.lineWidth = 1.8;
       c.stroke();
-      px += 1 + divisorGap;
-
-      c.fillStyle = cores.multi;
-      c.font = '800 10.5px Arial, sans-serif';
-      c.fillText(badge, px, cy + 0.2);
+      c.fillStyle = '#223449';
+      c.font = `800 ${selo.length > 2 ? 7 : 9}px Arial, sans-serif`;
+      c.fillText(selo, 37, 9.4);
     }
 
     try {

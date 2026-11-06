@@ -44,16 +44,19 @@ const rascunho = criar({ quantidade: 1, status: 'pendente', mostrarNumero: false
 
 for (const entry of [pendente, selecionada, parcial, concluida, falhou]) {
   assert.equal(entry.options.pixelRatio, 2);
-  assert.equal(entry.data.height / entry.options.pixelRatio, 43);
-  assert.ok(entry.data.width / entry.options.pixelRatio >= 39);
+  assert.equal(entry.data.height / entry.options.pixelRatio, 47);
+  assert.equal(entry.data.width / entry.options.pixelRatio, 46);
 }
 assert.equal(rascunho.data.height / rascunho.options.pixelRatio, 33);
-assert.ok(selecionada.data.width > pendente.data.width);
-assert.ok(pendente.data.fills.includes('#ffffff'));
-assert.ok(selecionada.data.fills.includes('#a6532c'));
-assert.ok(parcial.data.fills.includes('#fff4e5'));
-assert.ok(concluida.data.fills.includes('#166534'));
+assert.equal(selecionada.data.width, pendente.data.width);
+assert.ok(pendente.data.fills.includes('#3179ef'));
+assert.ok(selecionada.data.fills.includes('#1649bc'));
+assert.ok(parcial.data.fills.includes('#e59b24'));
+assert.ok(concluida.data.fills.includes('#16a34a'));
 assert.ok(falhou.data.fills.includes('#dc2626'));
+
+const longa = criar({ ordem: 1234, quantidade: 1, status: 'pendente' });
+assert.equal(longa.data.width / longa.options.pixelRatio, 46);
 
 // Registra o mesmo ícone apenas uma vez no atlas MapLibre.
 const total = images.size;

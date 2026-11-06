@@ -47,8 +47,6 @@
   const SOURCE_MANEUVER = 'pemato-nav-maneuver-overlay';
   const SOURCE_STOPS = 'pemato-nav-all-stops';
   const SOURCE_STOPS_SELECTED = 'pemato-nav-selected-stops';
-  const LAYER_STOPS_CLUSTER = 'pemato-nav-stops-cluster';
-  const LAYER_STOPS_CLUSTER_COUNT = 'pemato-nav-stops-cluster-count';
   const LAYER_STOPS = 'pemato-nav-stops-simple';
   const LAYER_STOPS_MULTI = 'pemato-nav-stops-multi';
   const LAYER_STOPS_ACTIVE = 'pemato-nav-stops-active';
@@ -312,7 +310,7 @@
   function adicionarSourceParadas() {
     if (!mapa) return;
     if (!mapa.getSource(SOURCE_STOPS)) mapa.addSource(SOURCE_STOPS, {
-      type:'geojson', data:fc([]), cluster:true, clusterRadius:56, clusterMaxZoom:15
+      type:'geojson', data:fc([])
     });
     if (!mapa.getSource(SOURCE_STOPS_SELECTED)) mapa.addSource(SOURCE_STOPS_SELECTED, {
       type:'geojson', data:fc([])
@@ -340,12 +338,6 @@
       mapa.on('mouseenter',layerId,()=>{try{mapa.getCanvas().style.cursor='pointer';}catch(_){}});
       mapa.on('mouseleave',layerId,()=>{try{mapa.getCanvas().style.cursor='';}catch(_){}});
     });
-    mapa.on('click',LAYER_STOPS_CLUSTER,event=>{
-      const coord=event?.features?.[0]?.geometry?.coordinates;
-      if(Array.isArray(coord)) mapa.easeTo({center:coord,zoom:Math.min(18,Math.max(16.2,mapa.getZoom()+2)),duration:350});
-    });
-    mapa.on('mouseenter',LAYER_STOPS_CLUSTER,()=>{mapa.getCanvas().style.cursor='pointer';});
-    mapa.on('mouseleave',LAYER_STOPS_CLUSTER,()=>{mapa.getCanvas().style.cursor='';});
   }
 
   function garantirCamadas() {
@@ -355,9 +347,9 @@
     garantirImagensManobraMapa();
     const before = antesRotulos();
     if (!mapa.getLayer(LAYER_ROUTE_CASE)) mapa.addLayer({ id:LAYER_ROUTE_CASE,type:'line',source:SOURCE_ROUTE,layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#fff','line-width':['interpolate',['linear'],['zoom'],10,3.8,13,5.2,16,7.6,18,8.6],'line-opacity':.72,'line-blur':0}}, before);
-    if (!mapa.getLayer(LAYER_ROUTE)) mapa.addLayer({ id:LAYER_ROUTE,type:'line',source:SOURCE_ROUTE,layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#c8743b','line-width':['interpolate',['linear'],['zoom'],10,2.2,13,3.4,16,5.3,18,6.2],'line-opacity':.92,'line-blur':0}}, before);
+    if (!mapa.getLayer(LAYER_ROUTE)) mapa.addLayer({ id:LAYER_ROUTE,type:'line',source:SOURCE_ROUTE,layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#2876e6','line-width':['interpolate',['linear'],['zoom'],10,2.2,13,3.4,16,5.3,18,6.2],'line-opacity':.94,'line-blur':0}}, before);
     if (!mapa.getLayer(LAYER_ROUTE_STATUS_CASE)) mapa.addLayer({ id:LAYER_ROUTE_STATUS_CASE,type:'line',source:SOURCE_ROUTE_STATUS,layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#fff','line-width':['interpolate',['linear'],['zoom'],10,4.4,13,5.9,16,8.5,18,9.5],'line-opacity':['match',['get','status'],'passado',0.06,'proxima',0.72,0.56]}}, before);
-    if (!mapa.getLayer(LAYER_ROUTE_STATUS)) mapa.addLayer({ id:LAYER_ROUTE_STATUS,type:'line',source:SOURCE_ROUTE_STATUS,layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':['match',['get','status'],'passado','#9ba5aa','proxima','#a6532c','#a6532c'],'line-width':['interpolate',['linear'],['zoom'],10,2.4,13,3.7,16,5.8,18,6.6],'line-opacity':['match',['get','status'],'passado',0.07,'proxima',0.92,0.82]}}, before);
+    if (!mapa.getLayer(LAYER_ROUTE_STATUS)) mapa.addLayer({ id:LAYER_ROUTE_STATUS,type:'line',source:SOURCE_ROUTE_STATUS,layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':['match',['get','status'],'passado','#a4adb9','proxima','#1761d1','#2876e6'],'line-width':['interpolate',['linear'],['zoom'],10,2.4,13,3.7,16,5.8,18,6.6],'line-opacity':['match',['get','status'],'passado',0.07,'proxima',0.92,0.82]}}, before);
     // HOTFIX FINAL 7: a rota atrás vira histórico visual apagado. O source é
     // o mesmo snapping da geometria real; nenhuma coordenada operacional muda.
     if (!mapa.getLayer(LAYER_PROGRESS)) mapa.addLayer({ id:LAYER_PROGRESS,type:'line',source:SOURCE_PROGRESS,layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#96a69f','line-width':['interpolate',['linear'],['zoom'],10,2.2,13,3.4,16,5.2,18,5.9],'line-opacity':.20,'line-blur':0}}, before);
@@ -369,18 +361,13 @@
     const layoutMarcadorV12 = {
       'icon-image':['get','iconV12'],
       'icon-anchor':'bottom',
-      'icon-size':['interpolate',['linear'],['zoom'],9,.74,12,.84,14,.95,16,1.08,18,1.12],
+      'icon-size':['interpolate',['linear'],['zoom'],8,.62,11,.76,14,.94,17,1.06],
       'icon-offset': ['get','markerOffset'],
       'icon-allow-overlap':true,
       'icon-ignore-placement':true,
       'icon-padding':3,
       'symbol-sort-key':['get','order']
     };
-    if(!mapa.getLayer(LAYER_STOPS_CLUSTER)) mapa.addLayer({id:LAYER_STOPS_CLUSTER,type:'circle',source:SOURCE_STOPS,
-      filter:['has','point_count'],paint:{'circle-color':'#a6532c','circle-radius':['step',['get','point_count'],21,8,25,25,30],'circle-stroke-color':'#fff','circle-stroke-width':3}});
-    if(mapa.getStyle()?.glyphs && !mapa.getLayer(LAYER_STOPS_CLUSTER_COUNT)) mapa.addLayer({id:LAYER_STOPS_CLUSTER_COUNT,type:'symbol',source:SOURCE_STOPS,
-      filter:['has','point_count'],layout:{'text-field':['get','point_count_abbreviated'],'text-size':12,'text-font':['Noto Sans Regular'],'text-allow-overlap':true},
-      paint:{'text-color':'#fff','text-halo-color':'#87401e','text-halo-width':.3}});
     if(!mapa.getLayer(LAYER_STOPS)) mapa.addLayer({id:LAYER_STOPS,type:'symbol',source:SOURCE_STOPS,
       filter:['all',['<=',['get','multi'],1],['!=',['get','highlighted'],true]],
       layout:{...layoutMarcadorV12}});

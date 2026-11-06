@@ -29,7 +29,9 @@
   const inicial = HOLY_FROG_BASE_URL;
 
   const cfg = global.PEMATO_MAP_CONFIG = Object.assign({
-    mapStyleUrl: 'https://tiles.openfreemap.org/styles/positron',
+    // Cartografia de ruas detalhada, clara e legível no celular, com base
+    // aberta (o aplicativo não incorpora mapas nem recursos proprietários).
+    mapStyleUrl: 'https://tiles.openfreemap.org/styles/bright',
     fallbackMapStyle: {
       version: 8,
       glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
@@ -152,24 +154,24 @@
       const txt = textoLayer(layer);
 
       if (layer.type === 'background') {
-        setPaintSeguro(mapa, layer, 'background-color', '#f6f5f2');
+        setPaintSeguro(mapa, layer, 'background-color', '#f7f8fa');
         setPaintSeguro(mapa, layer, 'background-opacity', 1);
         return;
       }
 
       if (layer.type === 'fill') {
         if (/(water|ocean|lake|river|waterway)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'fill-color', '#dfebee');
+          setPaintSeguro(mapa, layer, 'fill-color', '#cfe6f6');
           setPaintSeguro(mapa, layer, 'fill-opacity', 0.94);
         } else if (/(park|grass|wood|forest|green|nature|landcover)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'fill-color', '#e7eee6');
-          setPaintSeguro(mapa, layer, 'fill-opacity', 0.78);
+          setPaintSeguro(mapa, layer, 'fill-color', '#dfeeda');
+          setPaintSeguro(mapa, layer, 'fill-opacity', 0.87);
         } else if (/(building)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'fill-color', '#e9e8e4');
-          setPaintSeguro(mapa, layer, 'fill-opacity', 0.42);
-          setPaintSeguro(mapa, layer, 'fill-outline-color', '#dededb');
+          setPaintSeguro(mapa, layer, 'fill-color', '#e8eaed');
+          setPaintSeguro(mapa, layer, 'fill-opacity', 0.46);
+          setPaintSeguro(mapa, layer, 'fill-outline-color', '#dfe3e7');
         } else if (/(landuse|industrial|commercial|retail|residential-area)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'fill-color', '#f2f1ee');
+          setPaintSeguro(mapa, layer, 'fill-color', '#f1f3f5');
           setPaintSeguro(mapa, layer, 'fill-opacity', 0.32);
         }
         return;
@@ -196,7 +198,7 @@
           setPaintSeguro(mapa, layer, 'line-opacity', 0.45);
         }
         if (/(waterway|river|stream)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'line-color', '#bcdfea');
+          setPaintSeguro(mapa, layer, 'line-color', '#a8d3ee');
           setPaintSeguro(mapa, layer, 'line-opacity', 0.82);
         }
         return;
