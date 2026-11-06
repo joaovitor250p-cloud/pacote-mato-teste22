@@ -17,12 +17,13 @@
   }
 
   function paleta(status, selecionado) {
-    // V27: o status precisa continuar evidente mesmo quando a parada está selecionada.
+    // Teste22: azul identifica a rota ativa; verde e vermelho ficam reservados
+    // para os resultados reais das entregas, mesmo quando selecionadas.
     if (status === 'nao_entregue') return { fundo: selecionado ? '#b91c1c' : '#dc2626', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
     if (status === 'concluida') return { fundo: selecionado ? '#15803d' : '#166534', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
-    if (status === 'parcial') return { fundo: selecionado ? '#059669' : '#f0fdf4', borda: selecionado ? '#ffffff' : '#059669', numero: selecionado ? '#ffffff' : '#111111', multi: selecionado ? '#ffffff' : '#047857', simbolo: selecionado ? '#ffffff' : '#047857' };
-    if (selecionado) return { fundo: '#059669', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
-    return { fundo: '#ffffff', borda: '#059669', numero: '#111111', multi: '#047857', simbolo: '#047857' };
+    if (status === 'parcial') return { fundo: selecionado ? '#b45309' : '#fffbeb', borda: selecionado ? '#ffffff' : '#d97706', numero: selecionado ? '#ffffff' : '#92400e', multi: selecionado ? '#ffffff' : '#92400e', simbolo: selecionado ? '#ffffff' : '#92400e' };
+    if (selecionado) return { fundo: '#2563eb', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
+    return { fundo: '#ffffff', borda: '#2563eb', numero: '#0f172a', multi: '#1d4ed8', simbolo: '#1d4ed8' };
   }
 
   function simboloStatus(status) {
@@ -135,7 +136,7 @@
     // V28: em vez de pintar um trecho diferente para CADA entrega concluída,
     // localizamos as paradas na geometria uma única vez e produzimos só dois
     // estados operacionais: caminho já percorrido (cinza) e próximo trecho
-    // ativo (verde destacado). Os ✓/× continuam sendo responsabilidade dos
+    // ativo (azul destacado). Os ✓/× continuam sendo responsabilidade dos
     // marcadores, evitando o "mapa arco-íris" que deixava a rota confusa.
     const ancoras = [];
     let cursor = entradas[0];
@@ -241,6 +242,26 @@
     ctx.closePath();
   }
 
+  // A ponta do balão aponta para a coordenada real da entrega. Por isso as
+  // camadas MapLibre usam icon-anchor=bottom para as duas formas de marcador.
+  function desenharBalao(ctx, x, y, largura, altura, raio, ponta) {
+    const centro = x + largura / 2;
+    ctx.beginPath();
+    ctx.moveTo(x + raio, y);
+    ctx.lineTo(x + largura - raio, y);
+    ctx.quadraticCurveTo(x + largura, y, x + largura, y + raio);
+    ctx.lineTo(x + largura, y + altura - raio);
+    ctx.quadraticCurveTo(x + largura, y + altura, x + largura - raio, y + altura);
+    ctx.lineTo(centro + 7, y + altura);
+    ctx.lineTo(centro, y + altura + ponta);
+    ctx.lineTo(centro - 7, y + altura);
+    ctx.lineTo(x + raio, y + altura);
+    ctx.quadraticCurveTo(x, y + altura, x, y + altura - raio);
+    ctx.lineTo(x, y + raio);
+    ctx.quadraticCurveTo(x, y, x + raio, y);
+    ctx.closePath();
+  }
+
   function criarIcone(mapa, opcoes) {
     if (!mapa || !global.document) return '';
     const prefixo = String(opcoes?.prefixo || 'pemato-stop-v12');
@@ -258,24 +279,29 @@
     if (!ctx) return '';
 
     if (!mostrarNumero) {
-      const tamanhoCss = 16;
-      canvas.width = Math.round(tamanhoCss * ratio);
-      canvas.height = Math.round(tamanhoCss * ratio);
+      const larguraCss = 26, alturaCss = 33;
+      canvas.width = Math.round(larguraCss * ratio);
+      canvas.height = Math.round(alturaCss * ratio);
       const c = contexto2d(canvas);
       if (!c) return '';
       c.scale(ratio, ratio);
-      c.clearRect(0, 0, tamanhoCss, tamanhoCss);
+      c.clearRect(0, 0, larguraCss, alturaCss);
       const cores = paleta(status, selecionado);
-      c.beginPath();
-      c.arc(tamanhoCss / 2, tamanhoCss / 2, 6, 0, Math.PI * 2);
-      c.fillStyle = selecionado ? '#059669' : '#ffffff';
+      c.save();
+      c.shadowColor = 'rgba(15,23,42,.20)';
+      c.shadowBlur = 3;
+      c.shadowOffsetY = 2;
+      c.fillStyle = cores.fundo;
+      c.strokeStyle = cores.borda;
+      c.lineWidth = 2.4;
+      desenharBalao(c, 3, 2, 20, 22, 9, 8);
       c.fill();
-      c.lineWidth = 2;
-      c.strokeStyle = selecionado ? '#ffffff' : '#059669';
+      c.shadowColor = 'transparent';
       c.stroke();
+      c.restore();
       c.beginPath();
-      c.arc(tamanhoCss / 2, tamanhoCss / 2, 2.1, 0, Math.PI * 2);
-      c.fillStyle = selecionado ? '#ffffff' : '#059669';
+      c.arc(13, 12.5, 3.3, 0, Math.PI * 2);
+      c.fillStyle = cores.numero;
       c.fill();
       try {
         mapa.addImage(nome, c.getImageData(0, 0, canvas.width, canvas.height), { pixelRatio: ratio });
@@ -289,21 +315,20 @@
     const numero = String(ordem);
     const badge = quantidade > 1 ? `${quantidade}x` : '';
     const simbolo = simboloStatus(status);
-    const alturaCss = 24;
+    const alturaCss = 43;
 
-    ctx.font = '800 12px Arial, sans-serif';
+    ctx.font = '900 14px Arial, sans-serif';
     const numeroW = Math.ceil(ctx.measureText(numero).width);
-    ctx.font = '700 8.5px Arial, sans-serif';
+    ctx.font = '800 10.5px Arial, sans-serif';
     const badgeW = badge ? Math.ceil(ctx.measureText(badge).width) : 0;
-    ctx.font = '900 10px Arial, sans-serif';
+    ctx.font = '900 12px Arial, sans-serif';
     const simboloW = simbolo ? Math.ceil(ctx.measureText(simbolo).width) : 0;
     const divisor = badge ? 1 : 0;
-    const gap = badge ? 7 : 0;
-    const statusGap = simbolo ? 5 : 0;
+    const gap = badge ? 10 : 0;
+    const statusGap = simbolo ? 6 : 0;
     const conteudoW = simboloW + statusGap + numeroW + badgeW + gap + divisor;
-    const larguraMin = badge ? (simbolo ? 50 : 42) : (simbolo ? 36 : 28);
-    const larguraMax = badge ? (simbolo ? 66 : 56) : (simbolo ? 50 : 40);
-    const larguraCss = Math.max(larguraMin, Math.min(larguraMax, conteudoW + (badge ? 16 : 14)));
+    const larguraMin = badge ? (simbolo ? 62 : 54) : (simbolo ? 48 : 39);
+    const larguraCss = Math.max(larguraMin, conteudoW + 22);
 
     canvas.width = Math.round(larguraCss * ratio);
     canvas.height = Math.round(alturaCss * ratio);
@@ -313,65 +338,65 @@
     c.clearRect(0, 0, larguraCss, alturaCss);
 
     const cores = paleta(status, selecionado);
-    const borda = 2;
-    const x = borda / 2 + 0.5;
-    const y = borda / 2 + 0.5;
-    const w = larguraCss - borda - 1;
-    const h = alturaCss - borda - 1;
-    const r = Math.min(h / 2, 13);
+    const borda = selecionado ? 2.8 : 2.2;
+    const x = 3;
+    const y = 2;
+    const w = larguraCss - 6;
+    const h = 32;
+    const r = 11;
 
     c.save();
-    c.shadowColor = 'rgba(15,23,42,0.08)';
-    c.shadowBlur = 1.5;
-    c.shadowOffsetY = .5;
+    c.shadowColor = 'rgba(15,23,42,0.24)';
+    c.shadowBlur = 4;
+    c.shadowOffsetY = 2;
     c.fillStyle = cores.fundo;
     c.strokeStyle = cores.borda;
     c.lineWidth = borda;
-    desenharCapsula(c, x, y, w, h, r);
+    desenharBalao(c, x, y, w, h, r, 8);
     c.fill();
     c.shadowColor = 'transparent';
     c.stroke();
     c.restore();
 
-    const cy = alturaCss / 2 + 0.2;
+    const cy = y + h / 2 + .3;
     c.textBaseline = 'middle';
     c.textAlign = 'left';
-    c.font = '800 12px Arial, sans-serif';
+    c.font = '900 14px Arial, sans-serif';
     const nw = c.measureText(numero).width;
-    c.font = '700 9.5px Arial, sans-serif';
+    c.font = '800 10.5px Arial, sans-serif';
     const bw = badge ? c.measureText(badge).width : 0;
-    c.font = '900 10px Arial, sans-serif';
+    c.font = '900 12px Arial, sans-serif';
     const sw = simbolo ? c.measureText(simbolo).width : 0;
-    const divisorGap = badge ? 6 : 0;
-    const statusGapTexto = simbolo ? 5 : 0;
+    const divisorGap = badge ? 5 : 0;
+    const statusGapTexto = simbolo ? 6 : 0;
     const total = sw + statusGapTexto + nw + (badge ? divisorGap + 1 + divisorGap + bw : 0);
     let px = (larguraCss - total) / 2;
 
     if (simbolo) {
       c.fillStyle = cores.simbolo || cores.numero;
-      c.font = '900 10px Arial, sans-serif';
+      c.font = '900 12px Arial, sans-serif';
       c.fillText(simbolo, px, cy + 0.1);
       px += sw + statusGapTexto;
     }
 
     c.fillStyle = cores.numero;
-    c.font = '800 12px Arial, sans-serif';
+    c.font = '900 14px Arial, sans-serif';
     c.fillText(numero, px, cy);
     px += nw;
 
     if (badge) {
       px += divisorGap;
-      c.strokeStyle = 'rgba(255,255,255,0.35)';
-      if (status !== 'concluida' && status !== 'nao_entregue' && !selecionado) c.strokeStyle = 'rgba(5,150,105,0.28)';
+      c.strokeStyle = 'rgba(255,255,255,0.45)';
+      if (status === 'pendente' && !selecionado) c.strokeStyle = 'rgba(37,99,235,0.28)';
       c.lineWidth = 1;
       c.beginPath();
-      c.moveTo(px + 0.5, 7);
-      c.lineTo(px + 0.5, alturaCss - 7);
+      c.moveTo(px + 0.5, y + 8);
+      c.lineTo(px + 0.5, y + h - 8);
       c.stroke();
       px += 1 + divisorGap;
 
       c.fillStyle = cores.multi;
-      c.font = '700 8.5px Arial, sans-serif';
+      c.font = '800 10.5px Arial, sans-serif';
       c.fillText(badge, px, cy + 0.2);
     }
 

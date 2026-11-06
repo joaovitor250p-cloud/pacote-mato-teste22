@@ -265,7 +265,7 @@
     if (!mapa.getLayer(LAYER_ROUTE)) mapa.addLayer({
       id: LAYER_ROUTE, type: 'line', source: SOURCE_ROUTE,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': '#3f9d72', 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 1.9, 12, 2.7, 14, 3.6, 16, 5], 'line-opacity': .68, 'line-blur': 0 }
+      paint: { 'line-color': '#38bdf8', 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 1.9, 12, 2.7, 14, 3.6, 16, 5], 'line-opacity': .82, 'line-blur': 0 }
     }, before);
     if (!mapa.getLayer(LAYER_ROUTE_STATUS_CASE)) mapa.addLayer({
       id: LAYER_ROUTE_STATUS_CASE, type: 'line', source: SOURCE_ROUTE_STATUS,
@@ -276,7 +276,7 @@
       id: LAYER_ROUTE_STATUS, type: 'line', source: SOURCE_ROUTE_STATUS,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
       paint: {
-        'line-color': ['match', ['get', 'status'], 'passado', '#3f9d72', 'proxima', '#047857', '#047857'],
+        'line-color': ['match', ['get', 'status'], 'passado', '#94a3b8', 'proxima', '#2563eb', '#2563eb'],
         'line-width': ['interpolate', ['linear'], ['zoom'], 9, 2.4, 12, 3.4, 14, 4.7, 16, 6.4],
         'line-opacity': ['match', ['get', 'status'], 'passado', 0.36, 'proxima', 1, 0.9]
       }
@@ -284,16 +284,16 @@
     if (!mapa.getLayer(LAYER_STOPS_GROUP_RING)) mapa.addLayer({
       id: LAYER_STOPS_GROUP_RING, type: 'circle', source: SOURCE_STOPS,
       filter: ['==', ['get', 'groupSelected'], 1],
-      paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 15, 17, 19], 'circle-color': 'rgba(16,185,129,.12)', 'circle-stroke-color': '#10b981', 'circle-stroke-width': 2 }
+      paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 21, 17, 26], 'circle-color': 'rgba(56,189,248,.13)', 'circle-stroke-color': '#2563eb', 'circle-stroke-width': 2 }
     });
     const layoutMarcadorV12 = {
       'icon-image': ['get', 'iconV12'],
-      'icon-anchor': 'center',
-      'icon-size': ['interpolate', ['linear'], ['zoom'], 9, .62, 12, .72, 14, .86, 16, 1, 18, 1.04],
+      'icon-anchor': 'bottom',
+      'icon-size': ['interpolate', ['linear'], ['zoom'], 9, .74, 12, .84, 14, .95, 16, 1.08, 18, 1.12],
       'icon-offset': ['get','markerOffset'],
-      'icon-allow-overlap': true,
-      'icon-ignore-placement': true,
-      'icon-padding': 1,
+      'icon-allow-overlap': false,
+      'icon-ignore-placement': false,
+      'icon-padding': 3,
       'symbol-sort-key': ['get', 'order']
     };
     if (!mapa.getLayer(LAYER_STOPS)) mapa.addLayer({
@@ -321,10 +321,10 @@
     // Em estilo raster puro não há servidor de glyphs. O círculo de partida continua visível
     // e evita que uma camada de texto impeça a montagem das demais camadas do mapa.
     if (mapa.getStyle()?.glyphs && !mapa.getLayer(LAYER_START_TEXT)) mapa.addLayer({ id: LAYER_START_TEXT, type: 'symbol', source: SOURCE_START, layout: { 'text-field': 'P', 'text-size': 10, 'text-allow-overlap': true }, paint: { 'text-color': '#ffffff' } });
-    if (!mapa.getLayer(LAYER_END)) mapa.addLayer({ id: LAYER_END, type: 'circle', source: SOURCE_END, paint: { 'circle-radius': 11, 'circle-color': '#111827', 'circle-stroke-color': '#34a66f', 'circle-stroke-width': 4 } });
+    if (!mapa.getLayer(LAYER_END)) mapa.addLayer({ id: LAYER_END, type: 'circle', source: SOURCE_END, paint: { 'circle-radius': 11, 'circle-color': '#111827', 'circle-stroke-color': '#38bdf8', 'circle-stroke-width': 4 } });
     if (mapa.getStyle()?.glyphs && !mapa.getLayer(LAYER_END_TEXT)) mapa.addLayer({ id: LAYER_END_TEXT, type: 'symbol', source: SOURCE_END, layout: { 'text-field': 'F', 'text-size': 10, 'text-allow-overlap': true }, paint: { 'text-color': '#ffffff' } });
-    if (!mapa.getLayer(LAYER_DRIVER_RING)) mapa.addLayer({ id: LAYER_DRIVER_RING, type: 'circle', source: SOURCE_DRIVER, paint: { 'circle-radius': 12, 'circle-color': 'rgba(5,150,105,.16)', 'circle-stroke-color':'rgba(5,150,105,.35)', 'circle-stroke-width':1 } });
-    if (!mapa.getLayer(LAYER_DRIVER)) mapa.addLayer({ id: LAYER_DRIVER, type: 'circle', source: SOURCE_DRIVER, paint: { 'circle-radius': 6, 'circle-color': '#059669', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 } });
+    if (!mapa.getLayer(LAYER_DRIVER_RING)) mapa.addLayer({ id: LAYER_DRIVER_RING, type: 'circle', source: SOURCE_DRIVER, paint: { 'circle-radius': 12, 'circle-color': 'rgba(37,99,235,.14)', 'circle-stroke-color':'rgba(37,99,235,.34)', 'circle-stroke-width':1 } });
+    if (!mapa.getLayer(LAYER_DRIVER)) mapa.addLayer({ id: LAYER_DRIVER, type: 'circle', source: SOURCE_DRIVER, paint: { 'circle-radius': 6, 'circle-color': '#2563eb', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 } });
   }
 
   function bindEventosMapa() {

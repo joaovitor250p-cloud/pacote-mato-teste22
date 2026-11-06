@@ -1,0 +1,86 @@
+/* Teste22 — acabamento azul-claro. Nenhuma regra de roteirização é alterada. */
+:root {
+  --primary: #2563eb !important;
+  --primary-2: #1d4ed8 !important;
+  --primary-light: #eff6ff !important;
+  /* Nomes legados usados pelo tema V15; representam agora a cor da marca. */
+  --pemato-green: #2563eb;
+  --pemato-green-dark: #1d4ed8;
+  --pemato-green-soft: #eff6ff;
+  --pemato-line: #dbeafe;
+  --pemato-shadow: 0 12px 34px rgba(30, 64, 175, .10);
+  --surface-2: #f7fbff !important;
+  --surface-border: #dbeafe !important;
+}
+
+.pemato-module.routing-module {
+  --route-accent: #2563eb;
+  --route-accent-strong: #1d4ed8;
+  --route-line: #dbeafe;
+}
+.pemato-primary, .btn-action-primary, .routing-start-route-btn,
+.auth-main-button, .auth-payment-button, .auth-mode-btn.active {
+  background: #2563eb !important;
+  color: #fff !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, .20) !important;
+}
+.pemato-primary:hover, .btn-action-primary:hover, .routing-start-route-btn:hover {
+  background: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+}
+.routing-map-pane, .navigation-map-wrap { background: #eaf6ff; }
+.routing-stop-card.is-selected { background: #eff6ff; }
+.routing-stop-search-wrap input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, .13);
+}
+.routing-map-status-chip, .routing-selected-stop, .nav-route-eta,
+.nav-maneuver-card, .nav-gps-status {
+  border-color: rgba(59, 130, 246, .20) !important;
+  box-shadow: 0 8px 26px rgba(30, 64, 175, .12) !important;
+}
+.routing-optimized-flag[data-optimized="true"] { color: #1d4ed8 !important; }
+.routing-map-icon:focus-visible, .nav-map-controls button:focus-visible,
+.routing-stop-card:focus-visible {
+  outline: 3px solid #7dd3fc;
+  outline-offset: 2px;
+}
+.nav-maneuver-distance, .nav-route-eta strong, .nav-next-card .eyebrow,
+.nav-card-navigation, .nav-instruction > span { color: #1d4ed8 !important; }
+.nav-instruction > span { background: #eff6ff; }
+.nav-map-controls button.active {
+  color: #1d4ed8 !important;
+  background: #dbeafe !important;
+  border-color: #93c5fd !important;
+}
+.routing-busy-spinner { border-top-color: #2563eb; }
+.routing-review-number { background: #2563eb !important; }
+
+/* Entregue, falhou e parcialmente bipada continuam semanticamente distintos. */
+.nav-stop-status-badge.is-delivered,
+.nav-next-card[data-status="entregue"] .nav-stop-status-badge {
+  color: #166534 !important;
+  background: #dcfce7 !important;
+  border-color: #86efac !important;
+}
+.nav-stop-status-badge.is-failed,
+.nav-next-card[data-status="nao_entregue"] .nav-stop-status-badge {
+  color: #b91c1c !important;
+  background: #fef2f2 !important;
+  border-color: #fecaca !important;
+}
+.routing-import-status[data-tone="success"] {
+  color: #166534;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+.routing-import-status[data-tone="warning"],
+.settings-inline-status[data-status="warning"] { color: #92400e !important; }
+.settings-inline-status[data-status="error"] { color: #b91c1c !important; }
+.pemato-dialog-confirm.is-danger { background: #dc2626 !important; border-color: #dc2626 !important; }
+
+@media (max-width: 820px) {
+  .routing-map-status-chip { border-radius: 15px; }
+  .routing-map-icon { box-shadow: 0 4px 14px rgba(30, 64, 175, .13) !important; }
+}
