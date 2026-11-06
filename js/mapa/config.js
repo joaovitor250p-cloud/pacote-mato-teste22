@@ -105,6 +105,8 @@
   function categoriaVia(txt) {
     // HOTFIX FINAL 6: hierarquia visual explícita. A classificação continua
     // baseada em id + source-layer e não depende de um único ID do Liberty.
+    // Não engrossar caminhos de pedestres/ciclovias/ferrovias como se fossem ruas.
+    if (/(footway|pedestrian|sidewalk|cycleway|bicycle|path|steps|railway|rail|tram|subway|ferry)/i.test(txt)) return '';
     if (/(motorway|trunk|freeway)/i.test(txt)) return 'rodovia';
     if (/(primary)/i.test(txt)) return 'primary';
     if (/(secondary)/i.test(txt)) return 'secondary';
@@ -124,7 +126,7 @@
       local:     [10,1.1,13,2.6,16,5.8,19,10.0]
     };
     const valores = tabela[categoria] || tabela.local;
-    const casingExtra = casing ? ({rodovia:2.8,primary:2.5,secondary:2.2,tertiary:2.0,local:1.8}[categoria] || 1.8) : 0;
+    const casingExtra = casing ? ({rodovia:2.2,primary:1.9,secondary:1.7,tertiary:1.5,local:1.2}[categoria] || 1.2) : 0;
     const expr = ['interpolate', ['linear'], ['zoom']];
     for (let i = 0; i < valores.length; i += 2) expr.push(valores[i], valores[i + 1] + extra + casingExtra);
     return expr;
@@ -168,9 +170,10 @@
           setPaintSeguro(mapa, layer, 'fill-color', '#f0f2f1');
           setPaintSeguro(mapa, layer, 'fill-opacity', 0.78);
         } else if (/(building)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'fill-color', '#f7f7fa');
-          setPaintSeguro(mapa, layer, 'fill-opacity', 0.96);
-          setPaintSeguro(mapa, layer, 'fill-outline-color', '#c5cbd5');
+          // Construções discretas, sem traçar cada imóvel como um desenho técnico.
+          setPaintSeguro(mapa, layer, 'fill-color', '#f5f6f7');
+          setPaintSeguro(mapa, layer, 'fill-opacity', ['interpolate', ['linear'], ['zoom'], 13, 0.16, 15, 0.36, 17, 0.62, 19, 0.76]);
+          setPaintSeguro(mapa, layer, 'fill-outline-color', '#e2e6eb');
         } else if (/(landuse|industrial|commercial|retail|residential-area)/i.test(txt)) {
           setPaintSeguro(mapa, layer, 'fill-color', '#f4f5f7');
           setPaintSeguro(mapa, layer, 'fill-opacity', 0.22);
@@ -184,12 +187,23 @@
       }
 
       if (layer.type === 'line') {
+        if (/(building|building_outline)/i.test(txt)) {
+          setPaintSeguro(mapa, layer, 'line-color', '#e2e6eb');
+          setPaintSeguro(mapa, layer, 'line-opacity', 0.36);
+          setPaintSeguro(mapa, layer, 'line-width', 0.55);
+          return;
+        }
         const via = categoriaVia(txt);
         if (via) {
           const casing = /(casing|outline|border)/i.test(txt);
           const cor = coresViaClean(via, casing);
           setPaintSeguro(mapa, layer, 'line-color', cor);
-          setPaintSeguro(mapa, layer, 'line-opacity', casing ? 0.98 : 1);
+          setPaintSeguro(mapa, layer, 'line-opacity', casing ? 0.76 : 1);
+          // O estilo original usa linhas tracejadas em algumas vias. Ao aumentar
+          // a largura, os traços viravam "quadradinhos" junto ao meio-fio.
+          // Zerar o dasharray devolve a borda contínua (sem esconder a rua).
+          setPaintSeguro(mapa, layer, 'line-dasharray', null);
+          setPaintSeguro(mapa, layer, 'line-gap-width', null);
           setPaintSeguro(mapa, layer, 'line-width', larguraViaClean(via, casing, navegacaoAtiva));
           setPaintSeguro(mapa, layer, 'line-blur', 0);
           return;
@@ -285,24 +299,15 @@
   derivarEndpoints();
 
   function exibirConstrucoes2D(mapa) {
-    const camadas = mapa?.getStyle?.()?.layers || [];
-    const bases = camadas.filter(l => l['source-layer'] &&
-      /building/i.test(l['source-layer']) && ['fill','fill-extrusion'].includes(l.type));
-    const fontes = new Map();
-    bases.forEach(l => fontes.set(`${l.source}:${l['source-layer']}`, l));
-    let indice = 0;
-    fontes.forEach(base => {
-      const id = `pemato-construcoes-2d-${indice++}`;
-      if (mapa.getLayer(id)) return;
-      const antes = camadas.find(l => l.source === base.source && l['source-layer'] === base['source-layer'])?.id;
-      mapa.addLayer({
-        id, type:'fill', source:base.source, 'source-layer':base['source-layer'], minzoom:14,
-        layout:{visibility:'visible'},
-        paint:{'fill-color':'#f7f7fa', 'fill-outline-color':'#c5cbd5',
-          'fill-opacity':['interpolate',['linear'],['zoom'],14,0.6,16,0.96]}
-      }, antes);
-      bases.filter(l => l.source === base.source && l['source-layer'] === base['source-layer'])
-        .forEach(l => mapa.setLayoutProperty(l.id, 'visibility', 'none'));
+    // O mapa-base já contém os polígonos dos prédios. Criar outra camada 2D
+    // duplicava os contornos e tornava o desenho das casas excessivamente técnico.
+    (mapa?.getStyle?.()?.layers || []).slice().forEach(layer => {
+      if (/^pemato-construcoes-2d-/i.test(layer.id || '')) {
+        try { if (mapa.getLayer?.(layer.id)) mapa.removeLayer(layer.id); } catch (_) {}
+      }
+      if (layer.type === 'fill-extrusion' && /building/i.test(textoLayer(layer))) {
+        setLayoutSeguro(mapa, layer, 'visibility', 'none');
+      }
     });
   }
 
