@@ -23,14 +23,15 @@ assert.match(planejamento, /order:\s*ordem\(p\)/);
 assert.match(config, /mapStyleUrl:\s*'https:\/\/tiles\.openfreemap\.org\/styles\/bright'/);
 assert.match(marcadores, /const larguraCss = 40, alturaCss = 42/);
 assert.match(config, /fill-color', '#f0f2f1'/);
-assert.match(config, /fill-outline-color', '#e5e8ed'/);
+assert.match(config, /fill-outline-color', '#cdd5de'/);
 assert.match(config, /base:'#d7e2ed'/);
 assert.match(config, /oneway\|one-way\|direction\|arrow/);
 assert.match(config, /'line-dasharray', \[1, 0\]/);
 assert.doesNotMatch(config, /'line-dasharray', null/);
 assert.doesNotMatch(config, /mapa\.addLayer\(\{\s*id, type:'fill', source:base\.source/);
 
-assert.ok(html.includes('js/mapa/config.js?v=20261106-vias-sem-blocos-6'));
+assert.ok(html.includes('js/mapa/config.js?v=20261106-trilhas-suaves-7'));
+assert.match(config, /const camadaPedestre/);
 assert.ok(html.includes('js/mapa/marcadores.js?v=20261106-circuit-clean-3'));
 assert.ok(html.includes('js/mapa/mapa.js?v=20261106-teste22-mapa-pinos-2'));
 assert.ok(html.includes('js/navegacao/navegacao.js?v=20261106-teste22-mapa-pinos-2'));
@@ -44,6 +45,7 @@ const estilo = ambiente.window.PacoteEMatoMapaConfig;
 const layersTeste = [
   { id: 'road_minor_casing', type: 'line', 'source-layer': 'transportation', layout: {}, paint: { 'line-dasharray': [2, 2] } },
   { id: 'road_minor', type: 'line', 'source-layer': 'transportation', layout: {}, paint: { 'line-dasharray': [2, 2] } },
+  { id: 'footway_path', type: 'line', 'source-layer': 'transportation', layout: {}, paint: { 'line-color': '#a98760', 'line-dasharray': [1, 2] } },
   { id: 'houses', type: 'fill', 'source-layer': 'building', paint: {} },
   { id: 'houses3D', type: 'fill-extrusion', 'source-layer': 'building', layout: {} }
 ];
@@ -62,6 +64,9 @@ assert.equal(inclusoes, 0, 'não deve duplicar o desenho das casas');
 assert.equal(layersTeste[0].layout.visibility, 'none', 'bordas decorativas tracejadas ficam ocultas');
 assert.deepEqual(Array.from(layersTeste[1].paint['line-dasharray']), [1, 0], 'via principal usa traçado sólido válido');
 assert.equal(layersTeste[1].paint['line-gap-width'], 0, 'rua não mantém vão decorativo');
-assert.equal(layersTeste[2].paint['fill-outline-color'], '#e5e8ed', 'casas com contorno discreto');
-assert.equal(layersTeste[3].layout.visibility, 'none', 'mantém construções sem 3D');
+assert.equal(layersTeste[2].paint['line-color'], '#d5dce4', 'passagens perdem o marrom de destaque');
+assert.deepEqual(Array.from(layersTeste[2].paint['line-dasharray']), [1, 0], 'passagens sem tracejado forte');
+assert.equal(layersTeste[2].paint['line-opacity'], 0.32, 'passagens não dominam a malha urbana');
+assert.equal(layersTeste[3].paint['fill-outline-color'], '#cdd5de', 'contornos das casas com melhor legibilidade');
+assert.equal(layersTeste[4].layout.visibility, 'none', 'mantém construções sem 3D');
 console.log('PASSOU: ruas sem quadradinhos e casas sem camadas duplicadas.');

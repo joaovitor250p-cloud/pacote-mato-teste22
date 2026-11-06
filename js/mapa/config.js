@@ -170,10 +170,10 @@
           setPaintSeguro(mapa, layer, 'fill-color', '#f0f2f1');
           setPaintSeguro(mapa, layer, 'fill-opacity', 0.78);
         } else if (/(building)/i.test(txt)) {
-          // Construções discretas, sem traçar cada imóvel como um desenho técnico.
-          setPaintSeguro(mapa, layer, 'fill-color', '#f2f3f5');
-          setPaintSeguro(mapa, layer, 'fill-opacity', ['interpolate', ['linear'], ['zoom'], 13, 0.18, 15, 0.43, 17, 0.70, 19, 0.82]);
-          setPaintSeguro(mapa, layer, 'fill-outline-color', '#e5e8ed');
+          // Casas visíveis sem preenchimento pesado: contorno cinza suave.
+          setPaintSeguro(mapa, layer, 'fill-color', '#f1f3f5');
+          setPaintSeguro(mapa, layer, 'fill-opacity', ['interpolate', ['linear'], ['zoom'], 13, 0.45, 15, 0.76, 17, 0.94, 19, 1]);
+          setPaintSeguro(mapa, layer, 'fill-outline-color', '#cdd5de');
         } else if (/(landuse|industrial|commercial|retail|residential-area)/i.test(txt)) {
           setPaintSeguro(mapa, layer, 'fill-color', '#f4f5f7');
           setPaintSeguro(mapa, layer, 'fill-opacity', 0.22);
@@ -188,9 +188,25 @@
 
       if (layer.type === 'line') {
         if (/(building|building_outline)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'line-color', '#e5e8ed');
-          setPaintSeguro(mapa, layer, 'line-opacity', 0.26);
+          setPaintSeguro(mapa, layer, 'line-color', '#cdd5de');
+          setPaintSeguro(mapa, layer, 'line-opacity', 0.45);
           setPaintSeguro(mapa, layer, 'line-width', 0.55);
+          return;
+        }
+        // A base Bright tem trilhas, passagens e caminhos de pedestres
+        // com tracejado marrom. Antes, a classificação os ignorava,
+        // deixando-os muito evidentes após a simplificação das bordas de rua.
+        // Mantém a informação cartográfica, mas em traço fino e neutro.
+        const camadaPedestre = /(?:^|[-_ ])(footway|footpath|pedestrian|sidewalk|cycleway|bicycle|path|walkway|trail|steps|bridleway)(?:$|[-_ ])/i.test(txt);
+        const caminhoTracejado = layer.paint?.['line-dasharray'] != null
+          && /(?:transportation|walkway|pedestrian|footway|footpath|path|cycleway|trail)/i.test(txt)
+          && !/(motorway|trunk|primary|secondary|tertiary|residential|living_street)/i.test(txt);
+        if (camadaPedestre || caminhoTracejado) {
+          setPaintSeguro(mapa, layer, 'line-color', '#d5dce4');
+          setPaintSeguro(mapa, layer, 'line-opacity', 0.32);
+          setPaintSeguro(mapa, layer, 'line-dasharray', [1, 0]);
+          setPaintSeguro(mapa, layer, 'line-gap-width', 0);
+          setPaintSeguro(mapa, layer, 'line-width', ['interpolate', ['linear'], ['zoom'], 12, 0.25, 16, 0.55, 19, 0.85]);
           return;
         }
         const via = categoriaVia(txt);
