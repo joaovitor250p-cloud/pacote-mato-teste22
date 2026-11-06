@@ -171,9 +171,9 @@
           setPaintSeguro(mapa, layer, 'fill-opacity', 0.78);
         } else if (/(building)/i.test(txt)) {
           // Construções discretas, sem traçar cada imóvel como um desenho técnico.
-          setPaintSeguro(mapa, layer, 'fill-color', '#f5f6f7');
-          setPaintSeguro(mapa, layer, 'fill-opacity', ['interpolate', ['linear'], ['zoom'], 13, 0.16, 15, 0.36, 17, 0.62, 19, 0.76]);
-          setPaintSeguro(mapa, layer, 'fill-outline-color', '#e2e6eb');
+          setPaintSeguro(mapa, layer, 'fill-color', '#f2f3f5');
+          setPaintSeguro(mapa, layer, 'fill-opacity', ['interpolate', ['linear'], ['zoom'], 13, 0.18, 15, 0.43, 17, 0.70, 19, 0.82]);
+          setPaintSeguro(mapa, layer, 'fill-outline-color', '#e5e8ed');
         } else if (/(landuse|industrial|commercial|retail|residential-area)/i.test(txt)) {
           setPaintSeguro(mapa, layer, 'fill-color', '#f4f5f7');
           setPaintSeguro(mapa, layer, 'fill-opacity', 0.22);
@@ -188,23 +188,31 @@
 
       if (layer.type === 'line') {
         if (/(building|building_outline)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'line-color', '#e2e6eb');
-          setPaintSeguro(mapa, layer, 'line-opacity', 0.36);
+          setPaintSeguro(mapa, layer, 'line-color', '#e5e8ed');
+          setPaintSeguro(mapa, layer, 'line-opacity', 0.26);
           setPaintSeguro(mapa, layer, 'line-width', 0.55);
           return;
         }
         const via = categoriaVia(txt);
         if (via) {
-          const casing = /(casing|outline|border)/i.test(txt);
-          const cor = coresViaClean(via, casing);
+          // A base Bright separa o corpo da via e linhas decorativas de borda.
+          // Ao ampliar todas indiscriminadamente, as bordas tracejadas viravam
+          // blocos retangulares repetidos dos dois lados das ruas.
+          const id = String(layer.id || '').toLowerCase();
+          const camadaDeBorda = /(?:^|[-_])(casing|outline|border|edge|kerb|curb)(?:$|[-_])/.test(id);
+          if (camadaDeBorda) {
+            setLayoutSeguro(mapa, layer, 'visibility', 'none');
+            return;
+          }
+
+          const cor = coresViaClean(via, false);
           setPaintSeguro(mapa, layer, 'line-color', cor);
-          setPaintSeguro(mapa, layer, 'line-opacity', casing ? 0.76 : 1);
-          // O estilo original usa linhas tracejadas em algumas vias. Ao aumentar
-          // a largura, os traços viravam "quadradinhos" junto ao meio-fio.
-          // Zerar o dasharray devolve a borda contínua (sem esconder a rua).
-          setPaintSeguro(mapa, layer, 'line-dasharray', null);
-          setPaintSeguro(mapa, layer, 'line-gap-width', null);
-          setPaintSeguro(mapa, layer, 'line-width', larguraViaClean(via, casing, navegacaoAtiva));
+          setPaintSeguro(mapa, layer, 'line-opacity', 1);
+          // É preciso usar os valores concretos aceitos pelo MapLibre.
+          // 'null' não assegurava que o tracejado e a largura do vão sumissem.
+          setPaintSeguro(mapa, layer, 'line-dasharray', [1, 0]);
+          setPaintSeguro(mapa, layer, 'line-gap-width', 0);
+          setPaintSeguro(mapa, layer, 'line-width', larguraViaClean(via, false, navegacaoAtiva));
           setPaintSeguro(mapa, layer, 'line-blur', 0);
           return;
         }
