@@ -199,8 +199,9 @@
         // Mantém a informação cartográfica, mas em traço fino e neutro.
         const camadaPedestre = /(?:^|[-_ ])(footway|footpath|pedestrian|sidewalk|cycleway|bicycle|path|walkway|trail|steps|bridleway)(?:$|[-_ ])/i.test(txt);
         const caminhoTracejado = layer.paint?.['line-dasharray'] != null
-          && /(?:transportation|walkway|pedestrian|footway|footpath|path|cycleway|trail)/i.test(txt)
-          && !/(motorway|trunk|primary|secondary|tertiary|residential|living_street)/i.test(txt);
+          && /(?:^|[-_ ])(walkway|pedestrian|footway|footpath|path|cycleway|trail|track|sidewalk)(?:$|[-_ ])/i.test(String(layer.id || ''));
+        // Não classificar vias comuns como trilhas só por pertencerem à
+        // source-layer "transportation". Ruas também podem ter dash no estilo.
         if (camadaPedestre || caminhoTracejado) {
           setPaintSeguro(mapa, layer, 'line-color', '#d5dce4');
           setPaintSeguro(mapa, layer, 'line-opacity', 0.32);

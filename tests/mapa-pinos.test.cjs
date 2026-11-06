@@ -30,7 +30,7 @@ assert.match(config, /'line-dasharray', \[1, 0\]/);
 assert.doesNotMatch(config, /'line-dasharray', null/);
 assert.doesNotMatch(config, /mapa\.addLayer\(\{\s*id, type:'fill', source:base\.source/);
 
-assert.ok(html.includes('js/mapa/config.js?v=20261106-trilhas-suaves-7'));
+assert.ok(html.includes('js/mapa/config.js?v=20261106-trilhas-suaves-8'));
 assert.match(config, /const camadaPedestre/);
 assert.ok(html.includes('js/mapa/marcadores.js?v=20261106-circuit-clean-3'));
 assert.ok(html.includes('js/mapa/mapa.js?v=20261106-teste22-mapa-pinos-2'));
@@ -63,6 +63,7 @@ estilo.aplicarEstiloMapaClean(mapaTeste);
 assert.equal(inclusoes, 0, 'não deve duplicar o desenho das casas');
 assert.equal(layersTeste[0].layout.visibility, 'none', 'bordas decorativas tracejadas ficam ocultas');
 assert.deepEqual(Array.from(layersTeste[1].paint['line-dasharray']), [1, 0], 'via principal usa traçado sólido válido');
+assert.equal(layersTeste[1].paint['line-color'], '#d7e2ed', 'ruas não viram trilhas apagadas');
 assert.equal(layersTeste[1].paint['line-gap-width'], 0, 'rua não mantém vão decorativo');
 assert.equal(layersTeste[2].paint['line-color'], '#d5dce4', 'passagens perdem o marrom de destaque');
 assert.deepEqual(Array.from(layersTeste[2].paint['line-dasharray']), [1, 0], 'passagens sem tracejado forte');
