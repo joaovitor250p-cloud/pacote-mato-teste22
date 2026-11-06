@@ -329,10 +329,31 @@
 
       if (layer.type !== 'symbol') return;
 
-      // Evitar centenas de setas decorativas de mão única na visão do mapa.
-      // As instruções e setas reais das manobras (camadas pemato-*) continuam.
+      // Setas de sentido: somente símbolos de mão única vinculados ao
+      // traçado das ruas. Símbolos de direção genéricos/pontos soltos são
+      // ocultados; as manobras da navegação (pemato-*) não são afetadas.
       if (/(oneway|one-way|direction|arrow)/i.test(txt)) {
-        setLayoutSeguro(mapa, layer, 'visibility', 'none');
+        const id = String(layer.id || '').toLowerCase();
+        const origem = String(layer['source-layer'] || '').toLowerCase();
+        const setaDeRua = /(oneway|one-way|one_way)/i.test(id) &&
+          /^(transportation|transportation_name|road|roads)$/i.test(origem);
+        if (!setaDeRua) {
+          setLayoutSeguro(mapa, layer, 'visibility', 'none');
+          return;
+        }
+        setLayoutSeguro(mapa, layer, 'visibility', 'visible');
+        // As setas acompanham o centro das ruas, em vez de aparecerem
+        // perdidas dentro das quadras; poucas setas por trecho.
+        setLayoutSeguro(mapa, layer, 'symbol-placement', 'line');
+        setLayoutSeguro(mapa, layer, 'symbol-spacing', 420);
+        setLayoutSeguro(mapa, layer, 'icon-allow-overlap', false);
+        setLayoutSeguro(mapa, layer, 'icon-ignore-placement', false);
+        setLayoutSeguro(mapa, layer, 'text-allow-overlap', false);
+        setLayoutSeguro(mapa, layer, 'text-ignore-placement', false);
+        setLayoutSeguro(mapa, layer, 'icon-size', 0.72);
+        setPaintSeguro(mapa, layer, 'icon-opacity', 0.66);
+        setPaintSeguro(mapa, layer, 'text-opacity', 0.66);
+        try { mapa.setLayerZoomRange?.(layer.id, 15.5, 24); } catch (_) {}
         return;
       }
 

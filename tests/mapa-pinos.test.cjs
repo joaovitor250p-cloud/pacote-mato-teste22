@@ -30,7 +30,7 @@ assert.match(config, /'line-dasharray', \[1, 0\]/);
 assert.doesNotMatch(config, /'line-dasharray', null/);
 assert.doesNotMatch(config, /mapa\.addLayer\(\{\s*id, type:'fill', source:base\.source/);
 
-assert.ok(html.includes('js/mapa/config.js?v=20261106-vias-uniformes-9'));
+assert.ok(html.includes('js/mapa/config.js?v=20261106-setas-de-rua-10'));
 assert.match(config, /const camadaPedestre/);
 assert.match(config, /garantirRuasAzuisUniformes\(mapa, navegacaoAtiva\)/);
 assert.match(config, /'pemato-streets-solid'/);
@@ -79,6 +79,7 @@ console.log('PASSOU: ruas sem quadradinhos e casas sem camadas duplicadas.');
 const viasReais = [
   { id: 'minor_roads', type: 'line', source: 'vector', 'source-layer': 'transportation', paint: { 'line-color': '#ffffff' }, layout: {} },
   { id: 'oneway_arrows', type: 'symbol', source: 'vector', 'source-layer': 'transportation_name', layout: {}, paint: {} },
+  { id: 'direction_marker', type: 'symbol', source: 'vector', 'source-layer': 'poi', layout: {}, paint: {} },
   { id: 'street_names', type: 'symbol', source: 'vector', 'source-layer': 'transportation_name', layout: {}, paint: {} }
 ];
 let camadaCriada = 0;
@@ -110,8 +111,12 @@ assert.equal(ruasAzuis['source-layer'], 'transportation');
 assert.ok(ruasAzuis.filter[2].includes('minor'), 'inclui ruas locais');
 assert.ok(ruasAzuis.filter[2].includes('service'), 'inclui vias de acesso');
 assert.equal(ruasAzuis.paint['line-color'], '#d2dfed');
-assert.equal(mapaRuas.getLayer('oneway_arrows').layout.visibility, 'none', 'sem setas decorativas repetidas');
+assert.equal(mapaRuas.getLayer('oneway_arrows').layout.visibility, 'visible', 'setas de mão única retornaram às ruas');
+assert.equal(mapaRuas.getLayer('oneway_arrows').layout['symbol-placement'], 'line', 'setas seguem as ruas');
+assert.equal(mapaRuas.getLayer('oneway_arrows').layout['symbol-spacing'], 420, 'setas têm espaçamento maior');
+assert.equal(mapaRuas.getLayer('oneway_arrows').paint['icon-opacity'], 0.66, 'setas discretas mas visíveis');
+assert.equal(mapaRuas.getLayer('direction_marker').layout.visibility, 'none', 'setas genéricas fora das ruas ocultas');
 assert.equal(mapaRuas.getLayer('street_names').layout.visibility, 'visible', 'nomes das ruas permanecem');
 estilo.aplicarEstiloNavegacaoAtiva(mapaRuas);
 assert.equal(camadaCriada, 2, 'trocar de modo nao duplica ruas');
-console.log('PASSOU: ruas azul-acinzentadas uniformes, sem setas de mao unica e sem alterar fonte.');
+console.log('PASSOU: ruas preservadas e somente setas de sentido da via visiveis.');
