@@ -248,13 +248,13 @@
           c.clearRect(0,0,72,72);
           c.save();
           c.shadowColor='rgba(15,23,42,.28)'; c.shadowBlur=9; c.shadowOffsetY=3;
-          c.fillStyle='#2563eb'; c.fill(corpo);
+          c.fillStyle='#a6532c'; c.fill(corpo);
           c.restore();
           c.lineJoin='round'; c.lineCap='round';
           c.strokeStyle='#ffffff'; c.lineWidth=3.5; c.stroke(corpo);
           c.fillStyle='rgba(255,255,255,.16)'; c.fill(interno);
           c.beginPath(); c.arc(36,35,4.4,0,Math.PI*2); c.fillStyle='#eff6ff'; c.fill();
-          c.beginPath(); c.arc(36,35,2.1,0,Math.PI*2); c.fillStyle='#2563eb'; c.fill();
+          c.beginPath(); c.arc(36,35,2.1,0,Math.PI*2); c.fillStyle='#a6532c'; c.fill();
           mapa.addImage('pemato-driver-arrow', c.getImageData(0,0,72,72));
         }
       }

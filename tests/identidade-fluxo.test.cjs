@@ -10,6 +10,7 @@ const importador = ler('js/importacao/xlsx.js');
 const mapa = ler('js/mapa/mapa.js');
 const navegacao = ler('js/navegacao/navegacao.js');
 const tema = ler('css/pemato-identidade.css');
+const manifest = JSON.parse(ler('manifest.json'));
 
 assert.ok(html.includes('css/pemato-identidade.css'));
 assert.ok(!html.includes('teste22-mapa-azul.css'));
@@ -20,6 +21,8 @@ assert.ok(importador.includes("pacote: ['pacote', 'spx tn'"));
 assert.ok(importador.includes("latitude: ['latitude'"));
 assert.ok(importador.includes("longitude: ['longitude'"));
 assert.ok(tema.includes('--pemato-cobre: #a6532c'));
+assert.equal(manifest.theme_color, '#a6532c');
+assert.equal(manifest.background_color, '#f6f5f2');
 
 for (const codigo of [mapa, navegacao]) {
   assert.ok(codigo.includes('clusterRadius:'));

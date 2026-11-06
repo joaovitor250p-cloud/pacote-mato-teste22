@@ -160,6 +160,7 @@ input:focus, select:focus, textarea:focus, .pemato-field:focus,
 #mapaRoteirizacao, #mapaNavegacao, .routing-map-pane,
 .navigation-map-wrap, .maplibregl-map { background: #edeff0 !important; }
 .routing-map-pane, .navigation-map-wrap { border-color: var(--pemato-borda) !important; }
+.pemato-start-marker { background: var(--pemato-cobre) !important; box-shadow: 0 4px 14px rgba(166,83,44,.23) !important; }
 
 /* Status reais conservam significado e não seguem a cor da marca. */
 .nav-stop-status-badge.is-delivered,
