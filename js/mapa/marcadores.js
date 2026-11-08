@@ -391,39 +391,63 @@
       painel.className = 'pemato-multi-popup';
       const titulo = doc.createElement('strong');
       titulo.className = 'pemato-multi-popup-title';
-      titulo.textContent = total + (total === 1 ? ' pacote neste endereço' : ' pacotes neste endereço');
+      titulo.textContent = total + (total === 1 ? ' pacote neste ponto' : ' pacotes neste ponto');
       const subtitulo = doc.createElement('span');
       subtitulo.className = 'pemato-multi-popup-subtitle';
-      subtitulo.textContent = grupo.length + (grupo.length === 1 ? ' parada' : ' paradas') + ' · toque para ver detalhes';
-      painel.append(titulo, subtitulo);
+      subtitulo.textContent = grupo.length +
+        (grupo.length === 1 ? ' parada no mapa' : ' paradas no mesmo ponto') +
+        ' · escolha uma para ver os detalhes';
+      const lista = doc.createElement('div');
+      lista.className = 'pemato-multi-popup-lista';
+      const itens = [];
       grupo.forEach(p => {
         const botao = doc.createElement('button');
         botao.type = 'button';
         botao.className = 'pemato-multi-popup-stop';
         const rotulo = doc.createElement('strong');
         const ordem = Number(p?.ordemOtimizada || p?.ordemOriginal || 0);
+        const qtd = quantidadePacotesDaParada(p);
         rotulo.textContent = (ordem > 0 ? 'Parada ' + ordem : 'Ver parada') +
-          ' · ' + quantidadePacotesDaParada(p) + (quantidadePacotesDaParada(p) === 1 ? ' pacote' : ' pacotes');
+          ' · ' + qtd + (qtd === 1 ? ' pacote' : ' pacotes');
         const endereco = doc.createElement('span');
+        endereco.className = 'pemato-multi-popup-endereco';
         endereco.textContent = String(p?.enderecoFonte || p?.enderecoOriginal ||
-          [p?.logradouro, p?.numero].filter(Boolean).join(', ') || 'Ver detalhes da entrega');
+          [p?.logradouro, p?.numero].filter(Boolean).join(', ') || 'Toque para abrir a entrega');
         botao.append(rotulo, endereco);
-        const pacotes = Array.isArray(p?.pacotes) ? p.pacotes : [];
-        if (pacotes.length) {
-          const detalhes = doc.createElement('small');
-          detalhes.textContent = pacotes.slice(0, 4).map(item => {
-            if (typeof item === 'string' || typeof item === 'number') return String(item);
-            return String(item?.codigoRastreio || item?.codigoBarras || item?.codigo || item?.id || 'Pacote');
-          }).join(' · ') + (pacotes.length > 4 ? ' · +' + (pacotes.length - 4) : '');
-          botao.append(detalhes);
-        }
         botao.addEventListener('click', () => {
           popupPacotesAtual?.remove();
           popupPacotesAtual = null;
           if (typeof selecionarParada === 'function') selecionarParada(String(p.id));
         });
-        painel.append(botao);
+        itens.push(botao);
+        lista.append(botao);
       });
+      painel.append(titulo, subtitulo, lista);
+      // Em endereços com muitas paradas, quatro itens bastam para o resumo.
+      // O restante aparece dentro da mesma lista com rolagem, não cresce
+      // para fora do mapa nem espreme cada botão.
+      if (itens.length > 4) {
+        const verMais = doc.createElement('button');
+        verMais.type = 'button';
+        verMais.className = 'pemato-multi-popup-mais';
+        let expandido = false;
+        const atualizarLista = () => {
+          itens.forEach((item, indice) => {
+            item.hidden = !expandido && indice >= 4;
+          });
+          verMais.textContent = expandido
+            ? 'Mostrar menos'
+            : 'Ver todas as ' + itens.length + ' paradas';
+          verMais.setAttribute('aria-expanded', String(expandido));
+          if (!expandido) lista.scrollTop = 0;
+        };
+        verMais.addEventListener('click', () => {
+          expandido = !expandido;
+          atualizarLista();
+        });
+        painel.append(verMais);
+        atualizarLista();
+      }
       const centro = feature?.geometry?.coordinates;
       if (!Array.isArray(centro) || centro.length < 2) return false;
       popupPacotesAtual = new global.maplibregl.Popup({
