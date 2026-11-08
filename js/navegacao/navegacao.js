@@ -318,16 +318,24 @@
   }
 
   function selecionarMarcadorNav(event) {
-    const props=event?.features?.[0]?.properties||{};
+    const feature = event?.features?.[0];
+    const props=feature?.properties||{};
     const ids=String(props.ids||props.id||'').split(',').map(v=>v.trim()).filter(Boolean);
     const id=ids[0];
     if(!id)return;
-    cartaoSelecionadoId=id;
-    definirAcompanhamento(false);
-    animarCardParada('pulse');
-    atualizarPainel();
-    atualizarFontesPontos();
-    persistirSelecao({motivo:'selecionar_marcador_mapa'});
+    const escolher = escolhido => {
+      cartaoSelecionadoId=String(escolhido);
+      definirAcompanhamento(false);
+      animarCardParada('pulse');
+      atualizarPainel();
+      atualizarFontesPontos();
+      persistirSelecao({motivo:'selecionar_marcador_mapa'});
+    };
+    const abriu = global.PacoteEMatoMarcadores?.abrirDetalhesPacotes?.(
+      mapa, feature, paradasPorOrdem(), escolher
+    );
+    if (abriu) return;
+    escolher(id);
   }
 
   function bindEventosMarcadoresNav() {
@@ -752,7 +760,7 @@
       const ativa = grupo.find(item => String(item.stop?.id) === idAtivo);
       const principal = consultada || ativa || grupoVisual[0];
       const stop = principal.stop;
-      const multi = grupoVisual.reduce((total,item) => total + quantidadePacotesDaParada(item.stop), 0);
+      const multi = grupo.reduce((total,item) => total + quantidadePacotesDaParada(item.stop), 0);
       const lat = Number(stop.latitude), lon = Number(stop.longitude);
       // V40: sem deslocamento dinâmico. O balão fica ancorado na coordenada
       // real da parada e não muda de posição ao selecionar, entregar ou recalcular.
