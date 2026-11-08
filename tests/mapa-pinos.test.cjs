@@ -133,6 +133,7 @@ assert.match(config, /function garantirSetasRuasBrasil\(mapa\)/);
 assert.match(config, /\['get', 'oneway'\]/);
 assert.match(config, /\['1', 'yes', 'true', '-1'\]/);
 assert.match(config, /garantirSetasRuasBrasil\(mapa\)/);
-assert.ok(html.includes('css/pemato-identidade.css?v=20261108-clean-6'));
+assert.ok(html.includes('css/pemato-identidade.css?v=20261108-clean-7'));
+assert.ok(html.includes('id="pematoTest22Version"'), 'indica versao ao entregador');
 assert.ok(html.includes('js/mapa/config.js?v=20261108-sem-tracejados-3'));
 console.log('PASSOU: estilo premium e setas vetoriais sem limite por estado.');
