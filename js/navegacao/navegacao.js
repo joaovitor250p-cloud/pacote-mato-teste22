@@ -760,7 +760,7 @@
       const ativa = grupo.find(item => String(item.stop?.id) === idAtivo);
       const principal = consultada || ativa || grupoVisual[0];
       const stop = principal.stop;
-      const multi = global.PacoteEMatoMarcadores?.quantidadePacotesUnicosDoGrupo?.(grupo.map(item => item.stop)) ?? 0;
+      const multi = global.PacoteEMatoMarcadores?.quantidadePacotesRegistradosDoGrupo?.(grupo.map(item => item.stop)) ?? 0;
       const lat = Number(stop.latitude), lon = Number(stop.longitude);
       // V40: sem deslocamento dinâmico. O balão fica ancorado na coordenada
       // real da parada e não muda de posição ao selecionar, entregar ou recalcular.
