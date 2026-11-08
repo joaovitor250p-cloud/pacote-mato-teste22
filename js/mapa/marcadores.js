@@ -47,22 +47,30 @@
     return Number.isFinite(n) && n > 0 ? Math.max(1, Math.round(n)) : 1;
   }
 
-  // Mesmo criterio da tela "Paradas": codigos distintos de pacotes no
-  // endereco, nao a soma de registros ou copias da mesma parada.
-  function quantidadePacotesUnicosDoGrupo(grupo) {
+
+  // Reúne códigos de rastreio distintos, sem confundir registros repetidos
+  // da mesma parada com novos pacotes. Preserva os códigos originais (BR...).
+  function pacotesUnicosDoGrupo(grupo) {
     const paradas = Array.isArray(grupo) ? grupo : [];
     const ativas = paradas.filter(p =>
       !['entregue', 'concluida', 'nao_entregue'].includes(String(p?.statusEntrega || ''))
     );
     const fonte = ativas.length ? ativas : paradas;
-    const codigos = new Set();
+    const porCodigo = new Map();
     fonte.forEach(p => {
-      (Array.isArray(p?.pacotes) ? p.pacotes : []).forEach(codigo => {
-        const valor = String(codigo || '').trim();
-        if (valor) codigos.add(valor);
+      (Array.isArray(p?.pacotes) ? p.pacotes : []).forEach(valor => {
+        const codigo = String(valor || '').trim();
+        if (!codigo) return;
+        if (!porCodigo.has(codigo)) porCodigo.set(codigo, { codigo, paradas: [] });
+        const entry = porCodigo.get(codigo);
+        if (!entry.paradas.some(item => String(item.id) === String(p.id))) entry.paradas.push(p);
       });
     });
-    return codigos.size;
+    return [...porCodigo.values()];
+  }
+
+  function quantidadePacotesUnicosDoGrupo(grupo) {
+    return pacotesUnicosDoGrupo(grupo).length;
   }
 
   function chaveFisicaMarcador(parada) {
@@ -407,32 +415,49 @@
       const doc = global.document;
       const painel = doc.createElement('div');
       painel.className = 'pemato-multi-popup';
+
+      const pacotes = pacotesUnicosDoGrupo(grupo);
+      const semCodigo = pacotes.length === 0;
+      // Com códigos, cada linha representa UM pacote físico (BR), não
+      // uma das 12 cópias da mesma parada. Sem códigos, mostrar as paradas.
+      const entradas = semCodigo
+        ? grupo.map(p => ({ parada: p, codigo: '' }))
+        : pacotes.map(item => ({ parada: item.paradas[0], codigo: item.codigo, repeticoes: item.paradas.length }));
       const titulo = doc.createElement('strong');
       titulo.className = 'pemato-multi-popup-title';
-      titulo.textContent = total + (total === 1 ? ' pacote neste ponto' : ' pacotes neste ponto');
+      titulo.textContent = semCodigo
+        ? 'Nenhum código de pacote neste ponto'
+        : total + (total === 1 ? ' pacote neste ponto' : ' pacotes neste ponto');
       const subtitulo = doc.createElement('span');
       subtitulo.className = 'pemato-multi-popup-subtitle';
       subtitulo.textContent = grupo.length +
-        (grupo.length === 1 ? ' parada no mapa' : ' paradas no mesmo ponto') +
-        ' · escolha uma para ver os detalhes';
+        (grupo.length === 1 ? ' parada cadastrada' : ' paradas cadastradas') +
+        (semCodigo ? ' · escolha uma parada' : ' · ' + total +
+          (total === 1 ? ' código diferente' : ' códigos diferentes'));
       const lista = doc.createElement('div');
       lista.className = 'pemato-multi-popup-lista';
       const itens = [];
-      grupo.forEach(p => {
+      entradas.forEach(item => {
+        const p = item.parada;
         const botao = doc.createElement('button');
         botao.type = 'button';
         botao.className = 'pemato-multi-popup-stop';
         const rotulo = doc.createElement('strong');
         const ordem = Number(p?.ordemOtimizada || p?.ordemOriginal || 0);
-        const qtd = new Set((Array.isArray(p?.pacotes) ? p.pacotes : [])
-          .map(codigo => String(codigo || '').trim()).filter(Boolean)).size;
-        rotulo.textContent = (ordem > 0 ? 'Parada ' + ordem : 'Ver parada') +
-          (qtd ? ' · ' + qtd + (qtd === 1 ? ' código vinculado' : ' códigos vinculados') : ' · sem código vinculado');
+        rotulo.textContent = item.codigo || (ordem > 0 ? 'Parada ' + ordem : 'Ver parada');
         const endereco = doc.createElement('span');
         endereco.className = 'pemato-multi-popup-endereco';
-        endereco.textContent = String(p?.enderecoFonte || p?.enderecoOriginal ||
-          [p?.logradouro, p?.numero].filter(Boolean).join(', ') || 'Toque para abrir a entrega');
+        const nomeEndereco = String(p?.enderecoFonte || p?.enderecoOriginal ||
+          [p?.logradouro, p?.numero].filter(Boolean).join(', ') || 'Ver detalhes da entrega');
+        endereco.textContent = item.codigo
+          ? (ordem > 0 ? 'Parada ' + ordem + ' · ' : '') + nomeEndereco
+          : nomeEndereco;
         botao.append(rotulo, endereco);
+        if (item.codigo && item.repeticoes > 1) {
+          const repetido = doc.createElement('small');
+          repetido.textContent = 'Código presente em ' + item.repeticoes + ' paradas';
+          botao.append(repetido);
+        }
         botao.addEventListener('click', () => {
           popupPacotesAtual?.remove();
           popupPacotesAtual = null;
@@ -442,9 +467,7 @@
         lista.append(botao);
       });
       painel.append(titulo, subtitulo, lista);
-      // Em endereços com muitas paradas, quatro itens bastam para o resumo.
-      // O restante aparece dentro da mesma lista com rolagem, não cresce
-      // para fora do mapa nem espreme cada botão.
+      // Só abrir uma lista longa quando há MAIS DE QUATRO pacotes distintos.
       if (itens.length > 4) {
         const verMais = doc.createElement('button');
         verMais.type = 'button';
@@ -454,9 +477,9 @@
           itens.forEach((item, indice) => {
             item.hidden = !expandido && indice >= 4;
           });
-          verMais.textContent = expandido
-            ? 'Mostrar menos'
-            : 'Ver todas as ' + itens.length + ' paradas';
+          verMais.textContent = expandido ? 'Mostrar menos'
+            : semCodigo ? 'Ver todas as ' + itens.length + ' paradas'
+            : 'Ver todos os ' + itens.length + ' pacotes';
           verMais.setAttribute('aria-expanded', String(expandido));
           if (!expandido) lista.scrollTop = 0;
         };
@@ -520,6 +543,7 @@
     chaveMultiplo,
     quantidadePacotesDaParada,
     quantidadePacotesUnicosDoGrupo,
+    pacotesUnicosDoGrupo,
     chaveFisicaMarcador,
     capturarBaseVisualStatus,
     segmentosStatusDaRota
