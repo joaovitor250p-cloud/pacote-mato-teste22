@@ -938,6 +938,17 @@
     return b;
   }
 
+  // Contagem exibida no planejamento deve coincidir com o pino: registros
+  // repetidos de BR em outras paradas continuam sendo pacotes cadastrados.
+  function quantidadePacotesVisiveisNoEndereco(parada) {
+    const chave = global.PacoteEMatoMarcadores?.chaveFisicaMarcador?.(parada);
+    const grupo = (rotaAtual?.paradas || []).filter(item =>
+      global.PacoteEMatoMarcadores?.chaveFisicaMarcador?.(item) === chave
+    );
+    return global.PacoteEMatoMarcadores?.quantidadePacotesRegistradosDoGrupo?.(grupo) ??
+      grupo.reduce((soma, item) => soma + (item?.pacotes?.length || 0), 0);
+  }
+
   function renderizarLista() {
     const container = $('routePlannerStops');
     if (!container) return;
@@ -986,7 +997,7 @@
       const meta = document.createElement('div');
       meta.className = 'routing-stop-meta';
       const multi = multiplicidadeDaParada(p, multiplicidades);
-      const quantidadeFisica = global.PacoteEMatoOperacoesPacotes?.quantidadePacotesFisicos?.(rotaAtual, p) ?? (p.pacotes?.length || 0);
+      const quantidadeFisica = quantidadePacotesVisiveisNoEndereco(p);
       const pacoteTexto = quantidadeFisica ? `${quantidadeFisica} ${quantidadeFisica === 1 ? 'pacote' : 'pacotes'}` : 'Sem código de pacote';
       meta.textContent = `${p.rotaGrupoTipo === 'adicao-bipagem' ? 'Adicionada por bipagem · ' : ''}${multi > 1 ? `${multi}x no mesmo endereço · ` : ''}${pacoteTexto} · ${statusGeoTexto(p)} · ${statusEntregaTexto(p)}`;
       body.append(address);
@@ -1025,7 +1036,7 @@
     if ($('routingSelectedStopAddress')) $('routingSelectedStopAddress').textContent = enderecoExibicao(p) || 'Endereço não informado';
     if ($('routingSelectedStopComplement')) $('routingSelectedStopComplement').textContent = detalheComplemento(p) || p.observacao || '';
     if ($('routingSelectedStopMeta')) {
-      const quantidadeFisica = global.PacoteEMatoOperacoesPacotes?.quantidadePacotesFisicos?.(rotaAtual, p) ?? (p.pacotes?.length || 0);
+      const quantidadeFisica = quantidadePacotesVisiveisNoEndereco(p);
       $('routingSelectedStopMeta').textContent = `${quantidadeFisica} ${quantidadeFisica === 1 ? 'pacote' : 'pacotes'} · ${statusGeoTexto(p)} · ${statusEntregaTexto(p)}`;
     }
   }
