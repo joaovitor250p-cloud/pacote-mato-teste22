@@ -131,7 +131,7 @@
       // troca o rótulo 81 -> 82 sem inventar outra coordenada.
       const pSelecionada = grupo.find(item => String(item.id) === String(selectedId));
       const p = pSelecionada || grupoVisual[0];
-      const totalPacotes = grupoVisual.reduce((total, item) => total + quantidadePacotesDaParada(item), 0);
+      const totalPacotes = grupo.reduce((total, item) => total + quantidadePacotesDaParada(item), 0);
       const lat = Number(p.latitude), lon = Number(p.longitude);
       // Agrupa visualmente pontos muito próximos para que os balões sejam
       // deslocados em vez de ficarem um em cima do outro.
@@ -337,12 +337,20 @@
     if (!mapa || mapa.__pematoBound) return;
     mapa.__pematoBound = true;
     const selecionar = event => {
-      const id = event?.features?.[0]?.properties?.id;
+      const feature = event?.features?.[0];
+      const id = feature?.properties?.id;
       if (!id) return;
       if (selecaoDesenhoAtiva) {
         alternarIdSelecao(String(id));
         return;
       }
+      // Um endereço físico pode conter mais de uma parada ou pacote:
+      // revelar todos em vez de abrir silenciosamente só a primeira.
+      const abriu = global.PacoteEMatoMarcadores?.abrirDetalhesPacotes?.(
+        mapa, feature, paradas(), escolhido =>
+          global.PacoteEMatoRoteirizacao?.selecionarParada?.(String(escolhido), 'mapa')
+      );
+      if (abriu) return;
       global.PacoteEMatoRoteirizacao?.selecionarParada?.(String(id), 'mapa');
     };
     [LAYER_STOPS, LAYER_STOPS_MULTI, LAYER_STOPS_ACTIVE, LAYER_STOPS_MULTI_ACTIVE].forEach(layerId => {
