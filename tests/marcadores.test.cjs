@@ -119,7 +119,7 @@ const listaPopup = raizPopup.children.find(e => e.className === 'pemato-multi-po
 const botaoMais = raizPopup.children.find(e => e.className === 'pemato-multi-popup-mais');
 assert.equal(listaPopup.children.length, 12);
 assert.equal(listaPopup.children.filter(e => !e.hidden).length, 4, 'apenas quatro paradas inicialmente visiveis');
-assert.equal(botaoMais.textContent, 'Ver todas as 12 paradas');
+assert.equal(botaoMais.textContent, 'Ver todos os 12 pacotes');
 assert.match(raizPopup.children[0].textContent, /12 pacotes neste ponto/);
 botaoMais.eventos.click();
 assert.equal(listaPopup.children.filter(e => !e.hidden).length, 12, 'ao expandir todas ficam acessiveis');
@@ -141,18 +141,42 @@ assert.equal(sandbox.PacoteEMatoMarcadores.quantidadePacotesUnicosDoGrupo(repeti
 assert.equal(sandbox.PacoteEMatoMarcadores.quantidadePacotesUnicosDoGrupo(
   [{ id: 'sem-codigo', pacotes: [], quantidadePacotes: 1 }]), 0,
   'registro sem codigo nao vira pacote ficticio');
+
 const abriuRepetidas = sandbox.PacoteEMatoMarcadores.abrirDetalhesPacotes(
   mapa,
   { properties: { id: 'dupla-1', ids: repetidas.map(p => p.id).join(',') },
     geometry: { coordinates: [-46.6, -23.5] } },
   repetidas,
-  () => {}
+  id => { paradaSelecionada = id; }
 );
 assert.equal(abriuRepetidas, true);
 assert.equal(popupTeste.conteudo.children[0].textContent, '2 pacotes neste ponto');
-assert.match(popupTeste.conteudo.children[1].textContent, /12 paradas no mesmo ponto/);
+assert.match(popupTeste.conteudo.children[1].textContent, /12 paradas cadastradas · 2 códigos diferentes/);
 const linhasDuplicadas = popupTeste.conteudo.children.find(e => e.className === 'pemato-multi-popup-lista');
-assert.equal(linhasDuplicadas.children.length, 12);
-assert.match(linhasDuplicadas.children[0].children[0].textContent, /1 codigo vinculado/);
-console.log('PASSOU: 12 paradas repetidas exibem so 2 pacotes unicos.');
+assert.equal(linhasDuplicadas.children.length, 2, 'duas linhas por codigo, nao doze linhas repetidas');
+assert.equal(linhasDuplicadas.children[0].children[0].textContent, 'CODIGO-A');
+assert.equal(linhasDuplicadas.children[1].children[0].textContent, 'CODIGO-B');
+assert.match(linhasDuplicadas.children[0].children[2].textContent, /6 paradas/);
+assert.ok(!popupTeste.conteudo.children.some(e => e.className === 'pemato-multi-popup-mais'));
+linhasDuplicadas.children[1].eventos.click();
+assert.equal(paradaSelecionada, 'dupla-2');
+console.log('PASSOU: 12 paradas com 2 codigos exibem apenas os 2 pacotes.');
 
+const codigosBR = [
+ { id: 'br-1', ordemOriginal: 51, enderecoOriginal: 'Rua Frei Durao, 603', pacotes: ['BR123456789BR','BR999888777BR'] },
+ { id: 'br-2', ordemOriginal: 52, enderecoOriginal: 'Rua Frei Durao, 603', pacotes: ['BR123456789BR'] }
+];
+const abriuBR = sandbox.PacoteEMatoMarcadores.abrirDetalhesPacotes(
+  mapa,
+  { properties: { id: 'br-1', ids: 'br-1,br-2' }, geometry: { coordinates: [-46.6,-23.5] } },
+  codigosBR,
+  id => { paradaSelecionada = id; }
+);
+assert.equal(abriuBR, true);
+const itensBR = popupTeste.conteudo.children.find(e => e.className === 'pemato-multi-popup-lista').children;
+assert.equal(itensBR.length, 2);
+assert.equal(itensBR[0].children[0].textContent, 'BR123456789BR', 'exibe o codigo BR real');
+assert.equal(itensBR[1].children[0].textContent, 'BR999888777BR', 'nao inventa outro codigo');
+itensBR[1].eventos.click();
+assert.equal(paradaSelecionada, 'br-1', 'codigo abre a parada que o contem');
+console.log('PASSOU: popup mostra BR real de cada pacote e seleciona a entrega correta.');
