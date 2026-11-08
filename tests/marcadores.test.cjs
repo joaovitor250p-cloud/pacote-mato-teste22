@@ -8,14 +8,14 @@ const sandbox = { devicePixelRatio: 2 };
 sandbox.document = {
   createElement(tag) {
     assert.equal(tag, 'canvas');
-    const canvas = { width: 0, height: 0, fills: [] };
+    const canvas = { width: 0, height: 0, fills: [], texts: [] };
     const ctx = {
       scale() {}, clearRect() {}, beginPath() {}, moveTo() {}, lineTo() {},
       quadraticCurveTo() {}, closePath() {}, arc() {}, save() {}, restore() {},
-      stroke() {}, fillText() {},
+      stroke() {}, fillText(text) { canvas.texts.push(String(text)); },
       fill() { canvas.fills.push(this.fillStyle); },
       measureText(text) { return { width: String(text).length * 8 }; },
-      getImageData() { return { width: canvas.width, height: canvas.height, fills: canvas.fills.slice() }; }
+      getImageData() { return { width: canvas.width, height: canvas.height, fills: canvas.fills.slice(), texts: canvas.texts.slice() }; }
     };
     canvas.getContext = () => ctx;
     return canvas;
@@ -44,11 +44,13 @@ const rascunho = criar({ quantidade: 1, status: 'pendente', mostrarNumero: false
 
 for (const entry of [pendente, selecionada, parcial, concluida, falhou]) {
   assert.equal(entry.options.pixelRatio, 2);
-  assert.equal(entry.data.height / entry.options.pixelRatio, 29);
-  assert.equal(entry.data.width / entry.options.pixelRatio, 34);
+  assert.equal(entry.data.height / entry.options.pixelRatio, 34);
+  assert.equal(entry.data.width / entry.options.pixelRatio, [selecionada, parcial].includes(entry) ? 49 : 34);
 }
 assert.equal(rascunho.data.height / rascunho.options.pixelRatio, 24);
-assert.equal(selecionada.data.width, pendente.data.width);
+assert.equal(selecionada.data.width / selecionada.options.pixelRatio, 49);
+assert.deepEqual(selecionada.data.texts, ['18', '×2'], 'o selo ×2 nao substitui o numero principal');
+assert.deepEqual(parcial.data.texts, ['19', '×3']);
 assert.ok(pendente.data.fills.includes('#018D3E'));
 assert.ok(selecionada.data.fills.includes('#006D32'));
 assert.ok(parcial.data.fills.includes('#e59b24'));
@@ -67,6 +69,6 @@ console.log('PASSOU: dimensões, estado, cores e cache dos marcadores.');
 
 // Bandeira com tecido ondulado, haste central e base oval.
 assert.match(fs.readFileSync(path.resolve(__dirname, '../js/mapa/marcadores.js'), 'utf8'), /desenharBandeirola/);
-assert.ok([...images.keys()].every(name => name.includes('bandeirola-premium-v2-menor')));
+assert.ok([...images.keys()].every(name => name.includes('bandeirola-premium-v3-multi')));
 
 assert.doesNotMatch(fs.readFileSync(path.resolve(__dirname, '../js/mapa/marcadores.js'), 'utf8'), /function desenharBaseBandeira/);
