@@ -47,6 +47,24 @@
     return Number.isFinite(n) && n > 0 ? Math.max(1, Math.round(n)) : 1;
   }
 
+  // Mesmo criterio da tela "Paradas": codigos distintos de pacotes no
+  // endereco, nao a soma de registros ou copias da mesma parada.
+  function quantidadePacotesUnicosDoGrupo(grupo) {
+    const paradas = Array.isArray(grupo) ? grupo : [];
+    const ativas = paradas.filter(p =>
+      !['entregue', 'concluida', 'nao_entregue'].includes(String(p?.statusEntrega || ''))
+    );
+    const fonte = ativas.length ? ativas : paradas;
+    const codigos = new Set();
+    fonte.forEach(p => {
+      (Array.isArray(p?.pacotes) ? p.pacotes : []).forEach(codigo => {
+        const valor = String(codigo || '').trim();
+        if (valor) codigos.add(valor);
+      });
+    });
+    return codigos.size;
+  }
+
   function chaveFisicaMarcador(parada) {
     const chave = chaveMultiplo(parada);
     if (chave) return `end:${chave}`;
@@ -381,7 +399,7 @@
     const ids = new Set(String(props.ids || props.id || '').split(',').filter(Boolean));
     const grupo = (Array.isArray(paradas) ? paradas : []).filter(p => ids.has(String(p?.id)));
     if (!grupo.length) return false;
-    const total = grupo.reduce((soma, p) => soma + quantidadePacotesDaParada(p), 0);
+    const total = quantidadePacotesUnicosDoGrupo(grupo);
     if (total <= 1 && grupo.length <= 1) return false;
     if (!mapa || !global.document || typeof global.maplibregl?.Popup !== 'function') return false;
     try {
@@ -406,9 +424,10 @@
         botao.className = 'pemato-multi-popup-stop';
         const rotulo = doc.createElement('strong');
         const ordem = Number(p?.ordemOtimizada || p?.ordemOriginal || 0);
-        const qtd = quantidadePacotesDaParada(p);
+        const qtd = new Set((Array.isArray(p?.pacotes) ? p.pacotes : [])
+          .map(codigo => String(codigo || '').trim()).filter(Boolean)).size;
         rotulo.textContent = (ordem > 0 ? 'Parada ' + ordem : 'Ver parada') +
-          ' · ' + qtd + (qtd === 1 ? ' pacote' : ' pacotes');
+          (qtd ? ' · ' + qtd + (qtd === 1 ? ' código vinculado' : ' códigos vinculados') : ' · sem código vinculado');
         const endereco = doc.createElement('span');
         endereco.className = 'pemato-multi-popup-endereco';
         endereco.textContent = String(p?.enderecoFonte || p?.enderecoOriginal ||
@@ -500,6 +519,7 @@
     nomeIcone,
     chaveMultiplo,
     quantidadePacotesDaParada,
+    quantidadePacotesUnicosDoGrupo,
     chaveFisicaMarcador,
     capturarBaseVisualStatus,
     segmentosStatusDaRota
