@@ -17,13 +17,13 @@
   }
 
   function paleta(status, selecionado) {
-    // Marcadores compactos de navegação: azul para paradas e cores operacionais
+    // Marcadores compactos de navegação: verde para paradas e cores operacionais
     // apenas para os estados reais de entrega.
     if (status === 'nao_entregue') return { fundo: selecionado ? '#b91c1c' : '#dc2626', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
     if (status === 'concluida') return { fundo: selecionado ? '#15803d' : '#16a34a', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
     if (status === 'parcial') return { fundo: selecionado ? '#b45309' : '#e59b24', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
-    if (selecionado) return { fundo: '#1649bc', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
-    return { fundo: '#3179ef', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
+    if (selecionado) return { fundo: '#0F7351', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
+    return { fundo: '#168B61', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
   }
 
   function simboloStatus(status) {
@@ -264,7 +264,7 @@
 
   function criarIcone(mapa, opcoes) {
     if (!mapa || !global.document) return '';
-    const prefixo = String(opcoes?.prefixo || 'pemato-stop-v12');
+    const prefixo = String(opcoes?.prefixo || 'pemato-stop-v13');
     const mostrarNumero = opcoes?.mostrarNumero !== false;
     const ordem = mostrarNumero ? Math.max(1, Math.round(numeroSeguro(opcoes?.ordem, 1))) : 0;
     const quantidade = Math.max(1, Math.round(numeroSeguro(opcoes?.quantidade, 1)));
@@ -324,32 +324,37 @@
     c.clearRect(0, 0, larguraCss, alturaCss);
 
     const cores = paleta(status, selecionado);
-    const centro = larguraCss / 2, topo = 3, raio = 14;
+    const centro = larguraCss / 2, topo = 3, raio = 15;
+    const cy = topo + 15;
 
+    // Círculo compacto com ponta curta e alinhada à coordenada.
+    // A numeração tem alto contraste e não depende do nível de zoom.
     c.save();
-    c.shadowColor = 'rgba(24,48,83,0.14)';
-    c.shadowBlur = 2;
-    c.shadowOffsetY = 1;
+    c.shadowColor = 'rgba(8,53,39,.18)';
+    c.shadowBlur = selecionado ? 6 : 4;
+    c.shadowOffsetY = 2;
     c.fillStyle = cores.fundo;
     c.strokeStyle = cores.borda;
-    c.lineWidth = selecionado ? 3.2 : 2.5;
+    c.lineWidth = selecionado ? 3.6 : 2.8;
+    c.lineJoin = 'round';
     c.beginPath();
-    c.moveTo(centro, topo);
-    c.quadraticCurveTo(centro + raio, topo, centro + raio, topo + raio);
-    c.quadraticCurveTo(centro + raio, topo + raio * 1.65, centro, alturaCss - 4);
-    c.quadraticCurveTo(centro - raio, topo + raio * 1.65, centro - raio, topo + raio);
-    c.quadraticCurveTo(centro - raio, topo, centro, topo);
+    c.moveTo(centro - 6, topo + 27);
+    c.lineTo(centro, alturaCss - 2);
+    c.lineTo(centro + 6, topo + 27);
     c.closePath();
     c.fill();
-    c.shadowColor = 'transparent';
+    c.stroke();
+    c.beginPath();
+    c.arc(centro, cy, raio, 0, Math.PI * 2);
+    c.fill();
     c.stroke();
     c.restore();
 
     c.textBaseline = 'middle';
     c.textAlign = 'center';
-    c.font = `800 ${numero.length >= 4 ? 10.5 : numero.length === 3 ? 12 : 14}px Arial, sans-serif`;
+    c.font = `800 ${numero.length >= 4 ? 10.5 : numero.length === 3 ? 12.5 : 16}px Arial, sans-serif`;
     c.fillStyle = cores.numero;
-    c.fillText(numero, centro, topo + 14.2);
+    c.fillText(numero, centro, cy + 0.4);
 
     // Quantidade por endereço fica num selo discreto. Não é o agrupamento
     // dinâmico do mapa: o número central continua sendo a ordem da parada.
@@ -362,7 +367,7 @@
       c.strokeStyle = cores.fundo;
       c.lineWidth = 1.8;
       c.stroke();
-      c.fillStyle = '#223449';
+      c.fillStyle = '#16442F';
       c.font = `800 ${selo.length > 2 ? 7 : 9}px Arial, sans-serif`;
       c.fillText(selo, 33, 8.4);
     }

@@ -1,22 +1,22 @@
-/* Teste22: identidade clara e legível para uso na rua.
+/* Teste22: identidade verde-esmeralda, clara e legível para uso na rua.
    Cores de situação (entregue/falha/parcial) não são cores da marca. */
 :root {
-  --pemato-cobre: #a6532c;
-  --pemato-cobre-hover: #87401e;
-  --pemato-cobre-realce: #c8743b;
-  --pemato-cobre-suave: #fff0e5;
+  --pemato-cobre: #168B61;
+  --pemato-cobre-hover: #0F7351;
+  --pemato-cobre-realce: #25B782;
+  --pemato-cobre-suave: #E9F8EF;
   --pemato-grafite: #24313b;
   --pemato-cinza: #64717b;
-  --pemato-fundo: #f6f5f2;
-  --pemato-borda: #dedfdc;
+  --pemato-fundo: #F6FAF8;
+  --pemato-borda: #DCE8E1;
   --primary: var(--pemato-cobre) !important;
   --primary-2: var(--pemato-cobre-hover) !important;
   --primary-light: var(--pemato-cobre-suave) !important;
-  --primary-gradient: linear-gradient(135deg, #a6532c, #bd703b) !important;
+  --primary-gradient: linear-gradient(135deg, #168B61, #25B782) !important;
   --accent-green: var(--pemato-cobre) !important;
   --accent-green-gradient: var(--primary-gradient) !important;
-  --accent-green-soft: #d99865 !important;
-  /* Compatibilidade com seletores do tema legado. */
+  --accent-green-soft: #54C99E !important;
+  /* Variáveis legadas preservadas por compatibilidade; os valores agora são verdes. */
   --pemato-green: var(--pemato-cobre);
   --pemato-green-dark: var(--pemato-cobre-hover);
   --pemato-green-soft: var(--pemato-cobre-suave);
@@ -25,9 +25,9 @@
   --pemato-line: var(--pemato-borda);
   --pemato-shadow: 0 12px 30px rgba(36, 49, 59, .09);
   --surface-1: #ffffff !important;
-  --surface-2: #fbfaf8 !important;
+  --surface-2: #F9FCFA !important;
   --surface-border: var(--pemato-borda) !important;
-  --surface-border-hover: #c2c4c2 !important;
+  --surface-border-hover: #B8D3C4 !important;
   --text-main: var(--pemato-grafite) !important;
   --text-muted: var(--pemato-cinza) !important;
   --bg-body: var(--pemato-fundo) !important;
@@ -72,13 +72,13 @@ body[data-pemato-module] .pemato-module,
 .bipagem-tabs, .settings-required-card, .settings-location-card,
 .routing-optimized-flag[data-optimized="true"] {
   background: var(--pemato-cobre-suave) !important;
-  border-color: #ebc2a6 !important;
+  border-color: #BDE5CF !important;
 }
 .auth-access-card .input-auth:focus, .input-auth:focus,
 input:focus, select:focus, textarea:focus, .pemato-field:focus,
 .routing-stop-search-wrap input:focus {
   border-color: var(--pemato-cobre) !important;
-  box-shadow: 0 0 0 3px rgba(166, 83, 44, .13) !important;
+  box-shadow: 0 0 0 3px rgba(22, 139, 97, .13) !important;
 }
 .pemato-primary, .btn-action-primary, .routing-start-route-btn,
 .auth-main-button, .auth-payment-button, .auth-mode-btn.active,
@@ -88,7 +88,7 @@ input:focus, select:focus, textarea:focus, .pemato-field:focus,
   background: var(--pemato-cobre) !important;
   border-color: var(--pemato-cobre) !important;
   color: #fff !important;
-  box-shadow: 0 6px 16px rgba(166, 83, 44, .18) !important;
+  box-shadow: 0 6px 16px rgba(22, 139, 97, .18) !important;
 }
 .pemato-primary:hover, .btn-action-primary:hover, .routing-start-route-btn:hover,
 .auth-main-button:hover, .route-import-choice:hover, .auth-mode-btn.active:hover {
@@ -115,12 +115,12 @@ input:focus, select:focus, textarea:focus, .pemato-field:focus,
 .nav-map-controls button.active, .nav-instruction > span { color: var(--pemato-cobre-hover) !important; }
 .routing-map-icon:focus-visible, .nav-map-controls button:focus-visible,
 .routing-stop-card:focus-visible, #sidebar button:focus-visible,
-#sidebar a:focus-visible { outline: 3px solid #ce8859 !important; outline-offset: 2px; }
+#sidebar a:focus-visible { outline: 3px solid #37B985 !important; outline-offset: 2px; }
 .routing-busy-spinner { border-top-color: var(--pemato-cobre); }
 
 /* Menu claro, sem faixa escura, inclusive no celular. */
 #sidebar {
-  background: linear-gradient(160deg, #fff6ef, #fff 44%) !important;
+  background: linear-gradient(160deg, #EDF9F2, #fff 44%) !important;
   box-shadow: 16px 0 52px rgba(36,49,59,.16) !important;
 }
 .sidebar-brand { border-color: var(--pemato-borda) !important; }
@@ -131,10 +131,10 @@ input:focus, select:focus, textarea:focus, .pemato-field:focus,
 .sidebar-nav a:hover, .sidebar-nav a.active {
   color: var(--pemato-cobre-hover) !important;
   background: var(--pemato-cobre-suave) !important;
-  border-color: #ebc2a6 !important;
+  border-color: #BDE5CF !important;
 }
 #sidebar .sidebar-nav svg, #sidebar .sidebar-arrow { color: var(--pemato-cobre) !important; }
-.sidebar-support { background: #fffaf6 !important; border-color: var(--pemato-borda) !important; }
+.sidebar-support { background: #F7FCF9 !important; border-color: var(--pemato-borda) !important; }
 .sidebar-support strong { color: var(--pemato-cobre-hover) !important; }
 .top-nav .nav-btn, .top-nav .nav-btn svg { color: var(--pemato-grafite) !important; }
 .top-nav .nav-btn span[aria-hidden="true"],
@@ -143,16 +143,16 @@ input:focus, select:focus, textarea:focus, .pemato-field:focus,
 
 /* Scanner e importação com superfícies de baixo brilho. */
 .pkg-op-banner, #pkgOpBannerHost .pkg-op-banner {
-  background: #fffaf6 !important; color: var(--pemato-grafite) !important;
-  border: 1px solid #ecd6c6 !important; box-shadow: 0 5px 18px rgba(36,49,59,.06) !important;
+  background: #F7FCF9 !important; color: var(--pemato-grafite) !important;
+  border: 1px solid #CFEBDD !important; box-shadow: 0 5px 18px rgba(36,49,59,.06) !important;
 }
 .pkg-op-stats > div, #pkgOpBannerHost .pkg-op-stats > div,
-.bipagem-history-metrics > div, .nav-stat { background: #f9f8f5 !important; }
+.bipagem-history-metrics > div, .nav-stat { background: #F7FBF8 !important; }
 .bipagem-area-head, .bipagem-tabs { border-color: var(--pemato-borda) !important; }
-.bipagem-history-progress { background: #ece6e1 !important; }
+.bipagem-history-progress { background: #E3F1E9 !important; }
 .bipagem-history-progress i, .pkg-op-review-number { background: var(--pemato-cobre) !important; }
 .bipagem-config-card input { accent-color: var(--pemato-cobre) !important; }
-.pemato-bipagem-quick { background: #fff8f2 !important; color: var(--pemato-grafite) !important; border-color: #e9c7b2 !important; }
+.pemato-bipagem-quick { background: #EDF9F2 !important; color: var(--pemato-grafite) !important; border-color: #BDE5CF !important; }
 .pemato-bipagem-quick-icon { background: var(--pemato-cobre) !important; }
 .route-import-indeterminate span, .route-import-kicker { color: var(--pemato-cobre-hover) !important; }
 
@@ -160,7 +160,7 @@ input:focus, select:focus, textarea:focus, .pemato-field:focus,
 #mapaRoteirizacao, #mapaNavegacao, .routing-map-pane,
 .navigation-map-wrap, .maplibregl-map { background: #edeff0 !important; }
 .routing-map-pane, .navigation-map-wrap { border-color: var(--pemato-borda) !important; }
-.pemato-start-marker { background: var(--pemato-cobre) !important; box-shadow: 0 4px 14px rgba(166,83,44,.23) !important; }
+.pemato-start-marker { background: var(--pemato-cobre) !important; box-shadow: 0 4px 14px rgba(22,139,97,.23) !important; }
 
 /* Status reais conservam significado e não seguem a cor da marca. */
 .nav-stop-status-badge.is-delivered,
@@ -183,4 +183,4 @@ input:focus, select:focus, textarea:focus, .pemato-field:focus,
 #splashScreenPs2 { background: var(--pemato-fundo) !important; }
 .ps2-title { color: var(--pemato-grafite) !important; text-shadow: none !important; }
 .ps2-subtitle { color: var(--pemato-cinza) !important; }
-.ps2-cube-rotating { filter: drop-shadow(0 9px 18px rgba(166,83,44,.18)) !important; }
+.ps2-cube-rotating { filter: drop-shadow(0 9px 18px rgba(22,139,97,.18)) !important; }
