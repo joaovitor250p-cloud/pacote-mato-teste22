@@ -131,7 +131,7 @@
       // troca o rótulo 81 -> 82 sem inventar outra coordenada.
       const pSelecionada = grupo.find(item => String(item.id) === String(selectedId));
       const p = pSelecionada || grupoVisual[0];
-      const totalPacotes = global.PacoteEMatoMarcadores?.quantidadePacotesUnicosDoGrupo?.(grupo) ?? 0;
+      const totalPacotes = global.PacoteEMatoMarcadores?.quantidadePacotesRegistradosDoGrupo?.(grupo) ?? 0;
       const lat = Number(p.latitude), lon = Number(p.longitude);
       // Agrupa visualmente pontos muito próximos para que os balões sejam
       // deslocados em vez de ficarem um em cima do outro.
