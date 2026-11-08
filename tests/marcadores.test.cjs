@@ -44,10 +44,10 @@ const rascunho = criar({ quantidade: 1, status: 'pendente', mostrarNumero: false
 
 for (const entry of [pendente, selecionada, parcial, concluida, falhou]) {
   assert.equal(entry.options.pixelRatio, 2);
-  assert.equal(entry.data.height / entry.options.pixelRatio, 42);
-  assert.equal(entry.data.width / entry.options.pixelRatio, 40);
+  assert.equal(entry.data.height / entry.options.pixelRatio, 46);
+  assert.equal(entry.data.width / entry.options.pixelRatio, 44);
 }
-assert.equal(rascunho.data.height / rascunho.options.pixelRatio, 33);
+assert.equal(rascunho.data.height / rascunho.options.pixelRatio, 35);
 assert.equal(selecionada.data.width, pendente.data.width);
 assert.ok(pendente.data.fills.includes('#168B61'));
 assert.ok(selecionada.data.fills.includes('#0F7351'));
@@ -56,7 +56,7 @@ assert.ok(concluida.data.fills.includes('#16a34a'));
 assert.ok(falhou.data.fills.includes('#dc2626'));
 
 const longa = criar({ ordem: 1234, quantidade: 1, status: 'pendente' });
-assert.equal(longa.data.width / longa.options.pixelRatio, 40);
+assert.equal(longa.data.width / longa.options.pixelRatio, 44);
 
 // Registra o mesmo ícone apenas uma vez no atlas MapLibre.
 const total = images.size;
@@ -64,3 +64,7 @@ criar({ ordem: 17, quantidade: 1, status: 'pendente' });
 assert.equal(images.size, total);
 
 console.log('PASSOU: dimensões, estado, cores e cache dos marcadores.');
+
+// Escudo facetado: nenhuma chamada de arc() pode aparecer no desenho dos pinos.
+assert.match(fs.readFileSync(path.resolve(__dirname, '../js/mapa/marcadores.js'), 'utf8'), /desenharEscudoPremium/);
+assert.ok([...images.keys()].every(name => name.includes('shield-v1')));
