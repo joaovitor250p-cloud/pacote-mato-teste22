@@ -262,28 +262,33 @@
     ctx.closePath();
   }
 
-  // Silhueta própria do Pacote É Mato: escudo geométrico com ponta exata.
-  // O vértice inferior coincide com a coordenada, pois MapLibre usa anchor=bottom.
-  function desenharEscudoPremium(ctx, x, y, largura, corpo, ponta, canto) {
-    const centro = x + largura / 2;
+
+  // Bandeirinha inspirada na imagem: haste, tecido ondulado e anel no solo.
+  // A haste central coincide com icon-anchor=bottom e com a localização real.
+  function desenharBandeira(ctx, x, y, largura, altura) {
     ctx.beginPath();
-    ctx.moveTo(x + canto, y);
-    ctx.lineTo(x + largura - canto, y);
-    ctx.quadraticCurveTo(x + largura, y, x + largura, y + canto);
-    ctx.lineTo(x + largura, y + corpo - 9);
-    ctx.lineTo(centro + 7, y + corpo);
-    ctx.lineTo(centro, y + corpo + ponta);
-    ctx.lineTo(centro - 7, y + corpo);
-    ctx.lineTo(x, y + corpo - 9);
-    ctx.lineTo(x, y + canto);
-    ctx.quadraticCurveTo(x, y, x + canto, y);
+    ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(x + largura * .27, y - 2, x + largura * .51, y + 1);
+    ctx.quadraticCurveTo(x + largura * .77, y + 3, x + largura, y);
+    ctx.lineTo(x + largura, y + altura - 2);
+    ctx.quadraticCurveTo(x + largura * .76, y + altura + 2, x + largura * .5, y + altura - 1);
+    ctx.quadraticCurveTo(x + largura * .25, y + altura - 4, x, y + altura);
+    ctx.closePath();
+  }
+
+  function desenharBaseBandeira(ctx, centro, y, raioX, raioY) {
+    ctx.beginPath();
+    ctx.moveTo(centro - raioX, y);
+    ctx.quadraticCurveTo(centro - raioX, y - raioY, centro, y - raioY);
+    ctx.quadraticCurveTo(centro + raioX, y - raioY, centro + raioX, y);
+    ctx.quadraticCurveTo(centro + raioX, y + raioY, centro, y + raioY);
+    ctx.quadraticCurveTo(centro - raioX, y + raioY, centro - raioX, y);
     ctx.closePath();
   }
 
   function criarIcone(mapa, opcoes) {
     if (!mapa || !global.document) return '';
-    // Nova versão no nome evita reaproveitar o atlas antigo de ícones circulares.
-    const prefixo = String(opcoes?.prefixo || 'pemato-stop-v13') + '-shield-v1';
+    const prefixo = String(opcoes?.prefixo || 'pemato-stop-v13') + '-flag-v1';
     const mostrarNumero = opcoes?.mostrarNumero !== false;
     const ordem = mostrarNumero ? Math.max(1, Math.round(numeroSeguro(opcoes?.ordem, 1))) : 0;
     const quantidade = Math.max(1, Math.round(numeroSeguro(opcoes?.quantidade, 1)));
@@ -294,8 +299,8 @@
 
     const ratio = Math.max(2, Math.min(3, Number(global.devicePixelRatio || 2)));
     const canvas = global.document.createElement('canvas');
-    const larguraCss = mostrarNumero ? 44 : 30;
-    const alturaCss = mostrarNumero ? 46 : 35;
+    const larguraCss = mostrarNumero ? 64 : 42;
+    const alturaCss = mostrarNumero ? 52 : 38;
     canvas.width = Math.round(larguraCss * ratio);
     canvas.height = Math.round(alturaCss * ratio);
     const c = contexto2d(canvas);
@@ -304,62 +309,72 @@
     c.clearRect(0, 0, larguraCss, alturaCss);
 
     const cores = paleta(status, selecionado);
-    const corpoX = mostrarNumero ? 4 : 4;
-    const corpoY = 2;
-    const corpoLargura = mostrarNumero ? 36 : 22;
-    const corpoAltura = mostrarNumero ? 31 : 24;
-    const ponta = mostrarNumero ? 10 : 7;
     const centro = larguraCss / 2;
+    const escala = mostrarNumero ? 1 : .71;
+    const topo = mostrarNumero ? 7 : 5;
+    const base = alturaCss - (mostrarNumero ? 5 : 4);
+    const hasteX = centro;
+    const inicioTecido = hasteX + 3 * escala;
+    const larguraTecido = 28 * escala;
+    const alturaTecido = 22 * escala;
 
     c.save();
-    c.shadowColor = 'rgba(8, 37, 27, .22)';
-    c.shadowBlur = selecionado ? 7 : 4;
-    c.shadowOffsetY = 2.4;
+    c.shadowColor = 'rgba(9, 47, 35, .19)';
+    c.shadowBlur = selecionado ? 6 : 3;
+    c.shadowOffsetY = 1.5;
+    // Anel de localização como na imagem, sem corpo arredondado.
+    c.strokeStyle = selecionado ? '#0d6848' : '#629b85';
+    c.lineWidth = selecionado ? 2.5 : 2.1;
+    desenharBaseBandeira(c, centro, base - 1.5 * escala, 11 * escala, 4.5 * escala);
+    c.stroke();
+
+    c.beginPath();
+    c.moveTo(hasteX, topo - 1 * escala);
+    c.lineTo(hasteX, base - 2.7 * escala);
+    c.strokeStyle = '#e9f6f0';
+    c.lineWidth = 5.2 * escala;
+    c.lineCap = 'round';
+    c.stroke();
+    c.beginPath();
+    c.moveTo(hasteX, topo - 1 * escala);
+    c.lineTo(hasteX, base - 2.7 * escala);
+    c.strokeStyle = selecionado ? '#07533a' : '#116e51';
+    c.lineWidth = 2.9 * escala;
+    c.stroke();
+
+    desenharBandeira(c, inicioTecido, topo, larguraTecido, alturaTecido);
     c.fillStyle = cores.fundo;
-    c.strokeStyle = cores.borda;
-    c.lineWidth = selecionado ? 3.2 : 2.7;
-    c.lineJoin = 'round';
-    desenharEscudoPremium(c, corpoX, corpoY, corpoLargura, corpoAltura, ponta, mostrarNumero ? 5 : 4);
     c.fill();
-    c.shadowColor = 'transparent';
+    c.strokeStyle = selecionado ? '#084b35' : '#e5f5ed';
+    c.lineWidth = selecionado ? 1.8 : 1.5;
+    c.lineJoin = 'round';
     c.stroke();
     c.restore();
 
     if (mostrarNumero) {
       const numero = String(ordem);
-      c.textBaseline = 'middle';
+      c.fillStyle = cores.numero;
       c.textAlign = 'center';
-      c.font = `800 ${numero.length >= 4 ? 10 : numero.length === 3 ? 12.5 : 16}px Arial, sans-serif`;
-      c.fillStyle = cores.numero;
-      c.fillText(numero, centro, 17.7);
-    } else {
-      // Rascunhos mantêm o escudo, sem virar uma bolinha genérica.
-      c.fillStyle = cores.numero;
-      c.beginPath();
-      c.moveTo(centro, 9);
-      c.lineTo(centro + 5, 14);
-      c.lineTo(centro, 19);
-      c.lineTo(centro - 5, 14);
-      c.closePath();
-      c.fill();
+      c.textBaseline = 'middle';
+      c.font = '800 ' + (numero.length >= 4 ? 9.4 : numero.length === 3 ? 11 : 14) + 'px Arial, sans-serif';
+      c.fillText(numero, inicioTecido + larguraTecido * .5, topo + alturaTecido * .51);
     }
 
     if (mostrarNumero && quantidade > 1) {
-      // Selo de quantidade retangular, sem círculos sobrepostos ao escudo.
+      // Mini etiqueta retangular de pacotes presa à lateral da bandeira.
       const selo = quantidade > 99 ? '99+' : String(quantidade);
-      c.save();
+      const bx = larguraCss - 18, by = 29;
       c.fillStyle = '#ffffff';
       c.strokeStyle = cores.fundo;
-      c.lineWidth = 1.6;
-      desenharCapsula(c, 28, 2, 15, 14, 3);
+      c.lineWidth = 1.4;
+      desenharCapsula(c, bx, by, 17, 13, 2.5);
       c.fill();
       c.stroke();
-      c.textBaseline = 'middle';
-      c.textAlign = 'center';
       c.fillStyle = '#16442F';
-      c.font = `800 ${selo.length > 2 ? 7 : 9}px Arial, sans-serif`;
-      c.fillText(selo, 35.5, 9.4);
-      c.restore();
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.font = '800 ' + (selo.length > 2 ? 7 : 9) + 'px Arial, sans-serif';
+      c.fillText(selo, bx + 8.5, by + 6.8);
     }
 
     try {
