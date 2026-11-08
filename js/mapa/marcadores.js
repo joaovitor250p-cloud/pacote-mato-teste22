@@ -288,7 +288,7 @@
 
   function criarIcone(mapa, opcoes) {
     if (!mapa || !global.document) return '';
-    const prefixo = String(opcoes?.prefixo || 'pemato-stop-v13') + '-flag-v2';
+    const prefixo = String(opcoes?.prefixo || 'pemato-stop-v13') + '-flag-v3-compact';
     const mostrarNumero = opcoes?.mostrarNumero !== false;
     const ordem = mostrarNumero ? Math.max(1, Math.round(numeroSeguro(opcoes?.ordem, 1))) : 0;
     const quantidade = Math.max(1, Math.round(numeroSeguro(opcoes?.quantidade, 1)));
@@ -299,20 +299,21 @@
 
     const ratio = Math.max(2, Math.min(3, Number(global.devicePixelRatio || 2)));
     const canvas = global.document.createElement('canvas');
-    const larguraCss = mostrarNumero ? 64 : 42;
-    const alturaCss = mostrarNumero ? 52 : 38;
+    const larguraCss = mostrarNumero ? 48 : 32;
+    const alturaCss = mostrarNumero ? 39 : 29;
     canvas.width = Math.round(larguraCss * ratio);
     canvas.height = Math.round(alturaCss * ratio);
     const c = contexto2d(canvas);
     if (!c) return '';
-    c.scale(ratio, ratio);
-    c.clearRect(0, 0, larguraCss, alturaCss);
+    // Renderiza o mesmo desenho em uma bandeira 25% menor, sem perder nitidez.
+    c.scale(ratio * larguraCss / (mostrarNumero ? 64 : 42), ratio * alturaCss / (mostrarNumero ? 52 : 38));
+    c.clearRect(0, 0, mostrarNumero ? 64 : 42, mostrarNumero ? 52 : 38);
 
     const cores = paleta(status, selecionado);
-    const centro = larguraCss / 2;
+    const centro = (mostrarNumero ? 64 : 42) / 2;
     const escala = mostrarNumero ? 1 : .71;
     const topo = mostrarNumero ? 7 : 5;
-    const base = alturaCss - (mostrarNumero ? 5 : 4);
+    const base = (mostrarNumero ? 52 : 38) - (mostrarNumero ? 5 : 4);
     const hasteX = centro;
     const inicioTecido = hasteX + 3 * escala;
     const larguraTecido = 28 * escala;
@@ -363,7 +364,7 @@
     if (mostrarNumero && quantidade > 1) {
       // Mini etiqueta retangular de pacotes presa à lateral da bandeira.
       const selo = quantidade > 99 ? '99+' : String(quantidade);
-      const bx = larguraCss - 18, by = 29;
+      const bx = 64 - 18, by = 29;
       c.fillStyle = '#ffffff';
       c.strokeStyle = cores.fundo;
       c.lineWidth = 1.4;
