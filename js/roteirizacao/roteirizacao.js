@@ -884,6 +884,14 @@
     if (!rotaAtual) return;
     const totalEntregas = rotaAtual.paradas.length;
     const total = contarParadasFisicas(rotaAtual.paradas);
+    // Cada ocorrência de pacote entra na contagem, mesmo com BR repetido.
+    const totalPacotes = global.PacoteEMatoMarcadores
+      ?.quantidadePacotesRegistradosDoGrupo?.(rotaAtual.paradas)
+      ?? rotaAtual.paradas.reduce((soma, p) =>
+        soma + Math.max(Array.isArray(p.pacotes) ? p.pacotes.length : 0,
+          Math.max(0, Math.round(Number(p.quantidadePacotes) || 0))), 0);
+    if ($('routingSummaryPackages')) $('routingSummaryPackages').textContent = String(totalPacotes);
+    if ($('routingSummaryStops')) $('routingSummaryStops').textContent = String(total);
     const localizadasFisicas = contarParadasFisicas(rotaAtual.paradas.filter(p => paradaLocalizada(p)));
     const problemas = Math.max(0, total - localizadasFisicas);
     if ($('routingImportedCount')) $('routingImportedCount').textContent = String(total);
@@ -920,9 +928,8 @@
           : (rotaAtual.rotaOtimizada ? 'Rota pronta' : 'Rota em planejamento'));
     }
     if (meta) {
-      const paradaTexto = `${total} ${total === 1 ? 'parada' : 'paradas'}`;
-      const distancia = formatarDistancia(rotaAtual.distanciaTotalMetros);
-      meta.textContent = distancia === '—' ? paradaTexto : `${paradaTexto} · ${distancia}`;
+      const distancia = calculada ? formatarDistancia(rotaAtual.distanciaTotalMetros) : 'Aguardando cálculo';
+      meta.textContent = 'Distância: ' + distancia;
     }
     renderizarPreferencias();
     atualizarDisponibilidadeAcoes();
