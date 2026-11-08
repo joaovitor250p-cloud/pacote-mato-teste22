@@ -249,7 +249,8 @@ function tocarIntroPs2Audio() {
       document.documentElement.style.setProperty('--shadow-card', p.shadow);
       
       let metaColor = document.getElementById('metaThemeColor');
-      if (metaColor) metaColor.setAttribute('content', p.bg_body);
+      // O tema claro mantém a identidade verde também na barra do navegador/PWA.
+      if (metaColor) metaColor.setAttribute('content', '#168B61');
 
       localStorage.setItem('tema_preferido', tipo);
 

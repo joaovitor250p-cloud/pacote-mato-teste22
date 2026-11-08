@@ -34,9 +34,10 @@ assert.ok(html.includes('js/mapa/config.js?v=20261106-setas-de-rua-10'));
 assert.match(config, /const camadaPedestre/);
 assert.match(config, /garantirRuasAzuisUniformes\(mapa, navegacaoAtiva\)/);
 assert.match(config, /'pemato-streets-solid'/);
-assert.ok(html.includes('js/mapa/marcadores.js?v=20261106-circuit-clean-3'));
-assert.ok(html.includes('js/mapa/mapa.js?v=20261106-teste22-mapa-pinos-2'));
-assert.ok(html.includes('js/navegacao/navegacao.js?v=20261106-teste22-mapa-pinos-2'));
+assert.ok(html.includes('js/mapa/marcadores.js?v=20261108-pinos-verdes-1'));
+assert.ok(html.includes('js/mapa/mapa.js?v=20261108-teste22-verde-2'));
+assert.ok(html.includes('js/navegacao/navegacao.js?v=20261108-teste22-verde-2'));
+assert.doesNotMatch(planejamento + navegacao, /#a6532c|rgba\(166,83,44/i, 'marcador da posição usa o verde da marca');
 
 console.log('PASSOU: mapa de ruas, marcadores numerados sem agrupamento e cache atualizado.');
 

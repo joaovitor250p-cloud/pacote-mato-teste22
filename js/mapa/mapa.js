@@ -327,10 +327,10 @@
     // Em estilo raster puro não há servidor de glyphs. O círculo de partida continua visível
     // e evita que uma camada de texto impeça a montagem das demais camadas do mapa.
     if (mapa.getStyle()?.glyphs && !mapa.getLayer(LAYER_START_TEXT)) mapa.addLayer({ id: LAYER_START_TEXT, type: 'symbol', source: SOURCE_START, layout: { 'text-field': 'P', 'text-size': 10, 'text-allow-overlap': true }, paint: { 'text-color': '#ffffff' } });
-    if (!mapa.getLayer(LAYER_END)) mapa.addLayer({ id: LAYER_END, type: 'circle', source: SOURCE_END, paint: { 'circle-radius': 11, 'circle-color': '#24313b', 'circle-stroke-color': '#c8743b', 'circle-stroke-width': 4 } });
+    if (!mapa.getLayer(LAYER_END)) mapa.addLayer({ id: LAYER_END, type: 'circle', source: SOURCE_END, paint: { 'circle-radius': 11, 'circle-color': '#24313b', 'circle-stroke-color': '#25B782', 'circle-stroke-width': 4 } });
     if (mapa.getStyle()?.glyphs && !mapa.getLayer(LAYER_END_TEXT)) mapa.addLayer({ id: LAYER_END_TEXT, type: 'symbol', source: SOURCE_END, layout: { 'text-field': 'F', 'text-size': 10, 'text-allow-overlap': true }, paint: { 'text-color': '#ffffff' } });
-    if (!mapa.getLayer(LAYER_DRIVER_RING)) mapa.addLayer({ id: LAYER_DRIVER_RING, type: 'circle', source: SOURCE_DRIVER, paint: { 'circle-radius': 12, 'circle-color': 'rgba(166,83,44,.14)', 'circle-stroke-color':'rgba(166,83,44,.34)', 'circle-stroke-width':1 } });
-    if (!mapa.getLayer(LAYER_DRIVER)) mapa.addLayer({ id: LAYER_DRIVER, type: 'circle', source: SOURCE_DRIVER, paint: { 'circle-radius': 6, 'circle-color': '#a6532c', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 } });
+    if (!mapa.getLayer(LAYER_DRIVER_RING)) mapa.addLayer({ id: LAYER_DRIVER_RING, type: 'circle', source: SOURCE_DRIVER, paint: { 'circle-radius': 12, 'circle-color': 'rgba(22,139,97,.14)', 'circle-stroke-color':'rgba(22,139,97,.34)', 'circle-stroke-width':1 } });
+    if (!mapa.getLayer(LAYER_DRIVER)) mapa.addLayer({ id: LAYER_DRIVER, type: 'circle', source: SOURCE_DRIVER, paint: { 'circle-radius': 6, 'circle-color': '#168B61', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 } });
   }
 
   function bindEventosMapa() {

@@ -4,8 +4,8 @@
   "description": "Sistema Inteligente de Logística",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f6f5f2",
-  "theme_color": "#a6532c",
+  "background_color": "#F6FAF8",
+  "theme_color": "#168B61",
   "orientation": "portrait",
   "icons": [
     {

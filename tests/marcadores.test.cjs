@@ -49,8 +49,8 @@ for (const entry of [pendente, selecionada, parcial, concluida, falhou]) {
 }
 assert.equal(rascunho.data.height / rascunho.options.pixelRatio, 33);
 assert.equal(selecionada.data.width, pendente.data.width);
-assert.ok(pendente.data.fills.includes('#3179ef'));
-assert.ok(selecionada.data.fills.includes('#1649bc'));
+assert.ok(pendente.data.fills.includes('#168B61'));
+assert.ok(selecionada.data.fills.includes('#0F7351'));
 assert.ok(parcial.data.fills.includes('#e59b24'));
 assert.ok(concluida.data.fills.includes('#16a34a'));
 assert.ok(falhou.data.fills.includes('#dc2626'));

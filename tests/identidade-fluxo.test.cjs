@@ -20,9 +20,13 @@ assert.ok(roteiro.includes("PacoteEMatoImportacaoXLSX.lerArquivo(file, { inspeca
 assert.ok(importador.includes("pacote: ['pacote', 'spx tn'"));
 assert.ok(importador.includes("latitude: ['latitude'"));
 assert.ok(importador.includes("longitude: ['longitude'"));
-assert.ok(tema.includes('--pemato-cobre: #a6532c'));
-assert.equal(manifest.theme_color, '#a6532c');
-assert.equal(manifest.background_color, '#f6f5f2');
+assert.ok(tema.includes('--pemato-cobre: #168B61'));
+assert.equal(manifest.theme_color, '#168B61');
+assert.equal(manifest.background_color, '#F6FAF8');
+assert.ok(html.includes('content="#168B61" id="metaThemeColor"'));
+assert.ok(html.includes('manifest.json?v=20261108-teste22-verde-2'));
+assert.ok(ler('js/app.js').includes("metaColor.setAttribute('content', '#168B61')"));
+assert.ok(!html.includes('#a6532c'));
 
 for (const codigo of [mapa, navegacao]) {
   assert.ok(!codigo.includes('clusterRadius:'));
