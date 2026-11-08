@@ -263,32 +263,32 @@
   }
 
 
-  // Bandeirinha inspirada na imagem: haste, tecido ondulado e anel no solo.
-  // A haste central coincide com icon-anchor=bottom e com a localização real.
-  function desenharBandeira(ctx, x, y, largura, altura) {
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.quadraticCurveTo(x + largura * .27, y - 2, x + largura * .51, y + 1);
-    ctx.quadraticCurveTo(x + largura * .77, y + 3, x + largura, y);
-    ctx.lineTo(x + largura, y + altura - 2);
-    ctx.quadraticCurveTo(x + largura * .76, y + altura + 2, x + largura * .5, y + altura - 1);
-    ctx.quadraticCurveTo(x + largura * .25, y + altura - 4, x, y + altura);
-    ctx.closePath();
-  }
 
-  function desenharBaseBandeira(ctx, centro, y, raioX, raioY) {
+  // Bandeirola premium: plaqueta facetada sem haste, com pequeno vértice
+  // alinhado ao ponto geográfico (MapLibre icon-anchor=bottom).
+  function desenharBandeirola(ctx, x, y, w, h, centro) {
+    const r = 4;
     ctx.beginPath();
-    ctx.moveTo(centro - raioX, y);
-    ctx.quadraticCurveTo(centro - raioX, y - raioY, centro, y - raioY);
-    ctx.quadraticCurveTo(centro + raioX, y - raioY, centro + raioX, y);
-    ctx.quadraticCurveTo(centro + raioX, y + raioY, centro, y + raioY);
-    ctx.quadraticCurveTo(centro - raioX, y + raioY, centro - raioX, y);
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - 8);
+    // Recorte sutil de bandeirola à direita, sem ondulação infantil.
+    ctx.lineTo(x + w - 4, y + h - 11);
+    ctx.lineTo(x + w - 8, y + h - 8);
+    ctx.lineTo(centro + 5, y + h - 8);
+    ctx.lineTo(centro, y + h);
+    ctx.lineTo(centro - 5, y + h - 8);
+    ctx.lineTo(x + 4, y + h - 8);
+    ctx.quadraticCurveTo(x, y + h - 8, x, y + h - 12);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
     ctx.closePath();
   }
 
   function criarIcone(mapa, opcoes) {
     if (!mapa || !global.document) return '';
-    const prefixo = String(opcoes?.prefixo || 'pemato-stop-v13') + '-flag-v3-compact';
+    const prefixo = String(opcoes?.prefixo || 'pemato-stop-v13') + '-bandeirola-premium-v1';
     const mostrarNumero = opcoes?.mostrarNumero !== false;
     const ordem = mostrarNumero ? Math.max(1, Math.round(numeroSeguro(opcoes?.ordem, 1))) : 0;
     const quantidade = Math.max(1, Math.round(numeroSeguro(opcoes?.quantidade, 1)));
@@ -298,56 +298,28 @@
     if (mapa.hasImage?.(nome)) return nome;
 
     const ratio = Math.max(2, Math.min(3, Number(global.devicePixelRatio || 2)));
+    const larguraCss = mostrarNumero ? 40 : 30;
+    const alturaCss = mostrarNumero ? 34 : 28;
     const canvas = global.document.createElement('canvas');
-    const larguraCss = mostrarNumero ? 48 : 32;
-    const alturaCss = mostrarNumero ? 39 : 29;
     canvas.width = Math.round(larguraCss * ratio);
     canvas.height = Math.round(alturaCss * ratio);
     const c = contexto2d(canvas);
     if (!c) return '';
-    // Renderiza o mesmo desenho em uma bandeira 25% menor, sem perder nitidez.
-    c.scale(ratio * larguraCss / (mostrarNumero ? 64 : 42), ratio * alturaCss / (mostrarNumero ? 52 : 38));
-    c.clearRect(0, 0, mostrarNumero ? 64 : 42, mostrarNumero ? 52 : 38);
+    c.scale(ratio, ratio);
+    c.clearRect(0, 0, larguraCss, alturaCss);
 
     const cores = paleta(status, selecionado);
-    const centro = (mostrarNumero ? 64 : 42) / 2;
-    const escala = mostrarNumero ? 1 : .71;
-    const topo = mostrarNumero ? 7 : 5;
-    const base = (mostrarNumero ? 52 : 38) - (mostrarNumero ? 5 : 4);
-    const hasteX = centro;
-    const inicioTecido = hasteX + 3 * escala;
-    const larguraTecido = 28 * escala;
-    const alturaTecido = 22 * escala;
-
+    const centro = larguraCss / 2;
     c.save();
-    c.shadowColor = 'rgba(9, 47, 35, .19)';
-    c.shadowBlur = selecionado ? 6 : 3;
-    c.shadowOffsetY = 1.5;
-    // Anel de localização como na imagem, sem corpo arredondado.
-    c.strokeStyle = selecionado ? '#0d6848' : '#629b85';
-    c.lineWidth = selecionado ? 2.5 : 2.1;
-    desenharBaseBandeira(c, centro, base - 1.5 * escala, 11 * escala, 4.5 * escala);
-    c.stroke();
-
-    c.beginPath();
-    c.moveTo(hasteX, topo - 1 * escala);
-    c.lineTo(hasteX, base - 2.7 * escala);
-    c.strokeStyle = '#e9f6f0';
-    c.lineWidth = 5.2 * escala;
-    c.lineCap = 'round';
-    c.stroke();
-    c.beginPath();
-    c.moveTo(hasteX, topo - 1 * escala);
-    c.lineTo(hasteX, base - 2.7 * escala);
-    c.strokeStyle = selecionado ? '#07533a' : '#116e51';
-    c.lineWidth = 2.9 * escala;
-    c.stroke();
-
-    desenharBandeira(c, inicioTecido, topo, larguraTecido, alturaTecido);
+    c.shadowColor = 'rgba(9, 43, 31, .19)';
+    c.shadowBlur = selecionado ? 5 : 3;
+    c.shadowOffsetY = 2;
+    desenharBandeirola(c, 2, 2, larguraCss - 4, alturaCss - 3, centro);
     c.fillStyle = cores.fundo;
     c.fill();
-    c.strokeStyle = selecionado ? '#084b35' : '#e5f5ed';
-    c.lineWidth = selecionado ? 1.8 : 1.5;
+    c.shadowColor = 'transparent';
+    c.strokeStyle = selecionado ? '#c9f2df' : '#ffffff';
+    c.lineWidth = selecionado ? 2 : 1.4;
     c.lineJoin = 'round';
     c.stroke();
     c.restore();
@@ -355,27 +327,30 @@
     if (mostrarNumero) {
       const numero = String(ordem);
       c.fillStyle = cores.numero;
+      c.font = '800 ' + (numero.length >= 4 ? 10 : numero.length === 3 ? 12 : 16) + 'px Arial, sans-serif';
       c.textAlign = 'center';
       c.textBaseline = 'middle';
-      c.font = '800 ' + (numero.length >= 4 ? 9.4 : numero.length === 3 ? 11 : 14) + 'px Arial, sans-serif';
-      c.fillText(numero, inicioTecido + larguraTecido * .5, topo + alturaTecido * .51);
+      c.fillText(numero, centro - (quantidade > 1 ? 2 : 0), 14);
+    } else {
+      // Ícone de rascunho discreto, sem número inventado.
+      c.fillStyle = '#ffffff';
+      c.fillRect(centro - 2, 11, 4, 4);
     }
 
     if (mostrarNumero && quantidade > 1) {
-      // Mini etiqueta retangular de pacotes presa à lateral da bandeira.
       const selo = quantidade > 99 ? '99+' : String(quantidade);
-      const bx = 64 - 18, by = 29;
+      const bx = larguraCss - 15, by = 2;
       c.fillStyle = '#ffffff';
-      c.strokeStyle = cores.fundo;
-      c.lineWidth = 1.4;
-      desenharCapsula(c, bx, by, 17, 13, 2.5);
+      c.strokeStyle = '#d5e7de';
+      c.lineWidth = 1;
+      desenharCapsula(c, bx, by, 13, 11, 2);
       c.fill();
       c.stroke();
-      c.fillStyle = '#16442F';
+      c.fillStyle = '#15553b';
       c.textAlign = 'center';
       c.textBaseline = 'middle';
-      c.font = '800 ' + (selo.length > 2 ? 7 : 9) + 'px Arial, sans-serif';
-      c.fillText(selo, bx + 8.5, by + 6.8);
+      c.font = '800 ' + (selo.length >= 3 ? 6.4 : 8) + 'px Arial, sans-serif';
+      c.fillText(selo, bx + 6.5, by + 5.6);
     }
 
     try {
