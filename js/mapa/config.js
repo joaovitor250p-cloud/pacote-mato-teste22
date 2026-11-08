@@ -481,7 +481,20 @@
     // Desenhar as vias uniformemente por cima das ruas heterogêneas da base,
     // mantendo rótulos legíveis e sem alterar dados de roteirização.
     garantirRuasAzuisUniformes(mapa, navegacaoAtiva);
-    garantirSetasRuasBrasil(mapa);
+    // Evitar duas camadas de setas sobre a mesma via. Se não for possível
+    // criar a nossa camada, as setas originais seguem disponíveis.
+    const setasNacionais = garantirSetasRuasBrasil(mapa);
+    if (setasNacionais) {
+      layers.forEach(layer => {
+        if (layer.type !== 'symbol' || /^pemato-/i.test(layer.id || '')) return;
+        const id = String(layer.id || '').toLowerCase();
+        const origem = String(layer['source-layer'] || '').toLowerCase();
+        if (/(oneway|one-way|one_way)/.test(id) &&
+            /^(transportation|transportation_name|road|roads)$/.test(origem)) {
+          setLayoutSeguro(mapa, layer, 'visibility', 'none');
+        }
+      });
+    }
     estiloCleanAplicado.add(mapa);
     return true;
   }
