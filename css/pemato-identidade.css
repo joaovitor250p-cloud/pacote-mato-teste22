@@ -511,3 +511,158 @@ body[data-pemato-module="navegacao"],
   letter-spacing: .015em !important;
   color: #6E8073 !important;
 }
+
+
+/* Teste22 v12 — painel superior fixo e resumo executivo da rota */
+/* Painel ancorado ao container do MAPA, jamais à posição do pino.
+   Com isso ele permanece no topo sem deslocar o mapa quando o motorista se move. */
+.pemato-packages-top-panel {
+  position: absolute !important;
+  z-index: 45 !important;
+  top: clamp(72px, 10dvh, 105px) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  box-sizing: border-box !important;
+  width: min(370px, calc(100% - 118px)) !important;
+  max-height: min(54dvh, 475px) !important;
+  padding: 13px 12px 12px !important;
+  overflow: hidden !important;
+  border: 1px solid #DCEAE0 !important;
+  border-radius: 17px !important;
+  background: rgba(255,255,255,.985) !important;
+  color: #20382B !important;
+  box-shadow: 0 15px 44px rgba(17,49,35,.18) !important;
+  pointer-events: auto !important;
+  font-family: inherit;
+}
+.pemato-packages-top-panel .pemato-multi-popup {
+  max-height: min(49dvh, 422px) !important;
+}
+.pemato-packages-top-panel .pemato-multi-popup-lista {
+  max-height: min(30dvh, 245px) !important;
+}
+.pemato-packages-top-close {
+  position: absolute !important;
+  top: 5px !important;
+  right: 5px !important;
+  z-index: 1 !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 27px !important;
+  height: 27px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: #4D6255 !important;
+  font: 700 21px/1 Arial,sans-serif !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+.pemato-packages-top-close:hover { background: #EFF5F0 !important; }
+
+/* Painel inferior: a previsão de término fica destacada acima de
+   dois indicadores legíveis, pacotes e paradas, lado a lado. */
+#routingBottomSheet .routing-sheet-summary {
+  height: auto !important;
+  min-height: 119px !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
+  padding: 10px 15px 11px !important;
+  border-bottom: 1px solid #E9F0EB !important;
+  background: #FFFFFF !important;
+}
+#routingBottomSheet .routing-summary-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+#routingBottomSheet .routing-sheet-summary-main {
+  width: 100%;
+  min-height: 0;
+  text-align: left !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+#routingBottomSheet .routing-sheet-summary-main #routingSheetHeadline {
+  display: block !important;
+  color: #142A20 !important;
+  font-size: .98rem !important;
+  font-weight: 850 !important;
+  line-height: 1.2 !important;
+}
+#routingBottomSheet #routingSheetMeta {
+  display: block !important;
+  color: #73837A !important;
+  font-size: .60rem !important;
+  font-weight: 650 !important;
+  margin-top: 3px !important;
+}
+#routingBottomSheet .routing-summary-stats {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+#routingBottomSheet .routing-summary-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  gap: 9px;
+  padding: 7px 10px;
+  border: 1px solid #DDEAE1;
+  border-radius: 10px;
+  background: #F7FAF8;
+}
+#routingBottomSheet .routing-summary-stat-packages {
+  background: #EAF6EF;
+  border-color: #CCE5D4;
+}
+#routingBottomSheet .routing-summary-stat > span {
+  min-width: 0;
+  color: #5C7567 !important;
+  font-size: .64rem !important;
+  font-weight: 760 !important;
+  line-height: 1.15 !important;
+}
+#routingBottomSheet .routing-summary-stat > strong {
+  color: #087542 !important;
+  flex: 0 0 auto;
+  font-size: .94rem !important;
+  font-weight: 900 !important;
+  font-variant-numeric: tabular-nums;
+}
+#routingBottomSheet .routing-summary-stat-stops > strong { color: #283C30 !important; }
+#routingBottomSheet #routingActionsBtn { margin-top: 7px !important; }
+#routingBottomSheet #pematoTest22Version { margin-top: 2px !important; font-size: 9px !important; }
+
+@media (max-width: 820px) {
+  .routing-workspace.sheet-collapsed #routingBottomSheet.routing-list-pane,
+  .routing-workspace:not(.sheet-expanded):not(.sheet-intermediate) #routingBottomSheet.routing-list-pane {
+    height: 226px !important;
+  }
+  .routing-workspace:not(.sheet-expanded) .routing-selected-stop {
+    bottom: 237px !important;
+  }
+  .routing-workspace:not(.sheet-expanded) .routing-map-empty-state {
+    bottom: 249px !important;
+  }
+  #routingBottomSheet .routing-sheet-handle { height: 19px !important; flex: 0 0 19px; }
+  #routingBottomSheet .routing-sheet-summary { min-height: 117px !important; }
+  .pemato-packages-top-panel {
+    top: max(86px, env(safe-area-inset-top)) !important;
+    width: min(345px, calc(100% - 112px)) !important;
+    max-height: min(50dvh, 420px) !important;
+  }
+}
+@media (max-width: 360px) {
+  #routingBottomSheet .routing-sheet-summary { padding: 9px 10px !important; gap: 6px !important; }
+  #routingBottomSheet .routing-summary-stat { padding: 6px 7px; gap: 4px; }
+  #routingBottomSheet .routing-summary-stat > span { font-size: .57rem !important; }
+  .pemato-packages-top-panel { width: calc(100% - 82px) !important; }
+}
