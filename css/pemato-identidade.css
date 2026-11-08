@@ -312,9 +312,12 @@ body[data-pemato-module="navegacao"],
   border-color: #E0E8E2 !important;
 }
 #routingBottomSheet.routing-list-pane,
+#routingBottomSheet .routing-sheet-summary,
+#routingBottomSheet .routing-sheet-body,
+#routingBottomSheet .routing-stop-list,
 .routing-list-pane, .routing-sheet-summary, .routing-sheet-body,
 .nav-extras-panel {
-  background: #F7FAF8 !important;
+  background: #FFFFFF !important;
 }
 .home-panel, .settings-card, .history-route-card, .history-route-card-v2,
 .auth-access-card, .auth-plans-card, .login-card,
@@ -430,4 +433,14 @@ body[data-pemato-module="navegacao"],
 .pemato-multi-popup-stop:focus-visible {
   outline: 2px solid #018D3E;
   outline-offset: 2px;
+}
+
+/* Identificador discreto que permite verificar visualmente o carregamento
+   da versão correta na tela de planejamento do Teste22. */
+#pematoTest22Version {
+  display: block !important;
+  margin-top: 3px !important;
+  font: 700 9px/1.2 Arial, sans-serif !important;
+  letter-spacing: .015em !important;
+  color: #6E8073 !important;
 }
