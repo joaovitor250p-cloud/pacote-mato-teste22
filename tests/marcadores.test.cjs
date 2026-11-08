@@ -128,3 +128,31 @@ listaPopup.children[11].eventos.click();
 assert.equal(paradaSelecionada, '12', 'a ultima das doze paradas pode ser escolhida');
 assert.equal(popupTeste.removido, true);
 console.log('PASSOU: popup compacto com 12 paradas, expansao e selecao da ultima.');
+
+// Duplicar o mesmo endereco 12 vezes nao cria 12 pacotes fisicos.
+const repetidas = Array.from({ length: 12 }, (_, i) => ({
+  id: 'dupla-' + (i + 1),
+  ordemOriginal: 40 + i,
+  enderecoOriginal: 'Rua Frei Durao, 603',
+  pacotes: [i % 2 === 0 ? 'CODIGO-A' : 'CODIGO-B']
+}));
+assert.equal(sandbox.PacoteEMatoMarcadores.quantidadePacotesUnicosDoGrupo(repetidas), 2,
+  'dois codigos fisicos distintos nas doze paradas');
+assert.equal(sandbox.PacoteEMatoMarcadores.quantidadePacotesUnicosDoGrupo(
+  [{ id: 'sem-codigo', pacotes: [], quantidadePacotes: 1 }]), 0,
+  'registro sem codigo nao vira pacote ficticio');
+const abriuRepetidas = sandbox.PacoteEMatoMarcadores.abrirDetalhesPacotes(
+  mapa,
+  { properties: { id: 'dupla-1', ids: repetidas.map(p => p.id).join(',') },
+    geometry: { coordinates: [-46.6, -23.5] } },
+  repetidas,
+  () => {}
+);
+assert.equal(abriuRepetidas, true);
+assert.equal(popupTeste.conteudo.children[0].textContent, '2 pacotes neste ponto');
+assert.match(popupTeste.conteudo.children[1].textContent, /12 paradas no mesmo ponto/);
+const linhasDuplicadas = popupTeste.conteudo.children.find(e => e.className === 'pemato-multi-popup-lista');
+assert.equal(linhasDuplicadas.children.length, 12);
+assert.match(linhasDuplicadas.children[0].children[0].textContent, /1 codigo vinculado/);
+console.log('PASSOU: 12 paradas repetidas exibem so 2 pacotes unicos.');
+
