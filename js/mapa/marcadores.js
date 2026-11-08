@@ -286,9 +286,10 @@
     ctx.closePath();
   }
 
+
   function criarIcone(mapa, opcoes) {
     if (!mapa || !global.document) return '';
-    const prefixo = String(opcoes?.prefixo || 'pemato-stop-v13') + '-bandeirola-premium-v2-menor';
+    const prefixo = String(opcoes?.prefixo || 'pemato-stop-v13') + '-bandeirola-premium-v3-multi';
     const mostrarNumero = opcoes?.mostrarNumero !== false;
     const ordem = mostrarNumero ? Math.max(1, Math.round(numeroSeguro(opcoes?.ordem, 1))) : 0;
     const quantidade = Math.max(1, Math.round(numeroSeguro(opcoes?.quantidade, 1)));
@@ -297,9 +298,12 @@
     const nome = nomeIcone(prefixo, ordem, quantidade, selecionado, status, mostrarNumero);
     if (mapa.hasImage?.(nome)) return nome;
 
+    const multiplo = mostrarNumero && quantidade > 1;
     const ratio = Math.max(2, Math.min(3, Number(global.devicePixelRatio || 2)));
-    const larguraCss = mostrarNumero ? 34 : 26;
-    const alturaCss = mostrarNumero ? 29 : 24;
+    // A bandeirola mantém SEMPRE 34 px de largura. Apenas a área
+    // transparente do sprite cresce para caber a etiqueta de pacotes.
+    const larguraCss = mostrarNumero ? (multiplo ? 49 : 34) : 26;
+    const alturaCss = mostrarNumero ? 34 : 24;
     const canvas = global.document.createElement('canvas');
     canvas.width = Math.round(larguraCss * ratio);
     canvas.height = Math.round(alturaCss * ratio);
@@ -310,11 +314,15 @@
 
     const cores = paleta(status, selecionado);
     const centro = larguraCss / 2;
+    const bandeiraLargura = mostrarNumero ? 34 : 26;
+    const bandeiraAltura = mostrarNumero ? 26 : 21;
+    const topo = mostrarNumero ? 7 : 2;
     c.save();
-    c.shadowColor = 'rgba(9, 43, 31, .19)';
+    c.shadowColor = 'rgba(9, 43, 31, .17)';
     c.shadowBlur = selecionado ? 5 : 3;
-    c.shadowOffsetY = 2;
-    desenharBandeirola(c, 2, 2, larguraCss - 4, alturaCss - 3, centro);
+    c.shadowOffsetY = 1.5;
+    desenharBandeirola(c, centro - bandeiraLargura / 2 + 2, topo,
+      bandeiraLargura - 4, bandeiraAltura, centro);
     c.fillStyle = cores.fundo;
     c.fill();
     c.shadowColor = 'transparent';
@@ -330,28 +338,30 @@
       c.font = '800 ' + (numero.length >= 4 ? 8.5 : numero.length === 3 ? 10.5 : 14) + 'px Arial, sans-serif';
       c.textAlign = 'center';
       c.textBaseline = 'middle';
-      c.fillText(numero, centro - (quantidade > 1 ? 3 : 0), 12.6);
+      // Número principal fica independente do contador de pacotes.
+      c.fillText(numero, centro, 18);
     } else {
-      // Ícone de rascunho discreto, sem número inventado.
       c.fillStyle = '#ffffff';
       desenharCapsula(c, centro - 2, 11, 4, 4, 1);
       c.fill();
     }
 
-    if (mostrarNumero && quantidade > 1) {
-      const selo = quantidade > 99 ? '99+' : String(quantidade);
-      const bx = larguraCss - 15, by = 1;
+    if (multiplo) {
+      // O "×2" não parece outra parada: etiqueta própria acima e ao lado,
+      // nunca cobrindo o número da bandeirola.
+      const texto = quantidade > 99 ? '99+' : '×' + quantidade;
+      const bx = larguraCss - 17, by = 1;
       c.fillStyle = '#ffffff';
-      c.strokeStyle = '#d5e7de';
+      c.strokeStyle = '#b8d7c6';
       c.lineWidth = 1;
-      desenharCapsula(c, bx, by, 13, 11, 2);
+      desenharCapsula(c, bx, by, 16, 12, 3);
       c.fill();
       c.stroke();
-      c.fillStyle = '#15553b';
+      c.fillStyle = '#116744';
       c.textAlign = 'center';
       c.textBaseline = 'middle';
-      c.font = '800 ' + (selo.length >= 3 ? 6.4 : 8) + 'px Arial, sans-serif';
-      c.fillText(selo, bx + 6.5, by + 5.6);
+      c.font = '800 ' + (texto.length >= 3 ? 7 : 8.5) + 'px Arial, sans-serif';
+      c.fillText(texto, bx + 8, by + 6);
     }
 
     try {
@@ -361,6 +371,70 @@
       nomes.add(nome);
     } catch (_) {}
     return nome;
+  }
+
+  // Um toque num endereço com vários pacotes abre as paradas e seus códigos
+  // sem inventar pinos deslocados nem esconder entregas na mesma coordenada.
+  let popupPacotesAtual = null;
+  function abrirDetalhesPacotes(mapa, feature, paradas, selecionarParada) {
+    const props = feature?.properties || {};
+    const ids = new Set(String(props.ids || props.id || '').split(',').filter(Boolean));
+    const grupo = (Array.isArray(paradas) ? paradas : []).filter(p => ids.has(String(p?.id)));
+    if (!grupo.length) return false;
+    const total = grupo.reduce((soma, p) => soma + quantidadePacotesDaParada(p), 0);
+    if (total <= 1 && grupo.length <= 1) return false;
+    if (!mapa || !global.document || typeof global.maplibregl?.Popup !== 'function') return false;
+    try {
+      if (popupPacotesAtual) popupPacotesAtual.remove();
+      const doc = global.document;
+      const painel = doc.createElement('div');
+      painel.className = 'pemato-multi-popup';
+      const titulo = doc.createElement('strong');
+      titulo.className = 'pemato-multi-popup-title';
+      titulo.textContent = total + (total === 1 ? ' pacote neste endereço' : ' pacotes neste endereço');
+      const subtitulo = doc.createElement('span');
+      subtitulo.className = 'pemato-multi-popup-subtitle';
+      subtitulo.textContent = grupo.length + (grupo.length === 1 ? ' parada' : ' paradas') + ' · toque para ver detalhes';
+      painel.append(titulo, subtitulo);
+      grupo.forEach(p => {
+        const botao = doc.createElement('button');
+        botao.type = 'button';
+        botao.className = 'pemato-multi-popup-stop';
+        const rotulo = doc.createElement('strong');
+        const ordem = Number(p?.ordemOtimizada || p?.ordemOriginal || 0);
+        rotulo.textContent = (ordem > 0 ? 'Parada ' + ordem : 'Ver parada') +
+          ' · ' + quantidadePacotesDaParada(p) + (quantidadePacotesDaParada(p) === 1 ? ' pacote' : ' pacotes');
+        const endereco = doc.createElement('span');
+        endereco.textContent = String(p?.enderecoFonte || p?.enderecoOriginal ||
+          [p?.logradouro, p?.numero].filter(Boolean).join(', ') || 'Ver detalhes da entrega');
+        botao.append(rotulo, endereco);
+        const pacotes = Array.isArray(p?.pacotes) ? p.pacotes : [];
+        if (pacotes.length) {
+          const detalhes = doc.createElement('small');
+          detalhes.textContent = pacotes.slice(0, 4).map(item => {
+            if (typeof item === 'string' || typeof item === 'number') return String(item);
+            return String(item?.codigoRastreio || item?.codigoBarras || item?.codigo || item?.id || 'Pacote');
+          }).join(' · ') + (pacotes.length > 4 ? ' · +' + (pacotes.length - 4) : '');
+          botao.append(detalhes);
+        }
+        botao.addEventListener('click', () => {
+          popupPacotesAtual?.remove();
+          popupPacotesAtual = null;
+          if (typeof selecionarParada === 'function') selecionarParada(String(p.id));
+        });
+        painel.append(botao);
+      });
+      const centro = feature?.geometry?.coordinates;
+      if (!Array.isArray(centro) || centro.length < 2) return false;
+      popupPacotesAtual = new global.maplibregl.Popup({
+        closeButton: true, closeOnClick: true, maxWidth: '288px',
+        offset: 18, className: 'pemato-packages-popup'
+      }).setLngLat(centro).setDOMContent(painel).addTo(mapa);
+      return true;
+    } catch (erro) {
+      try { console.warn('Pacote É Mato: detalhes de pacotes indisponíveis', erro); } catch (_) {}
+      return false;
+    }
   }
 
   function prepararFeatures(mapa, features, opcoes) {
@@ -396,6 +470,7 @@
 
   global.PacoteEMatoMarcadores = Object.freeze({
     criarIcone,
+    abrirDetalhesPacotes,
     prepararFeatures,
     assinatura,
     nomeIcone,
