@@ -72,3 +72,59 @@ assert.match(fs.readFileSync(path.resolve(__dirname, '../js/mapa/marcadores.js')
 assert.ok([...images.keys()].every(name => name.includes('bandeirola-premium-v3-multi')));
 
 assert.doesNotMatch(fs.readFileSync(path.resolve(__dirname, '../js/mapa/marcadores.js'), 'utf8'), /function desenharBaseBandeira/);
+
+
+// Popup responsivo: 12 paradas compartilham o ponto sem esmagar os botoes.
+const elementos = [];
+sandbox.document = {
+  createElement(tag) {
+    const el = {
+      tag, type: '', className: '', textContent: '', hidden: false,
+      children: [], eventos: {}, atributos: {}, scrollTop: 0,
+      append(...filhos) { this.children.push(...filhos); },
+      addEventListener(tipo, fn) { this.eventos[tipo] = fn; },
+      setAttribute(nome, valor) { this.atributos[nome] = valor; }
+    };
+    elementos.push(el);
+    return el;
+  }
+};
+let popupTeste = null;
+sandbox.maplibregl = {
+  Popup: class {
+    constructor(options) { this.options = options; popupTeste = this; }
+    setLngLat(coordenadas) { this.coordenadas = coordenadas; return this; }
+    setDOMContent(conteudo) { this.conteudo = conteudo; return this; }
+    addTo() { return this; }
+    remove() { this.removido = true; }
+  }
+};
+const paradasDoze = Array.from({length: 12}, (_, i) => ({
+  id: String(i + 1),
+  ordemOriginal: i + 1,
+  enderecoOriginal: 'Rua teste, ' + (100 + i),
+  pacotes: ['PAC-' + (100 + i)]
+}));
+let paradaSelecionada = null;
+const abriuDoze = sandbox.PacoteEMatoMarcadores.abrirDetalhesPacotes(
+  mapa,
+  { properties: { id: '1', ids: paradasDoze.map(p => p.id).join(',') },
+    geometry: { coordinates: [-46.6, -23.5] } },
+  paradasDoze,
+  id => { paradaSelecionada = id; }
+);
+assert.equal(abriuDoze, true);
+const raizPopup = popupTeste.conteudo;
+const listaPopup = raizPopup.children.find(e => e.className === 'pemato-multi-popup-lista');
+const botaoMais = raizPopup.children.find(e => e.className === 'pemato-multi-popup-mais');
+assert.equal(listaPopup.children.length, 12);
+assert.equal(listaPopup.children.filter(e => !e.hidden).length, 4, 'apenas quatro paradas inicialmente visiveis');
+assert.equal(botaoMais.textContent, 'Ver todas as 12 paradas');
+assert.match(raizPopup.children[0].textContent, /12 pacotes neste ponto/);
+botaoMais.eventos.click();
+assert.equal(listaPopup.children.filter(e => !e.hidden).length, 12, 'ao expandir todas ficam acessiveis');
+assert.equal(botaoMais.atributos['aria-expanded'], 'true');
+listaPopup.children[11].eventos.click();
+assert.equal(paradaSelecionada, '12', 'a ultima das doze paradas pode ser escolhida');
+assert.equal(popupTeste.removido, true);
+console.log('PASSOU: popup compacto com 12 paradas, expansao e selecao da ultima.');
