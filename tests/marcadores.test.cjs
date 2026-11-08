@@ -190,3 +190,29 @@ assert.deepEqual(itensBR.map(item => item.children[0].textContent),
 itensBR[2].eventos.click();
 assert.equal(paradaSelecionada, 'br-2', 'cada pacote abre a parada a que pertence');
 console.log('PASSOU: BR repetido entre paradas e pacotes da mesma parada aparecem individualmente.');
+
+
+// Painel fixo: ao tocar em pinos diferentes, permanece no topo do mapa.
+const elementosNoMapa = [];
+const containerMapa = {
+  appendChild(elemento) {
+    elementosNoMapa.push(elemento);
+    elemento.remove = () => { elemento.removido = true; };
+  }
+};
+const mapaComContainer = { getContainer: () => containerMapa };
+const abriuNoTopo = marcadores.abrirDetalhesPacotes(
+  mapaComContainer,
+  { properties: { id: 'dupla-1', ids: repetidas.map(p => p.id).join(',') },
+    geometry: { coordinates: [-46.6, -23.5] } },
+  repetidas,
+  () => {}
+);
+assert.equal(abriuNoTopo, true);
+assert.equal(elementosNoMapa.length, 1);
+assert.equal(elementosNoMapa[0].className, 'pemato-packages-top-panel');
+assert.equal(elementosNoMapa[0].children[0].className, 'pemato-packages-top-close');
+assert.equal(elementosNoMapa[0].children[1].className, 'pemato-multi-popup');
+elementosNoMapa[0].children[0].eventos.click();
+assert.equal(elementosNoMapa[0].removido, true, 'botao fechar elimina o painel');
+console.log('PASSOU: painel no topo do mapa, independente da coordenada do pino.');
