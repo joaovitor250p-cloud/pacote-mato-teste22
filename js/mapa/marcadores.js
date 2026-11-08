@@ -262,9 +262,28 @@
     ctx.closePath();
   }
 
+  // Silhueta própria do Pacote É Mato: escudo geométrico com ponta exata.
+  // O vértice inferior coincide com a coordenada, pois MapLibre usa anchor=bottom.
+  function desenharEscudoPremium(ctx, x, y, largura, corpo, ponta, canto) {
+    const centro = x + largura / 2;
+    ctx.beginPath();
+    ctx.moveTo(x + canto, y);
+    ctx.lineTo(x + largura - canto, y);
+    ctx.quadraticCurveTo(x + largura, y, x + largura, y + canto);
+    ctx.lineTo(x + largura, y + corpo - 9);
+    ctx.lineTo(centro + 7, y + corpo);
+    ctx.lineTo(centro, y + corpo + ponta);
+    ctx.lineTo(centro - 7, y + corpo);
+    ctx.lineTo(x, y + corpo - 9);
+    ctx.lineTo(x, y + canto);
+    ctx.quadraticCurveTo(x, y, x + canto, y);
+    ctx.closePath();
+  }
+
   function criarIcone(mapa, opcoes) {
     if (!mapa || !global.document) return '';
-    const prefixo = String(opcoes?.prefixo || 'pemato-stop-v13');
+    // Nova versão no nome evita reaproveitar o atlas antigo de ícones circulares.
+    const prefixo = String(opcoes?.prefixo || 'pemato-stop-v13') + '-shield-v1';
     const mostrarNumero = opcoes?.mostrarNumero !== false;
     const ordem = mostrarNumero ? Math.max(1, Math.round(numeroSeguro(opcoes?.ordem, 1))) : 0;
     const quantidade = Math.max(1, Math.round(numeroSeguro(opcoes?.quantidade, 1)));
@@ -275,47 +294,8 @@
 
     const ratio = Math.max(2, Math.min(3, Number(global.devicePixelRatio || 2)));
     const canvas = global.document.createElement('canvas');
-    const ctx = contexto2d(canvas);
-    if (!ctx) return '';
-
-    if (!mostrarNumero) {
-      const larguraCss = 26, alturaCss = 33;
-      canvas.width = Math.round(larguraCss * ratio);
-      canvas.height = Math.round(alturaCss * ratio);
-      const c = contexto2d(canvas);
-      if (!c) return '';
-      c.scale(ratio, ratio);
-      c.clearRect(0, 0, larguraCss, alturaCss);
-      const cores = paleta(status, selecionado);
-      c.save();
-      c.shadowColor = 'rgba(15,23,42,.20)';
-      c.shadowBlur = 3;
-      c.shadowOffsetY = 2;
-      c.fillStyle = cores.fundo;
-      c.strokeStyle = cores.borda;
-      c.lineWidth = 2.4;
-      desenharBalao(c, 3, 2, 20, 22, 9, 8);
-      c.fill();
-      c.shadowColor = 'transparent';
-      c.stroke();
-      c.restore();
-      c.beginPath();
-      c.arc(13, 12.5, 3.3, 0, Math.PI * 2);
-      c.fillStyle = cores.numero;
-      c.fill();
-      try {
-        mapa.addImage(nome, c.getImageData(0, 0, canvas.width, canvas.height), { pixelRatio: ratio });
-        let nomes = REGISTRY.get(mapa);
-        if (!nomes) { nomes = new Set(); REGISTRY.set(mapa, nomes); }
-        nomes.add(nome);
-      } catch (_) {}
-      return nome;
-    }
-
-    const numero = String(ordem);
-    // Largura fixa mantém a ponta alinhada à coordenada da entrega e não
-    // transforma pacotes múltiplos em uma cápsula que encobre outras ruas.
-    const larguraCss = 40, alturaCss = 42;
+    const larguraCss = mostrarNumero ? 44 : 30;
+    const alturaCss = mostrarNumero ? 46 : 35;
     canvas.width = Math.round(larguraCss * ratio);
     canvas.height = Math.round(alturaCss * ratio);
     const c = contexto2d(canvas);
@@ -324,52 +304,62 @@
     c.clearRect(0, 0, larguraCss, alturaCss);
 
     const cores = paleta(status, selecionado);
-    const centro = larguraCss / 2, topo = 3, raio = 15;
-    const cy = topo + 15;
+    const corpoX = mostrarNumero ? 4 : 4;
+    const corpoY = 2;
+    const corpoLargura = mostrarNumero ? 36 : 22;
+    const corpoAltura = mostrarNumero ? 31 : 24;
+    const ponta = mostrarNumero ? 10 : 7;
+    const centro = larguraCss / 2;
 
-    // Círculo compacto com ponta curta e alinhada à coordenada.
-    // A numeração tem alto contraste e não depende do nível de zoom.
     c.save();
-    c.shadowColor = 'rgba(8,53,39,.18)';
-    c.shadowBlur = selecionado ? 6 : 4;
-    c.shadowOffsetY = 2;
+    c.shadowColor = 'rgba(8, 37, 27, .22)';
+    c.shadowBlur = selecionado ? 7 : 4;
+    c.shadowOffsetY = 2.4;
     c.fillStyle = cores.fundo;
     c.strokeStyle = cores.borda;
-    c.lineWidth = selecionado ? 3.6 : 2.8;
+    c.lineWidth = selecionado ? 3.2 : 2.7;
     c.lineJoin = 'round';
-    c.beginPath();
-    c.moveTo(centro - 6, topo + 27);
-    c.lineTo(centro, alturaCss - 2);
-    c.lineTo(centro + 6, topo + 27);
-    c.closePath();
+    desenharEscudoPremium(c, corpoX, corpoY, corpoLargura, corpoAltura, ponta, mostrarNumero ? 5 : 4);
     c.fill();
-    c.stroke();
-    c.beginPath();
-    c.arc(centro, cy, raio, 0, Math.PI * 2);
-    c.fill();
+    c.shadowColor = 'transparent';
     c.stroke();
     c.restore();
 
-    c.textBaseline = 'middle';
-    c.textAlign = 'center';
-    c.font = `800 ${numero.length >= 4 ? 10.5 : numero.length === 3 ? 12.5 : 16}px Arial, sans-serif`;
-    c.fillStyle = cores.numero;
-    c.fillText(numero, centro, cy + 0.4);
-
-    // Quantidade por endereço fica num selo discreto. Não é o agrupamento
-    // dinâmico do mapa: o número central continua sendo a ordem da parada.
-    if (quantidade > 1) {
-      const selo = quantidade > 99 ? '99+' : String(quantidade);
+    if (mostrarNumero) {
+      const numero = String(ordem);
+      c.textBaseline = 'middle';
+      c.textAlign = 'center';
+      c.font = `800 ${numero.length >= 4 ? 10 : numero.length === 3 ? 12.5 : 16}px Arial, sans-serif`;
+      c.fillStyle = cores.numero;
+      c.fillText(numero, centro, 17.7);
+    } else {
+      // Rascunhos mantêm o escudo, sem virar uma bolinha genérica.
+      c.fillStyle = cores.numero;
       c.beginPath();
-      c.arc(33, 8, 7, 0, Math.PI * 2);
-      c.fillStyle = '#ffffff';
+      c.moveTo(centro, 9);
+      c.lineTo(centro + 5, 14);
+      c.lineTo(centro, 19);
+      c.lineTo(centro - 5, 14);
+      c.closePath();
       c.fill();
+    }
+
+    if (mostrarNumero && quantidade > 1) {
+      // Selo de quantidade retangular, sem círculos sobrepostos ao escudo.
+      const selo = quantidade > 99 ? '99+' : String(quantidade);
+      c.save();
+      c.fillStyle = '#ffffff';
       c.strokeStyle = cores.fundo;
-      c.lineWidth = 1.8;
+      c.lineWidth = 1.6;
+      desenharCapsula(c, 28, 2, 15, 14, 3);
+      c.fill();
       c.stroke();
+      c.textBaseline = 'middle';
+      c.textAlign = 'center';
       c.fillStyle = '#16442F';
       c.font = `800 ${selo.length > 2 ? 7 : 9}px Arial, sans-serif`;
-      c.fillText(selo, 33, 8.4);
+      c.fillText(selo, 35.5, 9.4);
+      c.restore();
     }
 
     try {
