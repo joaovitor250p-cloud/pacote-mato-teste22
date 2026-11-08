@@ -281,3 +281,101 @@ body[data-pemato-module="roteirizacao"] .top-nav .nav-btn:hover {
   border: 1px solid #d4e2d9 !important;
   box-shadow: 0 4px 12px rgba(14, 66, 43, .08) !important;
 }
+
+
+/* Teste22 — paleta verde creme vermelho, inspirada na referencia */
+/* Verde #018D3E é a marca, creme #FDF7E6 dá aconchego às superfícies,
+   vermelho #E71506 é reservado a falhas/perigo. O mapa mantém suas ruas. */
+:root {
+  --pemato-cobre: #018D3E;
+  --pemato-cobre-hover: #006D32;
+  --pemato-cobre-realce: #17A65A;
+  --pemato-cobre-suave: #E9F6EC;
+  --pemato-fundo: #FDF7E6;
+  --pemato-borda: #E6DECC;
+  --pemato-alerta: #E71506;
+  --surface-1: #FFFDF7 !important;
+  --surface-2: #FDF7E6 !important;
+  --bg-body: #FDF7E6 !important;
+  --primary-gradient: linear-gradient(135deg, #018D3E, #007D39) !important;
+}
+html, body,
+body[data-pemato-module="roteirizacao"],
+body[data-pemato-module="bipagem"],
+body[data-pemato-module="operacoes-pacotes"],
+body[data-pemato-module="navegacao"],
+.pemato-module, .package-operation-module,
+.navigation-panel, #telaBloqueio, .auth-wrapper, .auth-wrapper-premium,
+#splashScreenPs2 {
+  background: #FDF7E6 !important;
+}
+.top-nav, body[data-pemato-module] .top-nav {
+  background: rgba(253,247,230,.97) !important;
+  border-color: #E6DECC !important;
+}
+#routingBottomSheet.routing-list-pane,
+.routing-list-pane,
+.routing-sheet-summary, .routing-sheet-body {
+  background: #FDF7E6 !important;
+}
+.home-panel, .settings-card, .history-route-card, .history-route-card-v2,
+.auth-access-card, .auth-plans-card, .login-card,
+.routing-review-card, .route-editor-modal-card, .route-decision-card,
+.nav-next-card, .nav-stats, .nav-instructions-card,
+.nav-route-actions-card, .nav-completion-card, .modal-card,
+.bipagem-config-card, .pkg-op-review-card, .quick-card {
+  background: #FFFDF7 !important;
+  border-color: #E6DECC !important;
+}
+#sidebar {
+  background: linear-gradient(160deg, #FDF7E6, #FFFDF7 56%) !important;
+}
+.sidebar-support, .pkg-op-banner, #pkgOpBannerHost .pkg-op-banner,
+.pkg-op-stats > div, .nav-stat {
+  background: #FFF9EA !important;
+  border-color: #E6DECC !important;
+}
+.pemato-primary, .btn-action-primary, .routing-start-route-btn,
+.auth-main-button, .auth-payment-button, .auth-mode-btn.active,
+.route-import-choice, .bipagem-tabs button.active,
+.segmented-btn.active, .routing-review-number,
+.pemato-dialog-confirm:not(.is-danger), .gps-option-btn:first-of-type {
+  background: linear-gradient(135deg, #018D3E, #007D39) !important;
+  border-color: #006D32 !important;
+  color: #fff !important;
+  box-shadow: 0 5px 16px rgba(1, 141, 62, .17) !important;
+}
+.pemato-primary:hover, .btn-action-primary:hover,
+.routing-start-route-btn:hover, .auth-main-button:hover,
+.auth-payment-button:hover, .route-import-choice:hover {
+  background: #006D32 !important;
+}
+.pemato-secondary, .routing-action-row,
+.auth-trial-button, .auth-secondary-button,
+.nav-back-btn, .nav-more-btn, .nav-map-controls button,
+.routing-map-icon, .routing-icon-button {
+  background: #FFFDF7 !important;
+  border-color: #E6DECC !important;
+}
+.auth-access-card .input-auth:focus, .input-auth:focus,
+input:focus, select:focus, textarea:focus, .pemato-field:focus {
+  border-color: #018D3E !important;
+  box-shadow: 0 0 0 3px rgba(1,141,62,.14) !important;
+}
+.pemato-danger, #navNotDeliveredBtn, .pemato-dialog-confirm.is-danger {
+  background: #E71506 !important;
+  border-color: #E71506 !important;
+  color: #fff !important;
+}
+.nav-stop-status-badge.is-failed,
+.nav-next-card[data-status="nao_entregue"] .nav-stop-status-badge,
+.settings-inline-status[data-status="error"] {
+  color: #A5190D !important;
+  background: #FFF0EC !important;
+  border-color: #F1ADA7 !important;
+}
+/* O mapa deve continuar neutro, independentemente do fundo creme do app. */
+#mapaRoteirizacao, #mapaNavegacao, .routing-map-pane,
+.navigation-map-wrap, .maplibregl-map {
+  background: #EDEFF0 !important;
+}
