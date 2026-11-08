@@ -334,7 +334,8 @@
     } else {
       // Ícone de rascunho discreto, sem número inventado.
       c.fillStyle = '#ffffff';
-      c.fillRect(centro - 2, 11, 4, 4);
+      desenharCapsula(c, centro - 2, 11, 4, 4, 1);
+      c.fill();
     }
 
     if (mostrarNumero && quantidade > 1) {
