@@ -487,9 +487,34 @@
       }
       const centro = feature?.geometry?.coordinates;
       if (!Array.isArray(centro) || centro.length < 2) return false;
+      // A janela não deve variar de posição conforme o entregador se move
+      // ou conforme o pino escolhido fica mais alto/baixo na tela.
+      // Fixá-la no topo do MAPA, sem alterar o centro ou o zoom.
+      const containerMapa = mapa.getContainer?.();
+      if (containerMapa && typeof containerMapa.appendChild === 'function') {
+        const flutuante = doc.createElement('section');
+        flutuante.className = 'pemato-packages-top-panel';
+        flutuante.setAttribute('role', 'region');
+        flutuante.setAttribute('aria-label', 'Pacotes neste ponto do mapa');
+        const fechar = doc.createElement('button');
+        fechar.type = 'button';
+        fechar.className = 'pemato-packages-top-close';
+        fechar.setAttribute('aria-label', 'Fechar detalhes dos pacotes');
+        fechar.textContent = '×';
+        fechar.addEventListener('click', () => {
+          popupPacotesAtual?.remove();
+          popupPacotesAtual = null;
+        });
+        flutuante.addEventListener('click', event => event.stopPropagation());
+        flutuante.append(fechar, painel);
+        containerMapa.appendChild(flutuante);
+        popupPacotesAtual = { remove() { flutuante.remove(); } };
+        return true;
+      }
+      // Compatibilidade com mapas que não fornecem container DOM.
       popupPacotesAtual = new global.maplibregl.Popup({
-        closeButton: true, closeOnClick: true, maxWidth: '288px',
-        offset: 18, className: 'pemato-packages-popup'
+        closeButton: true, closeOnClick: true, anchor: 'bottom',
+        maxWidth: '288px', offset: 18, className: 'pemato-packages-popup'
       }).setLngLat(centro).setDOMContent(painel).addTo(mapa);
       return true;
     } catch (erro) {
