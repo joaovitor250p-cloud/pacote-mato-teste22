@@ -19,11 +19,11 @@
   function paleta(status, selecionado) {
     // Marcadores compactos de navegação: verde para paradas e cores operacionais
     // apenas para os estados reais de entrega.
-    if (status === 'nao_entregue') return { fundo: selecionado ? '#b91c1c' : '#dc2626', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
+    if (status === 'nao_entregue') return { fundo: selecionado ? '#b81408' : '#E71506', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
     if (status === 'concluida') return { fundo: selecionado ? '#15803d' : '#16a34a', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
     if (status === 'parcial') return { fundo: selecionado ? '#b45309' : '#e59b24', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
-    if (selecionado) return { fundo: '#0F7351', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
-    return { fundo: '#168B61', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
+    if (selecionado) return { fundo: '#006D32', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
+    return { fundo: '#018D3E', borda: '#ffffff', numero: '#ffffff', multi: '#ffffff', simbolo: '#ffffff' };
   }
 
   function simboloStatus(status) {
@@ -288,7 +288,7 @@
 
   function criarIcone(mapa, opcoes) {
     if (!mapa || !global.document) return '';
-    const prefixo = String(opcoes?.prefixo || 'pemato-stop-v13') + '-bandeirola-premium-v1';
+    const prefixo = String(opcoes?.prefixo || 'pemato-stop-v13') + '-bandeirola-premium-v2-menor';
     const mostrarNumero = opcoes?.mostrarNumero !== false;
     const ordem = mostrarNumero ? Math.max(1, Math.round(numeroSeguro(opcoes?.ordem, 1))) : 0;
     const quantidade = Math.max(1, Math.round(numeroSeguro(opcoes?.quantidade, 1)));
@@ -298,8 +298,8 @@
     if (mapa.hasImage?.(nome)) return nome;
 
     const ratio = Math.max(2, Math.min(3, Number(global.devicePixelRatio || 2)));
-    const larguraCss = mostrarNumero ? 40 : 30;
-    const alturaCss = mostrarNumero ? 34 : 28;
+    const larguraCss = mostrarNumero ? 34 : 26;
+    const alturaCss = mostrarNumero ? 29 : 24;
     const canvas = global.document.createElement('canvas');
     canvas.width = Math.round(larguraCss * ratio);
     canvas.height = Math.round(alturaCss * ratio);
@@ -327,10 +327,10 @@
     if (mostrarNumero) {
       const numero = String(ordem);
       c.fillStyle = cores.numero;
-      c.font = '800 ' + (numero.length >= 4 ? 10 : numero.length === 3 ? 12 : 16) + 'px Arial, sans-serif';
+      c.font = '800 ' + (numero.length >= 4 ? 8.5 : numero.length === 3 ? 10.5 : 14) + 'px Arial, sans-serif';
       c.textAlign = 'center';
       c.textBaseline = 'middle';
-      c.fillText(numero, centro - (quantidade > 1 ? 2 : 0), 14);
+      c.fillText(numero, centro - (quantidade > 1 ? 3 : 0), 12.6);
     } else {
       // Ícone de rascunho discreto, sem número inventado.
       c.fillStyle = '#ffffff';
@@ -340,7 +340,7 @@
 
     if (mostrarNumero && quantidade > 1) {
       const selo = quantidade > 99 ? '99+' : String(quantidade);
-      const bx = larguraCss - 15, by = 2;
+      const bx = larguraCss - 15, by = 1;
       c.fillStyle = '#ffffff';
       c.strokeStyle = '#d5e7de';
       c.lineWidth = 1;
