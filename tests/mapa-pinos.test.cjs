@@ -34,20 +34,25 @@ assert.ok(html.includes('js/mapa/config.js?v=20261108-sem-tracejados-3'));
 assert.match(config, /const camadaPedestre/);
 assert.match(config, /garantirRuasAzuisUniformes\(mapa, navegacaoAtiva\)/);
 assert.match(config, /'pemato-streets-solid'/);
-assert.ok(html.includes('js/mapa/marcadores.js?v=20261108-br-unicos-10'));
-assert.ok(html.includes('js/mapa/mapa.js?v=20261108-contagem-real-9'));
-assert.ok(html.includes('js/navegacao/navegacao.js?v=20261108-contagem-real-9'));
+assert.ok(html.includes('js/mapa/marcadores.js?v=20261108-registros-11'));
+assert.ok(html.includes('js/mapa/mapa.js?v=20261108-registros-11'));
+assert.ok(html.includes('js/navegacao/navegacao.js?v=20261108-registros-11'));
 assert.doesNotMatch(planejamento + navegacao, /#a6532c|rgba\(166,83,44/i, 'marcador da posição usa o verde da marca');
 
 assert.match(planejamento, /abrirDetalhesPacotes/);
 assert.match(navegacao, /abrirDetalhesPacotes/);
-assert.match(planejamento, /const totalPacotes = global\.PacoteEMatoMarcadores\?\.quantidadePacotesUnicosDoGrupo/);
-assert.match(navegacao, /const multi = global\.PacoteEMatoMarcadores\?\.quantidadePacotesUnicosDoGrupo/);
+assert.match(planejamento, /const totalPacotes = global\.PacoteEMatoMarcadores\?\.quantidadePacotesRegistradosDoGrupo/);
+assert.match(navegacao, /const multi = global\.PacoteEMatoMarcadores\?\.quantidadePacotesRegistradosDoGrupo/);
 assert.match(marcadores, /'×' \+ quantidade/);
 assert.match(marcadores, /function abrirDetalhesPacotes\(/);
-assert.match(marcadores, /function pacotesUnicosDoGrupo\(/);
+assert.match(marcadores, /function pacotesRegistradosDoGrupo\(/);
 assert.match(marcadores, /rotulo\.textContent = item\.codigo/);
 assert.ok(html.includes('css/pemato-identidade.css?v=20261108-br-unicos-10'));
+assert.ok(html.includes('js/roteirizacao/roteirizacao.js?v=20261108-registros-11'));
+const roteiro = read('js/roteirizacao/roteirizacao.js');
+assert.match(roteiro, /function quantidadePacotesVisiveisNoEndereco/);
+assert.match(roteiro, /quantidadePacotesRegistradosDoGrupo/);
+
 
 console.log('PASSOU: mapa de ruas, numeracao com selo separado e detalhes das entregas no mesmo endereco.');
 
@@ -143,6 +148,6 @@ assert.ok(html.includes('Teste22 · visual 8 · pacotes 8'), 'versao da janela c
 assert.ok(html.includes('js/mapa/config.js?v=20261108-sem-tracejados-3'));
 console.log('PASSOU: estilo premium e setas vetoriais sem limite por estado.');
 
-assert.ok(html.includes('Teste22 · visual 10 · BR 10'));
-assert.match(marcadores, /function quantidadePacotesUnicosDoGrupo\(/);
+assert.ok(html.includes('Teste22 · visual 11 · pacotes 11'));
+assert.match(marcadores, /function quantidadePacotesRegistradosDoGrupo\(/);
 console.log('PASSOU: nova contagem de codigos distintos em ambas as telas.');
