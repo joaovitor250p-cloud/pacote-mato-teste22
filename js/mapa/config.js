@@ -227,6 +227,87 @@
     }
   }
 
+  // Setas geográficas: camada vetorial independente da cidade visualizada.
+  // Sem coordenadas fixas ou recortes por estado. Apenas vias cuja base
+  // disponibiliza explicitamente o atributo oneway recebem a seta.
+  const CAMADA_SETAS_BRASIL = 'pemato-oneway-brasil';
+  const IMAGEM_SETA_BRASIL = 'pemato-oneway-chevron';
+
+  function garantirImagemSetaRua(mapa) {
+    if (mapa.hasImage?.(IMAGEM_SETA_BRASIL)) return true;
+    if (!mapa.addImage || typeof document === 'undefined') return false;
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 36;
+      canvas.height = 36;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return false;
+      // Seta de uma via, não seta de manobra: discreta e legível.
+      ctx.fillStyle = '#566e81';
+      ctx.strokeStyle = '#f7fafc';
+      ctx.lineWidth = 2.3;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(7, 13); ctx.lineTo(19, 13);
+      ctx.lineTo(19, 8); ctx.lineTo(29, 18);
+      ctx.lineTo(19, 28); ctx.lineTo(19, 23);
+      ctx.lineTo(7, 23); ctx.closePath();
+      ctx.stroke(); ctx.fill();
+      mapa.addImage(IMAGEM_SETA_BRASIL, ctx.getImageData(0, 0, 36, 36), { pixelRatio: 2 });
+      return true;
+    } catch (_) { return false; }
+  }
+
+  function garantirSetasRuasBrasil(mapa) {
+    if (!mapa?.getStyle || !mapa?.addLayer) return false;
+    const layers = mapa.getStyle()?.layers || [];
+    const transporte = layers.find(l =>
+      l.type === 'line' && l['source-layer'] === 'transportation' &&
+      l.source && (!mapa.getSource || mapa.getSource(l.source))
+    );
+    if (!transporte || !garantirImagemSetaRua(mapa)) return false;
+    // OpenMapTiles: valores "1"/"yes"/"true" e "-1" quando disponíveis.
+    // Nunca exibe indicações para vias de mão dupla ou sem dado.
+    const normalizado = ['to-string', ['get', 'oneway']];
+    const validado = ['match', normalizado,
+      ['1', 'yes', 'true', '-1'], true, false];
+    const filtro = ['all',
+      ['match', ['get', 'class'], CLASSES_RUAS, true, false],
+      validado
+    ];
+    const antes = layers.find(l => l.type === 'symbol' && !/^pemato-/i.test(l.id || ''))?.id;
+    try {
+      if (!mapa.getLayer?.(CAMADA_SETAS_BRASIL)) {
+        mapa.addLayer({
+          id: CAMADA_SETAS_BRASIL,
+          type: 'symbol',
+          source: transporte.source,
+          'source-layer': 'transportation',
+          filter: filtro,
+          minzoom: 15,
+          layout: {
+            'symbol-placement': 'line',
+            'symbol-spacing': 310,
+            'icon-image': IMAGEM_SETA_BRASIL,
+            'icon-size': 0.9,
+            'icon-rotation-alignment': 'map',
+            'icon-keep-upright': false,
+            'icon-allow-overlap': false,
+            'icon-ignore-placement': false,
+            'icon-rotate': ['case', ['==', normalizado, '-1'], 180, 0]
+          },
+          paint: { 'icon-opacity': 0.75 }
+        }, antes);
+      } else {
+        mapa.setLayoutProperty?.(CAMADA_SETAS_BRASIL, 'visibility', 'visible');
+      }
+      return true;
+    } catch (error) {
+      try { console.warn('Pacote É Mato: setas de mão única indisponíveis nesta base', error); } catch (_) {}
+      return false;
+    }
+  }
+
   // HOTFIX FINAL 2: identidade base única para OVERVIEW e NAVIGATION-ACTIVE.
   // A classificação usa id + source-layer; nenhum ID específico do Liberty é obrigatório.
   function aplicarEstiloMapaClean(mapa, opcoes = {}) {
@@ -400,6 +481,7 @@
     // Desenhar as vias uniformemente por cima das ruas heterogêneas da base,
     // mantendo rótulos legíveis e sem alterar dados de roteirização.
     garantirRuasAzuisUniformes(mapa, navegacaoAtiva);
+    garantirSetasRuasBrasil(mapa);
     estiloCleanAplicado.add(mapa);
     return true;
   }
