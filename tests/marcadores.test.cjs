@@ -67,6 +67,6 @@ console.log('PASSOU: dimensões, estado, cores e cache dos marcadores.');
 
 // Bandeira com tecido ondulado, haste central e base oval.
 assert.match(fs.readFileSync(path.resolve(__dirname, '../js/mapa/marcadores.js'), 'utf8'), /desenharBandeira/);
-assert.ok([...images.keys()].every(name => name.includes('flag-v1')));
+assert.ok([...images.keys()].every(name => name.includes('flag-v2')));
 
 assert.match(fs.readFileSync(path.resolve(__dirname, '../js/mapa/marcadores.js'), 'utf8'), /desenharBaseBandeira/);
