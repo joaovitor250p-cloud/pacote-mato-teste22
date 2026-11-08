@@ -367,11 +367,10 @@
         // Não classificar vias comuns como trilhas só por pertencerem à
         // source-layer "transportation". Ruas também podem ter dash no estilo.
         if (camadaPedestre || caminhoTracejado) {
-          setPaintSeguro(mapa, layer, 'line-color', '#d5dce4');
-          setPaintSeguro(mapa, layer, 'line-opacity', 0.32);
-          setPaintSeguro(mapa, layer, 'line-dasharray', [1, 0]);
-          setPaintSeguro(mapa, layer, 'line-gap-width', 0);
-          setPaintSeguro(mapa, layer, 'line-width', ['interpolate', ['linear'], ['zoom'], 12, 0.25, 16, 0.55, 19, 0.85]);
+          // Passagens internas do Bright apareciam como traços azul-claros
+          // pontilhados no meio das quadras. Removê-las do estilo visual
+          // não altera vias, rotas calculadas nem setas de mão única.
+          setLayoutSeguro(mapa, layer, 'visibility', 'none');
           return;
         }
         const via = categoriaVia(txt);
