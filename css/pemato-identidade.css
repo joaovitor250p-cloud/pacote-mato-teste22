@@ -184,3 +184,67 @@ input:focus, select:focus, textarea:focus, .pemato-field:focus,
 .ps2-title { color: var(--pemato-grafite) !important; text-shadow: none !important; }
 .ps2-subtitle { color: var(--pemato-cinza) !important; }
 .ps2-cube-rotating { filter: drop-shadow(0 9px 18px rgba(22,139,97,.18)) !important; }
+
+
+/* Teste22 — acabamento premium: geometria precisa e ergonomia no celular.
+   Componentes funcionais do mapa e indicadores de rota mantêm sua própria forma. */
+:root {
+  --pemato-radius-control: 11px;
+  --pemato-radius-card: 18px;
+  --pemato-premium-shadow: 0 3px 0 rgba(6, 52, 37, .08), 0 10px 24px rgba(9, 52, 39, .11);
+}
+button, .btn, [role="button"], input[type="button"], input[type="submit"],
+.pemato-primary, .pemato-secondary, .btn-action-primary,
+.routing-start-route-btn, .auth-main-button, .auth-payment-button,
+.auth-trial-button, .auth-secondary-button, .route-import-choice,
+.routing-action-row, .segmented-btn, .bipagem-tabs button,
+.nav-back-btn, .nav-more-btn, .nav-map-controls button,
+.routing-map-icon, .gps-option-btn, .pemato-dialog-confirm {
+  border-radius: var(--pemato-radius-control) !important;
+  letter-spacing: .01em;
+  transition: background-color .18s ease, border-color .18s ease,
+              box-shadow .18s ease, transform .18s ease !important;
+}
+.pemato-primary, .btn-action-primary, .routing-start-route-btn,
+.auth-main-button, .auth-payment-button, .pemato-dialog-confirm:not(.is-danger),
+.route-import-choice {
+  background: linear-gradient(135deg, #08744f 0%, #11835c 100%) !important;
+  border: 1px solid #075b40 !important;
+  color: #fff !important;
+  box-shadow: var(--pemato-premium-shadow) !important;
+  font-weight: 800 !important;
+}
+.pemato-primary:hover, .btn-action-primary:hover, .routing-start-route-btn:hover,
+.auth-main-button:hover, .auth-payment-button:hover, .route-import-choice:hover {
+  background: linear-gradient(135deg, #076344, #0d704d) !important;
+  box-shadow: 0 4px 0 rgba(6,52,37,.08), 0 12px 26px rgba(9,52,39,.16) !important;
+}
+button:active, .btn:active, [role="button"]:active {
+  transform: translateY(1px);
+}
+.pemato-secondary, .routing-action-row, .auth-trial-button,
+.auth-secondary-button, .nav-back-btn, .nav-more-btn,
+.nav-map-controls button, .routing-map-icon {
+  border: 1px solid #d6e3da !important;
+  background: #fff !important;
+  box-shadow: 0 2px 7px rgba(12,43,31,.045) !important;
+  font-weight: 700;
+}
+.home-panel, .settings-card, .history-route-card, .history-route-card-v2,
+.auth-access-card, .auth-plans-card, .login-card, .routing-list-pane,
+.routing-review-card, .nav-next-card, .nav-stats, .nav-instructions-card,
+.nav-route-actions-card, .nav-completion-card, .modal-card, .quick-card {
+  border-radius: var(--pemato-radius-card) !important;
+}
+#sidebar .sidebar-nav button, #sidebar .sidebar-nav a,
+.auth-mode-btn, .auth-mode-tabs, .bipagem-tabs, .segmented-btn {
+  border-radius: 10px !important;
+}
+.top-nav { border-bottom: 1px solid #dbe7df !important; }
+button:focus-visible, [role="button"]:focus-visible, a:focus-visible {
+  outline: 2px solid #159369 !important;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  button, .btn, [role="button"] { transition: none !important; }
+}
