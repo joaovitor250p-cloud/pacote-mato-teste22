@@ -30,7 +30,7 @@ assert.match(config, /'line-dasharray', \[1, 0\]/);
 assert.doesNotMatch(config, /'line-dasharray', null/);
 assert.doesNotMatch(config, /mapa\.addLayer\(\{\s*id, type:'fill', source:base\.source/);
 
-assert.ok(html.includes('js/mapa/config.js?v=20261106-setas-de-rua-10'));
+assert.ok(html.includes('js/mapa/config.js?v=20261108-setas-brasil-2'));
 assert.match(config, /const camadaPedestre/);
 assert.match(config, /garantirRuasAzuisUniformes\(mapa, navegacaoAtiva\)/);
 assert.match(config, /'pemato-streets-solid'/);
@@ -121,3 +121,14 @@ assert.equal(mapaRuas.getLayer('street_names').layout.visibility, 'visible', 'no
 estilo.aplicarEstiloNavegacaoAtiva(mapaRuas);
 assert.equal(camadaCriada, 2, 'trocar de modo nao duplica ruas');
 console.log('PASSOU: ruas preservadas e somente setas de sentido da via visiveis.');
+
+// Cobertura de setas de mão única não pode depender da capital paulista.
+// A seta própria acompanha o tile vetorial e exige o atributo oneway válido.
+assert.match(config, /const CAMADA_SETAS_BRASIL = 'pemato-oneway-brasil'/);
+assert.match(config, /function garantirSetasRuasBrasil\(mapa\)/);
+assert.match(config, /\['get', 'oneway'\]/);
+assert.match(config, /\['1', 'yes', 'true', '-1'\]/);
+assert.match(config, /garantirSetasRuasBrasil\(mapa\)/);
+assert.ok(html.includes('css/pemato-identidade.css?v=20261108-teste22-premium-2'));
+assert.ok(html.includes('js/mapa/config.js?v=20261108-setas-brasil-2'));
+console.log('PASSOU: estilo premium e setas vetoriais sem limite por estado.');
