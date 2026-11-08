@@ -44,19 +44,19 @@ const rascunho = criar({ quantidade: 1, status: 'pendente', mostrarNumero: false
 
 for (const entry of [pendente, selecionada, parcial, concluida, falhou]) {
   assert.equal(entry.options.pixelRatio, 2);
-  assert.equal(entry.data.height / entry.options.pixelRatio, 34);
-  assert.equal(entry.data.width / entry.options.pixelRatio, 40);
+  assert.equal(entry.data.height / entry.options.pixelRatio, 29);
+  assert.equal(entry.data.width / entry.options.pixelRatio, 34);
 }
-assert.equal(rascunho.data.height / rascunho.options.pixelRatio, 28);
+assert.equal(rascunho.data.height / rascunho.options.pixelRatio, 24);
 assert.equal(selecionada.data.width, pendente.data.width);
-assert.ok(pendente.data.fills.includes('#168B61'));
-assert.ok(selecionada.data.fills.includes('#0F7351'));
+assert.ok(pendente.data.fills.includes('#018D3E'));
+assert.ok(selecionada.data.fills.includes('#006D32'));
 assert.ok(parcial.data.fills.includes('#e59b24'));
 assert.ok(concluida.data.fills.includes('#16a34a'));
-assert.ok(falhou.data.fills.includes('#dc2626'));
+assert.ok(falhou.data.fills.includes('#E71506'));
 
 const longa = criar({ ordem: 1234, quantidade: 1, status: 'pendente' });
-assert.equal(longa.data.width / longa.options.pixelRatio, 40);
+assert.equal(longa.data.width / longa.options.pixelRatio, 34);
 
 // Registra o mesmo ícone apenas uma vez no atlas MapLibre.
 const total = images.size;
@@ -67,6 +67,6 @@ console.log('PASSOU: dimensões, estado, cores e cache dos marcadores.');
 
 // Bandeira com tecido ondulado, haste central e base oval.
 assert.match(fs.readFileSync(path.resolve(__dirname, '../js/mapa/marcadores.js'), 'utf8'), /desenharBandeirola/);
-assert.ok([...images.keys()].every(name => name.includes('bandeirola-premium-v1')));
+assert.ok([...images.keys()].every(name => name.includes('bandeirola-premium-v2-menor')));
 
 assert.doesNotMatch(fs.readFileSync(path.resolve(__dirname, '../js/mapa/marcadores.js'), 'utf8'), /function desenharBaseBandeira/);
