@@ -248,3 +248,36 @@ button:focus-visible, [role="button"]:focus-visible, a:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   button, .btn, [role="button"] { transition: none !important; }
 }
+
+
+/* Teste22 — acabamento premium reforçado nos controles reais */
+/* A folha de roteirização usa um seletor mais específico para o botão
+   do menu no celular. A identidade premium precisa alcançá-lo também. */
+body[data-pemato-module="roteirizacao"] .top-nav .nav-btn,
+body[data-pemato-module="navegacao"] .top-nav .nav-btn,
+.top-nav .nav-btn,
+#sidebar .sidebar-close,
+.routing-icon-button,
+.routing-actions-close,
+.routing-draw-head button,
+.routing-map-controls .routing-map-icon,
+.nav-map-controls button,
+.nav-back-btn, .nav-more-btn {
+  border-radius: 11px !important;
+}
+body[data-pemato-module="roteirizacao"] .top-nav .nav-btn {
+  background: #fff !important;
+  border: 1px solid #d5e5dc !important;
+  box-shadow: 0 3px 12px rgba(14, 66, 43, .09) !important;
+}
+body[data-pemato-module="roteirizacao"] .top-nav .nav-btn:hover {
+  background: #edf8f1 !important;
+  border-color: #adcfba !important;
+}
+#sidebar .sidebar-nav button, #sidebar .sidebar-nav a {
+  border-radius: 11px !important;
+}
+.routing-map-controls .routing-map-icon, .routing-icon-button {
+  border: 1px solid #d4e2d9 !important;
+  box-shadow: 0 4px 12px rgba(14, 66, 43, .08) !important;
+}
