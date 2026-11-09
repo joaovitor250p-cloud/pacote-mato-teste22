@@ -2239,7 +2239,7 @@
 
   async function abrirEscolhaPacotes() {
     fecharMenuAcoes();
-    await mostrarTutorialPacotesSeNecessario();
+    // Partilhar paradas usa QR/link, não o antigo tutorial de bipagem.
     const backdrop = $('routingPackagesChooserBackdrop');
     if (backdrop) backdrop.style.display = 'flex';
     registrarRetornoInterno('pacotes_rota');
