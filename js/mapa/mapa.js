@@ -336,25 +336,41 @@
   function bindEventosMapa() {
     if (!mapa || mapa.__pematoBound) return;
     mapa.__pematoBound = true;
-    const selecionar = event => {
+    let ultimoToque = { id: '', at: 0 };
+    let ultimaAbertura = { id: '', at: 0 };
+    const pinoId = event => String(event?.features?.[0]?.properties?.id || '');
+    const selecionar = id => global.PacoteEMatoRoteirizacao?.selecionarParada?.(String(id), 'mapa');
+    const detalhes = event => {
       const feature = event?.features?.[0];
-      const id = feature?.properties?.id;
-      if (!id) return;
-      if (selecaoDesenhoAtiva) {
-        alternarIdSelecao(String(id));
-        return;
+      if (!feature) return false;
+      return global.PacoteEMatoMarcadores?.abrirDetalhesPacotes?.(
+        mapa, feature, paradas(), escolhido => selecionar(escolhido)
+      ) === true;
+    };
+    const aoClicar = event => {
+      const id = pinoId(event); if (!id) return;
+      if (selecaoDesenhoAtiva) { alternarIdSelecao(id); return; }
+      const agora = Date.now();
+      const duplo = ultimoToque.id === id && agora - ultimoToque.at < 440;
+      ultimoToque = { id, at: agora };
+      if (duplo) {
+        if (detalhes(event)) ultimaAbertura = { id, at: agora };
+      } else {
+        // Primeiro toque SEMPRE seleciona a parada, inclusive nos pinos múltiplos.
+        selecionar(id);
       }
-      // Um endereço físico pode conter mais de uma parada ou pacote:
-      // revelar todos em vez de abrir silenciosamente só a primeira.
-      const abriu = global.PacoteEMatoMarcadores?.abrirDetalhesPacotes?.(
-        mapa, feature, paradas(), escolhido =>
-          global.PacoteEMatoRoteirizacao?.selecionarParada?.(String(escolhido), 'mapa')
-      );
-      if (abriu) return;
-      global.PacoteEMatoRoteirizacao?.selecionarParada?.(String(id), 'mapa');
+    };
+    const aoDuplo = event => {
+      if (selecaoDesenhoAtiva) return;
+      event?.preventDefault?.();
+      const id = pinoId(event); if (!id) return;
+      const agora = Date.now();
+      if (ultimaAbertura.id === id && agora - ultimaAbertura.at < 500) return;
+      if (detalhes(event)) ultimaAbertura = { id, at: agora };
     };
     [LAYER_STOPS, LAYER_STOPS_MULTI, LAYER_STOPS_ACTIVE, LAYER_STOPS_MULTI_ACTIVE].forEach(layerId => {
-      mapa.on('click', layerId, selecionar);
+      mapa.on('click', layerId, aoClicar);
+      mapa.on('dblclick', layerId, aoDuplo);
       mapa.on('mouseenter', layerId, () => { try { mapa.getCanvas().style.cursor = 'pointer'; } catch (_) {} });
       mapa.on('mouseleave', layerId, () => { try { mapa.getCanvas().style.cursor = ''; } catch (_) {} });
     });
