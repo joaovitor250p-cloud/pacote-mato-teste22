@@ -35,7 +35,7 @@ match /partilhasParadas/{partilhaId} {
     && request.resource.data.criadoEm == request.time
     && request.resource.data.expiraEm is timestamp
     && request.resource.data.expiraEm > request.time
-    && request.resource.data.expiraEm <= request.time + duration.value(7, 'd');
+    && request.resource.data.expiraEm <= request.time + duration.value(8, 'd');
 
   allow update: if request.auth != null
     && request.auth.uid != resource.data.criadorUid
