@@ -67,7 +67,7 @@
     modal.id='pematoShareBackdrop';
     modal.className='pemato-share-backdrop';
     modal.hidden=true;
-    modal.innerHTML=String.raw\`
+    modal.innerHTML=String.raw`
       <section class="pemato-share-card" role="dialog" aria-modal="true" aria-labelledby="pematoShareTitle">
         <header class="pemato-share-head"><div><small>PACOTE É MATO</small><h2 id="pematoShareTitle">Partilhar paradas</h2></div>
           <button id="pematoShareClose" aria-label="Fechar" type="button">×</button></header>
@@ -114,7 +114,7 @@
             <button id="pematoShareAccept" class="pemato-share-primary" type="button">Confirmar recebimento das paradas</button>
           </div>
         </div>
-      </section>\`;
+      </section>`;
     document.body.appendChild(modal);
     const bind=(id,fn)=>$(id)?.addEventListener('click',fn);
     bind('pematoShareClose',fechar);
@@ -148,7 +148,7 @@
       const label=document.createElement('label');label.className='pemato-share-stop';
       const input=document.createElement('input');input.type='checkbox';input.checked=escolhidas.has(paradaId(p));
       input.addEventListener('change',()=>{if(input.checked)escolhidas.add(paradaId(p));else escolhidas.delete(paradaId(p));atualizarTotal();});
-      const body=document.createElement('span');body.innerHTML=\`<strong>Parada \${ordem.get(paradaId(p))||'—'}</strong><small>\${escapar(titulo(p))}</small><em>\${qtd(p)} pacote(s) · \${escapar((p.pacotes||[]).slice(0,2).join(' · '))}</em>\`;
+      const body=document.createElement('span');body.innerHTML=`<strong>Parada ${ordem.get(paradaId(p))||'—'}</strong><small>${escapar(titulo(p))}</small><em>${qtd(p)} pacote(s) · ${escapar((p.pacotes||[]).slice(0,2).join(' · '))}</em>`;
       label.append(input,body);host.append(label);
     });
     atualizarTotal();
