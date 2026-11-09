@@ -4,7 +4,7 @@
   const KEY_PENDING = 'pemato_partilhas_pendentes_v1';
   const EXPIRACAO_DIAS = 7;
   let tipo = 'enviar', rota = null, partilha = null, preview = null;
-  let escolhidas = new Set(), scanner = null, unsubscribe = null, ocupado = false;
+  let escolhidas = new Set(), scanner = null, unsubscribe = null, ocupado = false, sincronizando = false;
   const $ = id => document.getElementById(id);
   const alertar = mensagem => { global.notificar?.(mensagem); };
   const auth = () => global.firebase?.auth?.().currentUser;
@@ -306,7 +306,7 @@
       rotaNova.geometria=null;rotaNova.instrucoes=[];rotaNova.pernas=[];
       rotaNova.historicoPartilhas=Array.isArray(rotaNova.historicoPartilhas)?rotaNova.historicoPartilhas:[];
       rotaNova.historicoPartilhas.push({id,tipo:'recebida',em:Date.now(),quantidade:novas.length});
-      await global.PacoteEMatoRotaStore.salvarRota(rotaNova,{ativa:true,exigirPersistenciaLocal:true});
+      await global.PacoteEMatoRotaStore.salvarRota(rotaNova,{ativa:true,exigirPersistenciaLocal:true,firestore:false});
       salvou=true;
       // Recebedor confirma somente depois que o armazenamento local devolve sucesso.
       await banco().runTransaction(async tx=>{
@@ -317,6 +317,8 @@
         tx.update(ref,{status:'recebida',recebedorUid:auth().uid,
           recebidoEm:global.firebase.firestore.FieldValue.serverTimestamp()});
       });
+      // Somente depois de confirmado o recebimento, permitir o espelhamento remoto da rota.
+      await global.PacoteEMatoRotaStore.salvarRota(rotaNova,{ativa:true,exigirPersistenciaLocal:true});
       status('Recebidas '+novas.length+' paradas! Elas já estão na sua rota. Recalcule o trajeto para navegar.');
       $('pematoSharePreview').hidden=true;preview=null;
       global.PacoteEMatoRoteirizacao?.carregarRotaAtiva?.();
@@ -324,6 +326,8 @@
     }catch(e){
       if(salvou&&antes){
         try{await global.PacoteEMatoRotaStore.salvarRota(antes,{ativa:true,exigirPersistenciaLocal:true});}catch(_){}
+      } else if (salvou && !antes) {
+        try{await global.PacoteEMatoRotaStore.limparRotaAtiva();}catch(_){}
       }
       status(e?.message||'Não foi possível receber as paradas. Nenhuma remoção foi confirmada.',true);
     }finally{ocupado=false;$('pematoShareAccept').disabled=false;}
@@ -348,7 +352,8 @@
     return ids.size;
   }
   async function sincronizarRecebidas() {
-    if(!auth()||!banco())return;
+    if(sincronizando||!auth()||!banco())return;
+    sincronizando=true;
     const uid=auth().uid;const lista=pendentesLidos(),manter=[];
     for(const meta of lista){
       try{
@@ -367,6 +372,7 @@
       }catch(e){manter.push(meta);}
     }
     pendentesGravar(manter);
+    sincronizando=false;
   }
   function observarRecebimento(){
     try{unsubscribe?.();}catch(_){}
