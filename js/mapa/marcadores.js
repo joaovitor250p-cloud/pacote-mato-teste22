@@ -75,6 +75,80 @@
     return pacotesRegistradosDoGrupo(grupo).length;
   }
 
+  // Evita sobreposição visual entre endereços MUITO próximos no zoom atual.
+  // As coordenadas e os ids permanecem intactos: somente icon-offset muda.
+  // Tanto o pino simples quanto o múltiplo participam do mesmo cálculo.
+  function organizarPinosVisiveis(mapa, features, opcoes = {}) {
+    if (!mapa || typeof mapa.project !== 'function' || !Array.isArray(features)) return features;
+    const zoom = Number(mapa.getZoom?.() ?? 14);
+    const escala = zoom <= 8 ? .62 : zoom < 11 ? .62 + (zoom - 8) * (.14 / 3)
+      : zoom < 14 ? .76 + (zoom - 11) * (.18 / 3)
+      : zoom < 17 ? .94 + (zoom - 14) * (.12 / 3) : 1.06;
+    const canvas = mapa.getCanvas?.();
+    const container = mapa.getContainer?.();
+    const largura = Number(container?.clientWidth || canvas?.clientWidth || 0);
+    const altura = Number(container?.clientHeight || canvas?.clientHeight || 0);
+    const folha = opcoes.planejamento === true;
+    const topo = folha ? 85 : 36;
+    const base = altura > 380 ? altura - (folha ? 220 : 95) : altura - 12;
+    const passoX = Math.ceil(49 * escala + 5);
+    const passoY = Math.ceil(35 * escala + 5);
+    const ocupados = [];
+    const ordenados = features.slice().sort((a,b) => {
+      const p = a.properties || {}, q = b.properties || {};
+      const prioridade = v => Number(v.selected === 1 || v.highlighted === true ? 2 : 0) +
+        Number(Number(v.multi) > 1 ? 1 : 0);
+      return prioridade(q) - prioridade(p) ||
+        Number(p.order || 0) - Number(q.order || 0) ||
+        String(p.id || '').localeCompare(String(q.id || ''));
+    });
+
+    ordenados.forEach(feature => {
+      const props = feature.properties || (feature.properties = {});
+      props.markerOffset = [0,0];
+      const coord = feature.geometry?.coordinates;
+      if (!Array.isArray(coord) || coord.length < 2) return;
+      let ponto;
+      try { ponto = mapa.project(coord); } catch (_) { return; }
+      if (!Number.isFinite(Number(ponto?.x)) || !Number.isFinite(Number(ponto?.y))) return;
+      const w = (Number(props.multi) > 1 ? 49 : 34) * escala + 4;
+      const h = (Number(props.multi) > 1 ? 34 : 29) * escala + 4;
+      let escolhido = null;
+      const testar = (dx,dy,limitar) => {
+        const x = ponto.x + dx, y = ponto.y + dy;
+        const box = { l:x-w/2, r:x+w/2, t:y-h, b:y };
+        if (limitar && largura > 0 && altura > 0 &&
+          (box.l < 5 || box.r > largura - 5 || box.t < topo || box.b > base)) return false;
+        for (const p of ocupados) {
+          if (box.l < p.r && box.r > p.l && box.t < p.b && box.b > p.t) return false;
+        }
+        escolhido = { dx, dy, box };
+        return true;
+      };
+      // Procura perto da posição real, espalhando suavemente em anéis.
+      // Em mapas densos, o zoom afastado ainda mostra todos os pinos que
+      // caibam na tela, sem agrupar e sem esconder os múltiplos.
+      for (let modo = 0; modo < 2 && !escolhido; modo++) {
+        for (let anel = 0; anel <= 18 && !escolhido; anel++) {
+          for (let yy = -anel; yy <= anel && !escolhido; yy++) {
+            for (let xx = -anel; xx <= anel; xx++) {
+              if (Math.max(Math.abs(xx), Math.abs(yy)) !== anel) continue;
+              if (testar(xx * passoX, yy * passoY, modo === 0)) break;
+            }
+          }
+        }
+      }
+      if (escolhido) {
+        ocupados.push(escolhido.box);
+        props.markerOffset = [
+          Math.round(escolhido.dx / escala),
+          Math.round(escolhido.dy / escala)
+        ];
+      }
+    });
+    return features;
+  }
+
   function chaveFisicaMarcador(parada) {
     const chave = chaveMultiplo(parada);
     if (chave) return `end:${chave}`;
@@ -564,6 +638,7 @@
     quantidadePacotesDaParada,
     quantidadePacotesRegistradosDoGrupo,
     pacotesRegistradosDoGrupo,
+    organizarPinosVisiveis,
     chaveFisicaMarcador,
     capturarBaseVisualStatus,
     segmentosStatusDaRota
