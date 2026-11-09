@@ -51,6 +51,8 @@
   const LAYER_STOPS_MULTI = 'pemato-nav-stops-multi';
   const LAYER_STOPS_ACTIVE = 'pemato-nav-stops-active';
   const LAYER_STOPS_MULTI_ACTIVE = 'pemato-nav-stops-multi-active';
+  const LAYER_NEXT_HALO = 'pemato-nav-next-stop-halo';
+  const LAYER_NEXT_LABEL = 'pemato-nav-next-stop-label';
   let cartaoSelecionadoId = null;
   const LAYER_ROUTE_CASE = 'pemato-nav-route-case';
   const LAYER_ROUTE = 'pemato-nav-route-layer';
@@ -366,6 +368,21 @@
     if (!mapa.getLayer(LAYER_DRIVER_RING)) mapa.addLayer({ id:LAYER_DRIVER_RING,type:'circle',source:SOURCE_DRIVER,paint:{'circle-radius':['case',['==',['get','mode'],'internal'],14,11],'circle-color':['case',['==',['get','mode'],'internal'],'rgba(22,139,97,.10)','rgba(22,139,97,.16)'],'circle-stroke-color':['case',['==',['get','mode'],'internal'],'rgba(255,255,255,.95)','rgba(22,139,97,.35)'],'circle-stroke-width':['case',['==',['get','mode'],'internal'],1.4,1]} });
     if (!mapa.getLayer(LAYER_DRIVER_DOT)) mapa.addLayer({ id:LAYER_DRIVER_DOT,type:'circle',source:SOURCE_DRIVER,filter:['==',['get','mode'],'external'],paint:{'circle-radius':7,'circle-color':'#168B61','circle-stroke-color':'#ffffff','circle-stroke-width':3} });
     if (!mapa.getLayer(LAYER_DRIVER)) mapa.addLayer({ id:LAYER_DRIVER,type:'symbol',source:SOURCE_DRIVER,filter:['==',['get','mode'],'internal'],layout:{'icon-image':'pemato-driver-arrow','icon-size':['interpolate',['linear'],['zoom'],12,0.52,15,0.58,18,0.64,20,0.68],'icon-allow-overlap':true,'icon-ignore-placement':true,'icon-anchor':'center','icon-rotation-alignment':'map','icon-rotate':['coalesce',['get','heading'],0]} });
+    // A próxima entrega é uma camada independente da parada consultada:
+    // seu halo permanece no mapa ao abrir qualquer outro cartão.
+    if (!mapa.getLayer(LAYER_NEXT_HALO)) mapa.addLayer({
+      id:LAYER_NEXT_HALO,
+      type:'circle',
+      source:SOURCE_STOPS_SELECTED,
+      filter:['==',['get','current'],true],
+      paint:{
+        'circle-radius':['interpolate',['linear'],['zoom'],8,13,12,18,16,23,19,26],
+        'circle-color':'rgba(1,141,62,.12)',
+        'circle-stroke-color':'#018D3E',
+        'circle-stroke-opacity':.9,
+        'circle-stroke-width':['interpolate',['linear'],['zoom'],8,1.8,15,2.8,19,3.2]
+      }
+    });
     const layoutMarcadorV12 = {
       'icon-image':['get','iconV12'],
       'icon-anchor':'bottom',
@@ -374,7 +391,9 @@
       'icon-allow-overlap':true,
       'icon-ignore-placement':true,
       'icon-padding':3,
-      'symbol-sort-key':['get','order']
+      // A próxima parada é sempre desenhada acima das paradas consultadas.
+      'symbol-sort-key':['case',['==',['get','current'],true],1000000,
+        ['==',['get','selected'],true],900000,['get','order']]
     };
     if(!mapa.getLayer(LAYER_STOPS)) mapa.addLayer({id:LAYER_STOPS,type:'symbol',source:SOURCE_STOPS,
       filter:['all',['<=',['get','multi'],1],['!=',['get','highlighted'],true]],
@@ -388,6 +407,17 @@
     if(!mapa.getLayer(LAYER_STOPS_MULTI_ACTIVE)) mapa.addLayer({id:LAYER_STOPS_MULTI_ACTIVE,type:'symbol',source:SOURCE_STOPS_SELECTED,
       filter:['all',['>',['get','multi'],1],['==',['get','highlighted'],true]],
       layout:{...layoutMarcadorV12,'icon-allow-overlap':true,'icon-ignore-placement':true}});
+    // Identificação curta e exclusiva do próximo endereço, sem marcar como
+    // "próxima" a parada que foi aberta apenas para consulta.
+    if (mapa.getStyle()?.glyphs && !mapa.getLayer(LAYER_NEXT_LABEL)) mapa.addLayer({
+      id:LAYER_NEXT_LABEL,type:'symbol',source:SOURCE_STOPS_SELECTED,
+      filter:['==',['get','current'],true],
+      minzoom:12,
+      layout:{'text-field':'PRÓXIMA','text-size':10.5,'text-anchor':'bottom',
+        'text-offset':[0,-3.2],'text-allow-overlap':true,
+        'text-ignore-placement':true,'symbol-sort-key':1000001},
+      paint:{'text-color':'#006D32','text-halo-color':'#FFFFFF','text-halo-width':2.3}
+    });
 
   }
 
@@ -732,6 +762,15 @@
     }] : []));
   }
 
+  // A consulta e a próxima entrega são estados independentes:
+  // navegar pelos cartões nunca remove a marcação da parada ativa.
+  function destaquesNoMapa(ids, idAtivo, idConsultado) {
+    const presentes = (Array.isArray(ids) ? ids : []).map(String);
+    const current = idAtivo != null && String(idAtivo) !== '' && presentes.includes(String(idAtivo));
+    const selected = idConsultado != null && String(idConsultado) !== '' && presentes.includes(String(idConsultado));
+    return {current, selected, highlighted: current || selected};
+  }
+
   function atualizarFontesPontos() {
     if (!mapa || !mapReady) return;
     const p = proxima();
@@ -766,11 +805,9 @@
       // real da parada e não muda de posição ao selecionar, entregar ou recalcular.
       const stackIndex = 0;
       const ids = grupo.map(item => String(item.stop.id));
-      const current = ids.includes(idAtivo);
-      const selected = ids.includes(idConsultado) && idConsultado !== '';
-      // V47: dois verdes independentes. A parada ativa da corrida permanece verde
-      // e a parada consultada pelo motorista também fica verde sem substituir a ativa.
-      features.push({type:'Feature',properties:{id:String(stop.id),ids:ids.join(','),order:principal.order,multi,stackIndex,markerOffset:[0,0],status:stop.statusEntrega||'pendente',current,selected,highlighted:(current||selected)},geometry:{type:'Point',coordinates:[lon,lat]}});
+      const {current,selected,highlighted} = destaquesNoMapa(ids, idAtivo, idConsultado);
+      // A próxima entrega e a consulta aparecem ao mesmo tempo quando são diferentes.
+      features.push({type:'Feature',properties:{id:String(stop.id),ids:ids.join(','),order:principal.order,multi,stackIndex,markerOffset:[0,0],status:stop.statusEntrega||'pendente',current,selected,highlighted},geometry:{type:'Point',coordinates:[lon,lat]}});
     });
     let featuresVisiveis = features;
     if (navegacaoInternaAtiva()) {
