@@ -360,10 +360,6 @@
     });
     mapa.on('move', agendarRenderGruposDesenho);
     mapa.on('resize', agendarRenderGruposDesenho);
-    // Reposiciona apenas os sprites quando o zoom/mapa mudou,
-    // mantendo as coordenadas de entrega e os dados das paradas.
-    mapa.on('moveend', () => { if (pronto) renderizarMarcadores(); });
-    mapa.on('resize', () => { if (pronto) renderizarMarcadores(); });
   }
 
   function garantirMapa() {
@@ -473,7 +469,6 @@
 
   function renderizarMarcadores() {
     const data = stopsGeoJSON();
-    global.PacoteEMatoMarcadores?.organizarPinosVisiveis?.(mapa, data.features, { planejamento: true });
     prepararIconesParadasV12(data.features);
     atualizarSource(SOURCE_STOPS, featureCollection(data.features.filter(f => f.properties?.selected !== 1)));
     atualizarSource(SOURCE_STOPS_SELECTED, featureCollection(data.features.filter(f => f.properties?.selected === 1)));
