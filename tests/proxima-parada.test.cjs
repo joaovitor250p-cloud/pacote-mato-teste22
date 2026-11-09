@@ -49,6 +49,8 @@ const criar = (id, finalizada=false) => ({
 // 4 ficou sem entrega, 5 entregue -> cursor vai para 6, não volta para 4.
 const depoisDa5=[criar(4),criar(5,true),criar(6),criar(7),criar(8)];
 assert.equal(escolherProxima(depoisDa5,'5','5').id,'6');
+ // Mesmo que o cursor ainda esteja na 4, concluir a 5 adianta para a 6.
+assert.equal(escolherProxima(depoisDa5,'4','5').id,'6');
 // Abrir ou concluir a 8 fora de ordem não rouba o destaque permanente da 6.
 const depoisDa8=[criar(4),criar(5,true),criar(6),criar(7),criar(8,true)];
 assert.equal(escolherProxima(depoisDa8,'6','8').id,'6');
@@ -82,5 +84,5 @@ assert.match(nav,/const \{current,selected,highlighted\} = destaquesNoMapa/);
 assert.match(nav,/cartaoSelecionadoId=proximaDepois\?\.id \|\| idTratado/);
 assert.match(nav,/rota\.proximaParadaId=proximaDepois\?\.id\|\|null/);
 assert.doesNotMatch(nav,/organizarPinosVisiveis/,'nao pode redistribuir pinos');
-assert.ok(html.includes('js/navegacao/navegacao.js?v=20261109-cursor-fixo-17'));
+assert.ok(html.includes('js/navegacao/navegacao.js?v=20261109-sequencia-18'));
 console.log('PASSOU: proxima entrega sempre destacada, consulta independente e avancos de status.');
