@@ -84,5 +84,5 @@ assert.match(nav,/const \{current,selected,highlighted\} = destaquesNoMapa/);
 assert.match(nav,/cartaoSelecionadoId=proximaDepois\?\.id \|\| idTratado/);
 assert.match(nav,/rota\.proximaParadaId=proximaDepois\?\.id\|\|null/);
 assert.doesNotMatch(nav,/organizarPinosVisiveis/,'nao pode redistribuir pinos');
-assert.ok(html.includes('js/navegacao/navegacao.js?v=20261109-sequencia-18'));
+assert.ok(html.includes('js/navegacao/navegacao.js?v=20261109-toque-duplo-19'));
 console.log('PASSOU: proxima entrega sempre destacada, consulta independente e avancos de status.');
