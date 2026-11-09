@@ -52,11 +52,10 @@
     $('pematoShareResult').hidden=true;
     $('pematoSharePreview').hidden=true;
     $('pematoShareReceipt').hidden=true;
-    $('pematoShareCode').value='';
     $('pematoShareUrl').value='';
     if(tipo==='enviar') prepararEnvio(); else {
       const parametro=new URLSearchParams(global.location.search).get('partilha');
-      if (parametro) { $('pematoShareCode').value=urlPartilha(parametro); buscarRecebimento(parametro); }
+      if (parametro) buscarRecebimento(parametro, true);
       else escanear();
     }
   }
@@ -106,13 +105,12 @@
           </div>
         </div>
         <div id="pematoShareReceive" hidden>
-          <p>Leia o QR Code do outro entregador ou cole o link. Confira os pacotes antes de importar.</p>
+          <p>Aponte a câmera para o QR Code. A leitura importa as paradas automaticamente. Links recebidos abrem a partilha direto.</p>
           <div id="pematoShareScanner" class="pemato-share-scanner" hidden>
-            <div id="pematoShareQrReader"></div><div class="pemato-share-scanline" aria-hidden="true"></div>
+            <div id="pematoShareQrReader"></div>
+            <div class="pemato-share-frame" aria-hidden="true"></div>
+            <div class="pemato-share-scanline" aria-hidden="true"></div>
           </div>
-          <label for="pematoShareCode">Link ou código da partilha</label>
-          <div class="pemato-share-actions"><input id="pematoShareCode" placeholder="Cole o link aqui" type="text">
-            <button id="pematoShareFind" type="button">Conferir</button></div>
           <div id="pematoSharePreview" hidden>
             <div id="pematoSharePreviewBody"></div>
             <button id="pematoShareAccept" class="pemato-share-primary" type="button">Confirmar recebimento das paradas</button>
@@ -131,7 +129,6 @@
     bind('pematoShareCopy',()=>copiarLink());
     bind('pematoShareDownload',baixarQRCode);
     bind('pematoShareSendLink',enviarLink);
-    bind('pematoShareFind',()=>buscarRecebimento($('pematoShareCode').value));
     bind('pematoShareAccept',receberPartilha);
   }
   async function prepararEnvio() {
@@ -238,10 +235,10 @@
     if(/^[A-Za-z0-9]{18,48}$/.test(raw))return raw;
     return '';
   }
-  async function buscarRecebimento(codigo) {
+  async function buscarRecebimento(codigo, importarDireto=false) {
     if(!estaLogado())return;
     const id=extrairId(codigo);
-    if(!id){status('Cole um link válido do Pacote É Mato.',true);return;}
+    if(!id){status('QR Code ou link inválido.',true);return;}
     status('Consultando as paradas...');
     try{
       const doc=await banco().collection(COLLECTION).doc(id).get();
@@ -258,7 +255,9 @@
       const ul=document.createElement('div');ul.className='pemato-share-list';
       paradas.forEach(p=>{const el=document.createElement('div');el.className='pemato-share-stop';el.innerHTML='<span><strong>'+escapar(titulo(p))+'</strong><small>'+qtd(p)+' pacote(s)</small><em>'+escapar((p.pacotes||[]).join(' · ').slice(0,180))+'</em></span>';ul.appendChild(el);});
       body.appendChild(ul);
-      $('pematoSharePreview').hidden=false;status('Confira os dados e confirme o recebimento.');
+      $('pematoSharePreview').hidden=importarDireto;
+      status(importarDireto?'Partilha encontrada. Adicionando as paradas à sua rota...':'Confira os dados e confirme o recebimento.');
+      if(importarDireto) await receberPartilha();
     }catch(e){status(e?.message||'Não foi possível consultar a partilha.',true);$('pematoSharePreview').hidden=true;}
   }
   function somDeLeitura() {
@@ -279,23 +278,22 @@
   }
   async function escanear() {
     if(scanner || leituraEmCurso || tipo!=='receber') return;
-    if(typeof global.Html5Qrcode!=='function'){status('Leitor de QR Code indisponível. Cole o link.',true);return;}
+    if(typeof global.Html5Qrcode!=='function'){status('Leitor de QR Code indisponível neste aparelho.',true);return;}
     const reader=$('pematoShareScanner');if(reader)reader.hidden=false;
     try {
       const atual=new global.Html5Qrcode('pematoShareQrReader');scanner=atual;
-      await atual.start({facingMode:'environment'},{fps:10,qrbox:{width:220,height:220}},
+      await atual.start({facingMode:'environment'},{fps:10,aspectRatio:1},
         resultado=>{
           const id=extrairId(resultado);
           if(!id || leituraEmCurso) return;
           leituraEmCurso=true;
           somDeLeitura();
-          $('pematoShareCode').value=resultado;
           pararScanner();
-          buscarRecebimento(id).finally(()=>{leituraEmCurso=false;});
+          buscarRecebimento(id,true).finally(()=>{leituraEmCurso=false;});
         },()=>{});
       if(scanner!==atual){try{await atual.stop();await atual.clear();}catch(_){}}
     }catch(e){
-      status('Não foi possível abrir a câmera. Autorize o acesso ou cole o link.',true);
+      status('Não foi possível abrir a câmera. Autorize o acesso à câmera ou abra um link de partilha.',true);
       pararScanner();
     }
   }
@@ -356,6 +354,11 @@
       $('pematoSharePreview').hidden=true;preview=null;
       global.PacoteEMatoRoteirizacao?.carregarRotaAtiva?.();
       alertar('Paradas recebidas e adicionadas à rota.');
+      const urlAtual=new URL(global.location.href);
+      if(urlAtual.searchParams.has('partilha')){
+        urlAtual.searchParams.delete('partilha');
+        global.history?.replaceState?.(null,'',urlAtual.pathname+urlAtual.search+urlAtual.hash);
+      }
     }catch(e){
       if(!confirmou&&salvou&&antes){
         try{await global.PacoteEMatoRotaStore.salvarRota(antes,{ativa:true,exigirPersistenciaLocal:true});}catch(_){}
