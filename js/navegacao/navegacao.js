@@ -338,30 +338,56 @@
 
   function selecionarMarcadorNav(event) {
     const feature = event?.features?.[0];
-    const props=feature?.properties||{};
-    const ids=String(props.ids||props.id||'').split(',').map(v=>v.trim()).filter(Boolean);
-    const id=ids[0];
+    const id = String(feature?.properties?.id || '');
     if(!id)return;
-    const escolher = escolhido => {
-      cartaoSelecionadoId=String(escolhido);
-      definirAcompanhamento(false);
-      animarCardParada('pulse');
-      atualizarPainel();
-      atualizarFontesPontos();
-      persistirSelecao({motivo:'selecionar_marcador_mapa'});
-    };
-    const abriu = global.PacoteEMatoMarcadores?.abrirDetalhesPacotes?.(
-      mapa, feature, paradasPorOrdem(), escolher
-    );
-    if (abriu) return;
-    escolher(id);
+    // 1 toque: seleciona a parada no cartão; PRÓXIMA permanece independente.
+    cartaoSelecionadoId=id;
+    definirAcompanhamento(false);
+    animarCardParada('pulse');
+    atualizarPainel();
+    atualizarFontesPontos();
+    persistirSelecao({motivo:'selecionar_marcador_mapa'});
+  }
+
+  function abrirDetalhesMarcadorNav(event) {
+    const feature=event?.features?.[0];if(!feature)return false;
+    return global.PacoteEMatoMarcadores?.abrirDetalhesPacotes?.(
+      mapa, feature, paradasPorOrdem(), escolhido=>{
+        cartaoSelecionadoId=String(escolhido);
+        definirAcompanhamento(false);
+        animarCardParada('pulse');
+        atualizarPainel();
+        atualizarFontesPontos();
+        persistirSelecao({motivo:'selecionar_pacote_multiplo'});
+      }
+    ) === true;
   }
 
   function bindEventosMarcadoresNav() {
     if(!mapa||mapa.__pematoNavMarkersBound)return;
     mapa.__pematoNavMarkersBound=true;
+    let ultimoToque={id:'',at:0}, ultimaAbertura={id:'',at:0};
+    const clique=event=>{
+      const id=String(event?.features?.[0]?.properties?.id||'');
+      if(!id)return;
+      const agora=Date.now();
+      const duplo=ultimoToque.id===id && agora-ultimoToque.at<440;
+      ultimoToque={id,at:agora};
+      if(duplo){
+        if(abrirDetalhesMarcadorNav(event))ultimaAbertura={id,at:agora};
+      }else selecionarMarcadorNav(event);
+    };
+    const duplo=event=>{
+      event?.preventDefault?.();
+      const id=String(event?.features?.[0]?.properties?.id||'');
+      if(!id)return;
+      const agora=Date.now();
+      if(ultimaAbertura.id===id && agora-ultimaAbertura.at<500)return;
+      if(abrirDetalhesMarcadorNav(event))ultimaAbertura={id,at:agora};
+    };
     [LAYER_STOPS,LAYER_STOPS_MULTI,LAYER_STOPS_ACTIVE,LAYER_STOPS_MULTI_ACTIVE].forEach(layerId=>{
-      mapa.on('click',layerId,selecionarMarcadorNav);
+      mapa.on('click',layerId,clique);
+      mapa.on('dblclick',layerId,duplo);
       mapa.on('mouseenter',layerId,()=>{try{mapa.getCanvas().style.cursor='pointer';}catch(_){}});
       mapa.on('mouseleave',layerId,()=>{try{mapa.getCanvas().style.cursor='';}catch(_){}});
     });
