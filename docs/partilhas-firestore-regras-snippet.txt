@@ -8,7 +8,7 @@
 // O link expira em 7 dias; nenhuma listagem da coleção é permitida.
 // Use regras oficiais do Firestore e teste com Firebase Rules Playground.
 //
-// match /partilhasParadas/{partilhaId} {
+match /partilhasParadas/{partilhaId} {
   allow list: if false;
 
   allow get: if request.auth != null
@@ -49,4 +49,4 @@
     && request.resource.data.recebidoEm == request.time;
 
   allow delete: if false;
-// }
+}
