@@ -288,7 +288,7 @@
     if(ocupado||!preview||!estaLogado())return;
     ocupado=true;$('pematoShareAccept').disabled=true;
     const {id,data,ref}=preview;
-    let antes=null,rotaNova=null,salvou=false;
+    let antes=null,rotaNova=null,salvou=false,confirmou=false;
     try{
       status('Importando paradas...');
       antes=await global.PacoteEMatoRotaStore.obterRotaAtiva();
@@ -317,16 +317,19 @@
         tx.update(ref,{status:'recebida',recebedorUid:auth().uid,
           recebidoEm:global.firebase.firestore.FieldValue.serverTimestamp()});
       });
-      // Somente depois de confirmado o recebimento, permitir o espelhamento remoto da rota.
-      await global.PacoteEMatoRotaStore.salvarRota(rotaNova,{ativa:true,exigirPersistenciaLocal:true});
+      confirmou=true;
+      // Recibo confirmado: a cópia LOCAL já existe. O espelhamento remoto
+      // é secundário e não pode cancelar um recebimento aceito no servidor.
+      try{await global.PacoteEMatoRotaStore.salvarRota(rotaNova,{ativa:true,exigirPersistenciaLocal:true});}
+      catch(erroEspelho){console.warn('Partilha recebida; cópia remota pendente',erroEspelho);}
       status('Recebidas '+novas.length+' paradas! Elas já estão na sua rota. Recalcule o trajeto para navegar.');
       $('pematoSharePreview').hidden=true;preview=null;
       global.PacoteEMatoRoteirizacao?.carregarRotaAtiva?.();
       alertar('Paradas recebidas e adicionadas à rota.');
     }catch(e){
-      if(salvou&&antes){
+      if(!confirmou&&salvou&&antes){
         try{await global.PacoteEMatoRotaStore.salvarRota(antes,{ativa:true,exigirPersistenciaLocal:true});}catch(_){}
-      } else if (salvou && !antes) {
+      } else if (!confirmou && salvou && !antes) {
         try{await global.PacoteEMatoRotaStore.limparRotaAtiva();}catch(_){}
       }
       status(e?.message||'Não foi possível receber as paradas. Nenhuma remoção foi confirmada.',true);
