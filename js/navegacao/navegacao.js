@@ -247,7 +247,7 @@
       (mapa.getStyle()?.layers || []).forEach(layer => {
         if (layer?.type === 'fill-extrusion' && mapa.getLayer(layer.id)) mapa.removeLayer(layer.id);
       });
-      // Preserva a inclinação escolhida com dois dedos, inclusive fora da navegação guiada.
+      if (!navegacaoInternaAtiva()) mapa.setPitch?.(0);
     } catch (_) {}
   }
 
@@ -573,36 +573,6 @@
     wrap.style.setProperty('--nav-overlay-top', `${topo}px`);
   }
 
-  function habilitarGestosLivres(mapaAtual) {
-    const superficie=mapaAtual?.getCanvasContainer?.();
-    if(!superficie || superficie.dataset.pematoGestosLivres==='1')return;
-    superficie.dataset.pematoGestosLivres='1';
-    let inicio=null;
-    const medir=e=>{
-      if(e.touches?.length!==2)return null;
-      const a=e.touches[0],b=e.touches[1];
-      return {angulo:Math.atan2(b.clientY-a.clientY,b.clientX-a.clientX)*180/Math.PI,
-        y:(a.clientY+b.clientY)/2};
-    };
-    superficie.addEventListener('touchstart',e=>{
-      const pos=medir(e);
-      inicio=pos?{...pos,bearing:mapaAtual.getBearing(),pitch:mapaAtual.getPitch()}:null;
-      if(pos)definirAcompanhamento(false);
-    },{passive:true});
-    superficie.addEventListener('touchmove',e=>{
-      const pos=medir(e);if(!pos||!inicio)return;
-      let giro=pos.angulo-inicio.angulo;
-      giro=((giro+540)%360)-180;
-      if(Math.abs(giro)>2)mapaAtual.setBearing(inicio.bearing+giro);
-      const subida=inicio.y-pos.y;
-      if(Math.abs(subida)>14 && Math.abs(giro)<12){
-        mapaAtual.setPitch(Math.max(0,Math.min(60,inicio.pitch+subida/3.2)));
-      }
-    },{passive:true});
-    superficie.addEventListener('touchend',e=>{if(e.touches.length!==2)inicio=null;},{passive:true});
-    superficie.addEventListener('touchcancel',()=>{inicio=null;},{passive:true});
-  }
-
   function garantirMapa() {
     const container = $('mapaNavegacao');
     if (!container || mapa || !global.maplibregl) return mapa;
@@ -628,9 +598,7 @@
       contextoPerdido = false;
       mapa.on('webglcontextlost', () => { contextoPerdido = true; });
       mapa.on('webglcontextrestored', () => { contextoPerdido = false; });
-      mapa.touchZoomRotate?.disableRotation?.();
-      mapa.touchPitch?.disable?.();
-      habilitarGestosLivres(mapa);
+      mapa.touchZoomRotate?.enableRotation?.();
       ['dragstart','zoomstart','rotatestart','pitchstart'].forEach(nome => mapa.on(nome, explorarMapa));
       mapa.on('zoomend', () => { atualizarProgressoVisual(nearestOnRoute(ultimaPosicao,{visual:true})); });
 
