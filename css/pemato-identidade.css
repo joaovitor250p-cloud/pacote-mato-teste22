@@ -502,17 +502,6 @@ body[data-pemato-module="navegacao"],
   outline-offset: 2px;
 }
 
-/* Identificador discreto que permite verificar visualmente o carregamento
-   da versão correta na tela de planejamento do Teste22. */
-#pematoTest22Version {
-  display: block !important;
-  margin-top: 3px !important;
-  font: 700 9px/1.2 Arial, sans-serif !important;
-  letter-spacing: .015em !important;
-  color: #6E8073 !important;
-}
-
-
 /* Teste22 v12 — painel superior fixo e resumo executivo da rota */
 /* Painel ancorado ao container do MAPA, jamais à posição do pino.
    Com isso ele permanece no topo sem deslocar o mapa quando o motorista se move. */
@@ -639,7 +628,6 @@ body[data-pemato-module="navegacao"],
 }
 #routingBottomSheet .routing-summary-stat-stops > strong { color: #283C30 !important; }
 #routingBottomSheet #routingActionsBtn { margin-top: 7px !important; }
-#routingBottomSheet #pematoTest22Version { margin-top: 2px !important; font-size: 9px !important; }
 
 @media (max-width: 820px) {
   .routing-workspace.sheet-collapsed #routingBottomSheet.routing-list-pane,
