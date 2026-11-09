@@ -183,15 +183,23 @@
     const ativa = paradasPorOrdem().find(p => String(p.id) === String(rota.proximaParadaId || '') && !paradaFinalizada(p));
     return ativa || ordemPendente[0] || null;
   }
-  function proximaPendenteDepois(idAtual) {
-    const ordenadas = paradasPorOrdem();
-    const indice = ordenadas.findIndex(p => String(p.id) === String(idAtual || ''));
+  // A próxima entrega é o cursor permanente da sequência, NÃO o cartão
+  // temporariamente aberto para consulta. Ao tratar uma parada fora de ordem,
+  // o cursor continua na entrega pendente que já estava ativa.
+  function proximaFixaAposTratar(ordenadas, idAtivoAntes, idTratado) {
+    const lista = Array.isArray(ordenadas) ? ordenadas : [];
+    const idAtual = String(idAtivoAntes || '');
+    const aindaAtiva = lista.find(p => String(p.id) === idAtual && !paradaFinalizada(p));
+    if (aindaAtiva) return aindaAtiva;
+    // Só avança na ordem quando a própria próxima foi concluída.
+    const indice = lista.findIndex(p => String(p.id) === String(idAtivoAntes || idTratado || ''));
     if (indice >= 0) {
-      for (let i = indice + 1; i < ordenadas.length; i++) {
-        if (!['entregue','concluida','nao_entregue'].includes(String(ordenadas[i].statusEntrega || ''))) return ordenadas[i];
+      for (let i = indice + 1; i < lista.length; i++) {
+        if (!paradaFinalizada(lista[i])) return lista[i];
       }
     }
-    return ordemPendente[0] || null;
+    // Depois da última entrega, as pendências puladas continuam disponíveis.
+    return lista.find(p => !paradaFinalizada(p)) || null;
   }
 
   function destinoFinalDaRota() {
@@ -1693,6 +1701,9 @@
 
   async function salvarStatusParadaAtual(status,motivo,observacao){
     if(processandoStatus) return; const atual=paradasPorOrdem().find(s=>String(s.id)===String(cartaoSelecionadoId))||proxima(); if(!rota||!atual)return; const parada=rota.paradas.find(p=>String(p.id)===String(atual.id)); if(!parada||['entregue','concluida','nao_entregue'].includes(parada.statusEntrega))return;
+    // Capturar ANTES de tratar a entrega. A atualização dos pendentes pode
+    // encontrar a 4 ainda pendente, mas a continuidade real era a 5/6.
+    const idAtivoAntes = proxima()?.id || null;
     processandoStatus=true; try{
       if(!['entregue','nao_entregue'].includes(status)) return;
       const motivoFinal=status==='nao_entregue'?String(motivo||'').trim():'';
@@ -1702,14 +1713,14 @@
       parada.alteradoEm=timestamp;
       const idTratado=parada.id;
       atualizarPendentes();
-      const proximaDepois=proximaPendenteDepois(idTratado) || proxima();
+      const proximaDepois=proximaFixaAposTratar(paradasPorOrdem(), idAtivoAntes, idTratado);
       cartaoSelecionadoId=proximaDepois?.id || idTratado;
       rota.paradaSelecionadaId=cartaoSelecionadoId;
       rota.proximaParadaId=proximaDepois?.id||null;
       rota.duracaoParadasSegundos=ordemPendente.length*Number(rota.tempoParadaSegundos||0);
       if(Number.isFinite(Number(rota.duracaoDirecaoSegundos))){rota.duracaoTotalSegundos=Number(rota.duracaoDirecaoSegundos||0)+Number(rota.duracaoParadasSegundos||0);rota.horarioTerminoEstimado=Date.now()+rota.duracaoTotalSegundos*1000;}
       await global.PacoteEMatoRotaStore.salvarRota(rota,{ativa:true});
-      await global.PacoteEMatoSessao?.persistirAgora?.({motivo:status==='entregue'?'parada_entregue':'parada_nao_entregue',paradaSelecionadaId:cartaoSelecionadoId,proximaParadaId:cartaoSelecionadoId,navegacaoAtiva:true});
+      await global.PacoteEMatoSessao?.persistirAgora?.({motivo:status==='entregue'?'parada_entregue':'parada_nao_entregue',paradaSelecionadaId:cartaoSelecionadoId,proximaParadaId:rota.proximaParadaId,navegacaoAtiva:true});
       if($('navDeliveryNote'))$('navDeliveryNote').value=''; if($('navExtrasPanel'))$('navExtrasPanel').style.display='none'; ultimoIdNota='';
       animarCardParada('left');
       atualizarPainel(); desenharRota(); global.PacoteEMatoHistorico?.renderizar?.(); global.PacoteEMatoAppShell?.atualizarInicio?.();
