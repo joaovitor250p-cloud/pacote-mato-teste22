@@ -378,6 +378,35 @@
     mapa.on('resize', agendarRenderGruposDesenho);
   }
 
+  function habilitarGestosLivres(mapaAtual) {
+    const superficie=mapaAtual?.getCanvasContainer?.();
+    if(!superficie || superficie.dataset.pematoGestosLivres==='1')return;
+    superficie.dataset.pematoGestosLivres='1';
+    let inicio=null;
+    const medir=e=>{
+      if(e.touches?.length!==2)return null;
+      const a=e.touches[0],b=e.touches[1];
+      return {angulo:Math.atan2(b.clientY-a.clientY,b.clientX-a.clientX)*180/Math.PI,
+        y:(a.clientY+b.clientY)/2};
+    };
+    superficie.addEventListener('touchstart',e=>{
+      const pos=medir(e);
+      inicio=pos?{...pos,bearing:mapaAtual.getBearing(),pitch:mapaAtual.getPitch()}:null;
+    },{passive:true});
+    superficie.addEventListener('touchmove',e=>{
+      const pos=medir(e);if(!pos||!inicio)return;
+      let giro=pos.angulo-inicio.angulo;
+      giro=((giro+540)%360)-180;
+      if(Math.abs(giro)>2)mapaAtual.setBearing(inicio.bearing+giro);
+      const subida=inicio.y-pos.y;
+      if(Math.abs(subida)>14 && Math.abs(giro)<12){
+        mapaAtual.setPitch(Math.max(0,Math.min(60,inicio.pitch+subida/3.2)));
+      }
+    },{passive:true});
+    superficie.addEventListener('touchend',e=>{if(e.touches.length!==2)inicio=null;},{passive:true});
+    superficie.addEventListener('touchcancel',()=>{inicio=null;},{passive:true});
+  }
+
   function garantirMapa() {
     if (mapa) return mapa;
     const container = $('mapaRoteirizacao');
@@ -389,7 +418,10 @@
         container, style: cfg().mapStyleUrl, center: cfg().initialCenter || [-46.6333, -23.5505], zoom: Number(cfg().initialZoom || 10),
         pitch: 0, bearing: 0, maxPitch: 60, dragRotate: true, touchPitch: true, attributionControl: true, fadeDuration: 120
       });
-      mapa.touchZoomRotate?.enableRotation?.();
+      // A rotação é tratada diretamente pelo gesto de dois dedos para funcionar no Chrome móvel.
+      mapa.touchZoomRotate?.disableRotation?.();
+      mapa.touchPitch?.disable?.();
+      habilitarGestosLivres(mapa);
       const mapaPronto = () => {
         pronto = true; clearTimeout(loadTimer); if (state()) state().mapaDisponivel = true; ocultarFallback(); removerCamadas3D(); global.PacoteEMatoMapaConfig?.limparPontosInteresse?.(mapa); global.PacoteEMatoMapaConfig?.aplicarEstiloMapaClean?.(mapa, { navegacaoAtiva:false });
         garantirCamadas(); bindEventosMapa(); try { mapa.resize(); } catch (_) {} renderizar({ fit: !fitFeito });
