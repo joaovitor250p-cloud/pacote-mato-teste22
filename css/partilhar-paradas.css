@@ -54,7 +54,15 @@
 .pemato-share-actions input {width:auto!important;}
 .pemato-share-note {font-size:11px!important;color:#6d7c71!important;}
 .pemato-share-receipt {background:#e9f8ec;border:1px solid #b8e1c7;color:#16663e;padding:12px;border-radius:12px;font-size:12px;font-weight:750;}
-#pematoShareQrReader {margin:12px 0;overflow:hidden;border-radius:12px;max-height:340px;}
+.pemato-share-direct-link {display:inline-block;margin:6px 0 10px;color:#087240;font-size:13px;font-weight:800;text-decoration:underline;}
+.pemato-share-scanner {position:relative;margin:12px 0;overflow:hidden;border-radius:14px;background:#10271c;min-height:230px;isolation:isolate;}
+#pematoShareQrReader {overflow:hidden;max-height:340px;}
+#pematoShareQrReader video {display:block;object-fit:cover;}
+.pemato-share-scanline {position:absolute;z-index:4;left:12%;right:12%;top:15%;height:3px;border-radius:20px;
+  background:#36ff9e;box-shadow:0 0 8px #36ff9e,0 0 22px rgba(54,255,158,.85);
+  pointer-events:none;animation:pemato-qr-scan 2.1s ease-in-out infinite alternate;}
+@keyframes pemato-qr-scan {from {transform:translateY(0);}to {transform:translateY(190px);}}
+@media(prefers-reduced-motion:reduce){.pemato-share-scanline{animation:none;top:50%;}}
 @media(max-width:520px){
  .pemato-share-backdrop {padding:8px;align-items:flex-end;}
  .pemato-share-card {width:100%;max-height:94dvh;border-radius:20px 20px 12px 12px;padding:16px;}
