@@ -53,7 +53,7 @@ assert.match(codigo,/modoRemocao:remocao\?'retirar':'manter'/);
 assert.match(codigo,/new global.QRCode\(/);
 assert.match(codigo,/a.download='Pacote É Mato - QR Partilha '/);
 assert.match(codigo,/navigator\.share\(/);
-assert.match(codigo,/navigator\.clipboard\.writeText\(/);
+assert.match(codigo,/navigator\?\.clipboard\?\.writeText\(/);
 assert.match(codigo,/Html5Qrcode\(/);
 assert.match(codigo,/runTransaction\(/);
 assert.match(codigo,/status:'recebida',recebedorUid:auth\(\)\.uid/);
