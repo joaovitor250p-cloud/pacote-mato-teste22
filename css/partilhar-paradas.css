@@ -1,0 +1,63 @@
+
+.pemato-share-backdrop[hidden], .pemato-share-card [hidden] { display:none !important; }
+.pemato-share-backdrop {
+  position:fixed;inset:0;z-index:18000;display:flex;align-items:center;justify-content:center;
+  padding:18px 12px;box-sizing:border-box;background:rgba(15,31,23,.62);backdrop-filter:blur(4px);
+}
+.pemato-share-card {
+  width:min(460px,100%);max-height:calc(100dvh - 35px);overflow:auto;box-sizing:border-box;
+  padding:18px;border:1px solid #d5e8db;border-radius:20px;background:#fff;
+  box-shadow:0 25px 80px rgba(9,39,23,.28);color:#22392c;font-family:inherit;
+}
+.pemato-share-head {display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+.pemato-share-head small {font-size:10px;color:#08743e;font-weight:800;letter-spacing:.13em;}
+.pemato-share-head h2 {font-size:22px;line-height:1.25;margin:4px 0 0;color:#133321;}
+#pematoShareClose {width:34px;height:34px;flex:0 0 34px;border:0;border-radius:10px;background:#f1f5f2;color:#39523f;font-size:25px;cursor:pointer;}
+.pemato-share-card p {line-height:1.45;color:#536459;font-size:13px;margin:10px 0;}
+.pemato-share-status {min-height:0;font-size:12px!important;color:#126f41!important;font-weight:700;}
+.pemato-share-status:empty {display:none;}
+.pemato-share-status[data-error="true"] {color:#b42519!important;}
+.pemato-share-toolbar,.pemato-share-actions {display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0;}
+.pemato-share-toolbar button,.pemato-share-actions button {
+  border:1px solid #d8e9dd;border-radius:10px;background:#f7fbf8;color:#087240;
+  padding:10px 12px;min-height:38px;cursor:pointer;font:750 12px/1.1 inherit;
+}
+.pemato-share-card button.pemato-share-primary {
+  background:#018d3e!important;color:#fff!important;border:1px solid #087c3b!important;
+  padding:12px 15px!important;border-radius:11px!important;min-height:42px!important;
+  font-weight:800!important;box-shadow:0 4px 13px rgba(1,141,62,.15)!important;
+}
+.pemato-share-primary:disabled,.pemato-share-card button:disabled {opacity:.6;cursor:wait;}
+.pemato-share-list {
+  display:flex;flex-direction:column;gap:7px;max-height:min(35dvh,300px);overflow-y:auto;
+  overscroll-behavior:contain;padding:2px 3px 3px 1px;
+}
+.pemato-share-stop,.pemato-share-choice {
+  display:flex;align-items:flex-start;gap:10px;background:#f9fcfa;
+  border:1px solid #e0ebe3;border-radius:12px;padding:11px;cursor:pointer;
+}
+.pemato-share-stop input,.pemato-share-choice input {margin:3px 0 0;accent-color:#018d3e;width:18px;height:18px;flex-shrink:0;}
+.pemato-share-stop span,.pemato-share-choice span {display:flex;flex-direction:column;gap:3px;min-width:0;}
+.pemato-share-stop strong,.pemato-share-choice strong {font-size:13px;font-weight:800;color:#224c34;}
+.pemato-share-stop small,.pemato-share-choice small {font-size:12px;line-height:1.4;color:#57695d;overflow-wrap:anywhere;}
+.pemato-share-stop em {font-size:11px;font-style:normal;color:#788779;overflow-wrap:anywhere;}
+.pemato-share-summary {background:#ecf7f0;border-radius:10px;margin:12px 0;padding:11px;font-weight:800;font-size:13px;color:#176c40;}
+.pemato-share-card h3 {font-size:15px;color:#203d2b;margin:12px 0;}
+.pemato-share-choice {margin-bottom:8px;}
+.pemato-share-qr {display:flex;align-items:center;justify-content:center;background:#fff;padding:15px;border:1px solid #d8e9dd;border-radius:14px;max-width:260px;margin:12px auto;}
+.pemato-share-qr canvas,.pemato-share-qr img {max-width:100%;height:auto;}
+.pemato-share-card label[for] {display:block;font-size:11px;color:#4e6555;font-weight:800;margin:12px 0 6px;}
+.pemato-share-card input[type=text] {
+  min-width:0;flex:1 1 120px;width:100%;box-sizing:border-box;border:1px solid #d3e2d7;border-radius:10px;
+  font-size:13px;padding:11px;background:white;color:#20392b;
+}
+.pemato-share-actions input {width:auto!important;}
+.pemato-share-note {font-size:11px!important;color:#6d7c71!important;}
+.pemato-share-receipt {background:#e9f8ec;border:1px solid #b8e1c7;color:#16663e;padding:12px;border-radius:12px;font-size:12px;font-weight:750;}
+#pematoShareQrReader {margin:12px 0;overflow:hidden;border-radius:12px;max-height:340px;}
+@media(max-width:520px){
+ .pemato-share-backdrop {padding:8px;align-items:flex-end;}
+ .pemato-share-card {width:100%;max-height:94dvh;border-radius:20px 20px 12px 12px;padding:16px;}
+ .pemato-share-list {max-height:36dvh;}
+ .pemato-share-actions button {flex:1 1 auto;}
+}
