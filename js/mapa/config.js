@@ -375,9 +375,18 @@
         const camadaPedestre = /(?:^|[-_ ])(footway|footpath|pedestrian|sidewalk|cycleway|bicycle|path|walkway|trail|steps|bridleway)(?:$|[-_ ])/i.test(txt);
         const caminhoTracejado = layer.paint?.['line-dasharray'] != null
           && /(?:^|[-_ ])(walkway|pedestrian|footway|footpath|path|cycleway|trail|track|sidewalk)(?:$|[-_ ])/i.test(String(layer.id || ''));
+        // Algumas trilhas/ciclovias do Bright usam IDs genéricos
+        // (ex.: transportation) e só aparecem no filtro da camada.
+        const filtro = JSON.stringify(layer.filter || []);
+        const trilhaFiltrada = /(footway|footpath|pedestrian|cycleway|bicycle|sidewalk|walkway|bridleway|steps|path)/i.test(filtro)
+          && !/(motorway|trunk|primary|secondary|tertiary|residential)/i.test(filtro);
+        // Não deixar sobrar nenhum tracejado decorativo da base nas ruas.
+        const tracejadoDecorativo = layer.paint?.['line-dasharray'] != null
+          && /transportation/i.test(String(layer['source-layer'] || ''))
+          && !/(motorway|trunk|primary|secondary|tertiary)/i.test(String(layer.id || ''));
         // Não classificar vias comuns como trilhas só por pertencerem à
         // source-layer "transportation". Ruas também podem ter dash no estilo.
-        if (camadaPedestre || caminhoTracejado) {
+        if (camadaPedestre || caminhoTracejado || trilhaFiltrada || tracejadoDecorativo) {
           // Passagens internas do Bright apareciam como traços azul-claros
           // pontilhados no meio das quadras. Removê-las do estilo visual
           // não altera vias, rotas calculadas nem setas de mão única.
@@ -412,8 +421,8 @@
           setPaintSeguro(mapa, layer, 'line-opacity', 0.45);
         }
         if (/(waterway|river|stream)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'line-color', '#a8d3ee');
-          setPaintSeguro(mapa, layer, 'line-opacity', 0.82);
+          setPaintSeguro(mapa, layer, 'line-color', '#d1dce1');
+          setPaintSeguro(mapa, layer, 'line-opacity', 0.45);
         }
         return;
       }
