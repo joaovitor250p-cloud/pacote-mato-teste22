@@ -387,9 +387,9 @@
     try {
       mapa = new global.maplibregl.Map({
         container, style: cfg().mapStyleUrl, center: cfg().initialCenter || [-46.6333, -23.5505], zoom: Number(cfg().initialZoom || 10),
-        pitch: 0, bearing: 0, maxPitch: 0, dragRotate: false, touchPitch: false, attributionControl: true, fadeDuration: 120
+        pitch: 0, bearing: 0, maxPitch: 60, dragRotate: true, touchPitch: true, attributionControl: true, fadeDuration: 120
       });
-      mapa.touchZoomRotate?.disableRotation?.();
+      mapa.touchZoomRotate?.enableRotation?.();
       const mapaPronto = () => {
         pronto = true; clearTimeout(loadTimer); if (state()) state().mapaDisponivel = true; ocultarFallback(); removerCamadas3D(); global.PacoteEMatoMapaConfig?.limparPontosInteresse?.(mapa); global.PacoteEMatoMapaConfig?.aplicarEstiloMapaClean?.(mapa, { navegacaoAtiva:false });
         garantirCamadas(); bindEventosMapa(); try { mapa.resize(); } catch (_) {} renderizar({ fit: !fitFeito });
