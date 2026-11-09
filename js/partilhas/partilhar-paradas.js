@@ -295,7 +295,9 @@
       const idsExistentes=new Set((antes?.paradas||[]).filter(p=>p.partilhaId===id).map(p=>p.partilhaId));
       if(idsExistentes.size)throw Error('As paradas desta partilha já foram importadas neste aparelho.');
       const novas=registrosDaRecepcao(data.paradasPayload,id);
-      rotaNova=antes?clone(antes):global.PacoteEMatoRotaStore.criarRota({nome:'Paradas recebidas',paradas:[],ordem:[]});
+      rotaNova=antes && !['concluida','arquivada'].includes(antes.status)
+        ? clone(antes)
+        : global.PacoteEMatoRotaStore.criarRota({nome:'Paradas recebidas',paradas:[],ordem:[]});
       rotaNova.paradas=Array.isArray(rotaNova.paradas)?rotaNova.paradas:[];
       rotaNova.ordem=Array.isArray(rotaNova.ordem)?rotaNova.ordem:[];
       rotaNova.paradas.push(...novas);
@@ -329,6 +331,8 @@
   async function retirarRecebidasDoRemetente(meta) {
     const store=global.PacoteEMatoRotaStore;const original=await store?.obterRota?.(meta.rotaId);
     if(!original)throw Error('Rota de origem não está disponível neste aparelho.');
+    const ativo=await store.obterRotaAtiva();
+    if(ativo?.id!==original.id)throw Error('Abra a rota de origem neste aparelho para concluir a retirada segura.');
     const ids=new Set(meta.ids.map(String));
     const encontradas=(original.paradas||[]).filter(p=>ids.has(paradaId(p)));
     if(encontradas.length!==ids.size)throw Error('Algumas paradas mudaram desde a partilha. Confira a rota antes de remover.');
@@ -340,8 +344,7 @@
     if(ids.has(String(novo.proximaParadaId||'')))novo.proximaParadaId=novo.ordem[0]||null;
     novo.historicoPartilhas=Array.isArray(novo.historicoPartilhas)?novo.historicoPartilhas:[];
     novo.historicoPartilhas.push({id:meta.id,tipo:'enviada-e-retirada',em:Date.now(),ids:[...ids]});
-    const ativo=await store.obterRotaAtiva();
-    await store.salvarRota(novo,{ativa:ativo?.id===novo.id,exigirPersistenciaLocal:true});
+    await store.salvarRota(novo,{ativa:true,exigirPersistenciaLocal:true});
     return ids.size;
   }
   async function sincronizarRecebidas() {
@@ -389,8 +392,9 @@
     ligarBotao('navShareSendBtn','enviar');ligarBotao('navShareReceiveBtn','receber');
     iniciarDaURL();
     global.setTimeout(sincronizarRecebidas,1800);
+    global.firebase?.auth?.().onAuthStateChanged?.(user=>{if(user)sincronizarRecebidas();});
     global.addEventListener?.('focus',()=>sincronizarRecebidas());
-    global.addEventListener?.('pemato:rota:salva',()=>{if(tipo==='enviar'&&$('pematoShareBackdrop')?.style.display==='flex'&&!ocupado)prepararEnvio();});
+    global.addEventListener?.('pemato:rota:salva',()=>{if(tipo==='enviar'&&$('pematoShareSelect')?.hidden===false&&$('pematoShareBackdrop')?.style.display==='flex'&&!ocupado)prepararEnvio();});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ligar,{once:true});
   else ligar();
