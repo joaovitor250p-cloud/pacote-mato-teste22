@@ -5,6 +5,7 @@
   const EXPIRACAO_DIAS = 7;
   let tipo = 'enviar', rota = null, partilha = null, preview = null;
   let escolhidas = new Set(), scanner = null, unsubscribe = null, ocupado = false, sincronizando = false;
+  let leituraEmCurso = false, audioContexto = null;
   const $ = id => document.getElementById(id);
   const alertar = mensagem => { global.notificar?.(mensagem); };
   const auth = () => global.firebase?.auth?.().currentUser;
@@ -56,6 +57,7 @@
     if(tipo==='enviar') prepararEnvio(); else {
       const parametro=new URLSearchParams(global.location.search).get('partilha');
       if (parametro) { $('pematoShareCode').value=urlPartilha(parametro); buscarRecebimento(parametro); }
+      else escanear();
     }
   }
   function fechar() {
@@ -95,6 +97,7 @@
             <div class="pemato-share-qr" id="pematoShareQr"></div>
             <label for="pematoShareUrl">Link da partilha</label>
             <input id="pematoShareUrl" class="pemato-share-url" type="text" readonly>
+            <a id="pematoShareOpenLink" class="pemato-share-direct-link" href="#" target="_blank" rel="noopener">Abrir link de recebimento</a>
             <div class="pemato-share-actions"><button id="pematoShareCopy" type="button">Copiar link</button>
               <button id="pematoShareDownload" type="button">Baixar QR Code</button>
               <button id="pematoShareSendLink" type="button">Enviar link</button></div>
@@ -104,8 +107,9 @@
         </div>
         <div id="pematoShareReceive" hidden>
           <p>Leia o QR Code do outro entregador ou cole o link. Confira os pacotes antes de importar.</p>
-          <button id="pematoShareScan" class="pemato-share-primary" type="button">Ler QR Code pela câmera</button>
-          <div id="pematoShareQrReader" hidden></div>
+          <div id="pematoShareScanner" class="pemato-share-scanner" hidden>
+            <div id="pematoShareQrReader"></div><div class="pemato-share-scanline" aria-hidden="true"></div>
+          </div>
           <label for="pematoShareCode">Link ou código da partilha</label>
           <div class="pemato-share-actions"><input id="pematoShareCode" placeholder="Cole o link aqui" type="text">
             <button id="pematoShareFind" type="button">Conferir</button></div>
@@ -127,7 +131,6 @@
     bind('pematoShareCopy',()=>copiarLink());
     bind('pematoShareDownload',baixarQRCode);
     bind('pematoShareSendLink',enviarLink);
-    bind('pematoShareScan',escanear);
     bind('pematoShareFind',()=>buscarRecebimento($('pematoShareCode').value));
     bind('pematoShareAccept',receberPartilha);
   }
@@ -187,6 +190,7 @@
       if(!lista.some(item=>item.id===partilha.id)){lista.push({id:partilha.id,ids:partilha.ids,rotaId:partilha.origemRotaId,remocao,criadoEm:now.getTime()});pendentesGravar(lista);}
       $('pematoShareOptions').hidden=true;$('pematoShareResult').hidden=false;
       const url=configurarUrl(ref.id);
+      const acesso=$('pematoShareOpenLink');if(acesso)acesso.href=url;
       gerarQR(url);
       observarRecebimento();
       status('Partilha criada. Mostre o QR ou envie o link ao outro entregador.');
@@ -257,22 +261,48 @@
       $('pematoSharePreview').hidden=false;status('Confira os dados e confirme o recebimento.');
     }catch(e){status(e?.message||'Não foi possível consultar a partilha.',true);$('pematoSharePreview').hidden=true;}
   }
+  function somDeLeitura() {
+    try {
+      const Audio = global.AudioContext || global.webkitAudioContext;
+      if (!Audio) return;
+      audioContexto = audioContexto || new Audio();
+      if (audioContexto.state === 'suspended') audioContexto.resume().catch(()=>{});
+      const oscilador = audioContexto.createOscillator();
+      const volume = audioContexto.createGain();
+      oscilador.type='sine';oscilador.frequency.value=880;
+      volume.gain.setValueAtTime(0.0001,audioContexto.currentTime);
+      volume.gain.exponentialRampToValueAtTime(0.15,audioContexto.currentTime+0.015);
+      volume.gain.exponentialRampToValueAtTime(0.0001,audioContexto.currentTime+0.15);
+      oscilador.connect(volume);volume.connect(audioContexto.destination);
+      oscilador.start();oscilador.stop(audioContexto.currentTime+0.16);
+    } catch (_) {}
+  }
   async function escanear() {
-    if(scanner){pararScanner();return;}
+    if(scanner || leituraEmCurso || tipo!=='receber') return;
     if(typeof global.Html5Qrcode!=='function'){status('Leitor de QR Code indisponível. Cole o link.',true);return;}
-    const reader=$('pematoShareQrReader');reader.hidden=false;
-    try{
-      scanner=new global.Html5Qrcode('pematoShareQrReader');
-      await scanner.start({facingMode:'environment'}, {fps:10,qrbox:{width:220,height:220}},
-        resultado=>{const id=extrairId(resultado);if(id){$('pematoShareCode').value=resultado;buscarRecebimento(id);}},()=>{});
-      $('pematoShareScan').textContent='Parar câmera';
-    }catch(e){status('Não foi possível abrir a câmera. Cole o link da partilha.',true);pararScanner();}
+    const reader=$('pematoShareScanner');if(reader)reader.hidden=false;
+    try {
+      const atual=new global.Html5Qrcode('pematoShareQrReader');scanner=atual;
+      await atual.start({facingMode:'environment'},{fps:10,qrbox:{width:220,height:220}},
+        resultado=>{
+          const id=extrairId(resultado);
+          if(!id || leituraEmCurso) return;
+          leituraEmCurso=true;
+          somDeLeitura();
+          $('pematoShareCode').value=resultado;
+          pararScanner();
+          buscarRecebimento(id).finally(()=>{leituraEmCurso=false;});
+        },()=>{});
+      if(scanner!==atual){try{await atual.stop();await atual.clear();}catch(_){}}
+    }catch(e){
+      status('Não foi possível abrir a câmera. Autorize o acesso ou cole o link.',true);
+      pararScanner();
+    }
   }
   function pararScanner() {
     const atual=scanner;scanner=null;
     if(atual){Promise.resolve(atual.stop?.()).catch(()=>{}).finally(()=>{try{atual.clear?.()}catch(_){}});}
-    const reader=$('pematoShareQrReader');if(reader)reader.hidden=true;
-    const button=$('pematoShareScan');if(button)button.textContent='Ler QR Code pela câmera';
+    const reader=$('pematoShareScanner');if(reader)reader.hidden=true;
   }
   function registrosDaRecepcao(paradas,id) {
     return paradas.map((p,i)=>{
