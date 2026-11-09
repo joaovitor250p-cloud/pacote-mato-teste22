@@ -34,9 +34,9 @@ assert.ok(html.includes('js/mapa/config.js?v=20261108-sem-tracejados-3'));
 assert.match(config, /const camadaPedestre/);
 assert.match(config, /garantirRuasAzuisUniformes\(mapa, navegacaoAtiva\)/);
 assert.match(config, /'pemato-streets-solid'/);
-assert.ok(html.includes('js/mapa/marcadores.js?v=20261109-pinos-visiveis-14'));
-assert.ok(html.includes('js/mapa/mapa.js?v=20261109-pinos-visiveis-14'));
-assert.ok(html.includes('js/navegacao/navegacao.js?v=20261109-pinos-visiveis-14'));
+assert.ok(html.includes('js/mapa/marcadores.js?v=20261108-pinos-fixos-15'));
+assert.ok(html.includes('js/mapa/mapa.js?v=20261108-pinos-fixos-15'));
+assert.ok(html.includes('js/navegacao/navegacao.js?v=20261108-pinos-fixos-15'));
 assert.doesNotMatch(planejamento + navegacao, /#a6532c|rgba\(166,83,44/i, 'marcador da posição usa o verde da marca');
 
 assert.match(planejamento, /abrirDetalhesPacotes/);
@@ -163,41 +163,23 @@ assert.match(marcadores, /function quantidadePacotesRegistradosDoGrupo\(/);
 console.log('PASSOU: nova contagem de codigos distintos em ambas as telas.');
 
  
-// Em zoom afastado, os pinos simples e múltiplos que ficavam sobrepostos
-// são distribuídos apenas com icon-offset, preservando suas coordenadas.
+// Regressão: é proibido afastar os pinos das coordenadas reais.
 const ambienteMarcadores = {window:{}};
 vm.runInNewContext(marcadores, ambienteMarcadores, {filename:'marcadores.js'});
-const ui = ambienteMarcadores.window.PacoteEMatoMarcadores;
-const featuresSuperpostas = Array.from({length:56},(_,i)=>({
-  type:'Feature',
-  geometry:{type:'Point',coordinates:[-46.6,-23.5]},
-  properties:{id:'stop-'+i,order:i+1,multi:i%4===0?6:1,selected:i===0?1:0}
-}));
-const antes = JSON.stringify(featuresSuperpostas.map(f=>f.geometry.coordinates));
-const simulador = {
-  getZoom:()=>9,
-  getContainer:()=>({clientWidth:414,clientHeight:800}),
-  project:()=>({x:210,y:390})
-};
-ui.organizarPinosVisiveis(simulador,featuresSuperpostas,{planejamento:true});
-assert.equal(JSON.stringify(featuresSuperpostas.map(f=>f.geometry.coordinates)),antes,
-  'coordenadas permanecem originais');
-assert.equal(featuresSuperpostas.length,56,'nenhum pino descartado');
-assert.ok(featuresSuperpostas.filter(f=>f.properties.markerOffset.some(Boolean)).length>40,
-  'pinos densos ficam separados na tela');
-const escala=.62+(9-8)*(.14/3);
-const caixas=featuresSuperpostas.map(f=>{
-  const p=f.properties,largura=(p.multi>1?49:34)*escala+4,altura=(p.multi>1?34:29)*escala+4;
-  const x=210+p.markerOffset[0]*escala,y=390+p.markerOffset[1]*escala;
-  return {id:p.id,l:x-largura/2,r:x+largura/2,t:y-altura,b:y};
-});
-for(let i=0;i<caixas.length;i++)for(let j=i+1;j<caixas.length;j++){
-  const a=caixas[i],b=caixas[j];
-  assert.ok(!(a.l<b.r && a.r>b.l && a.t<b.b && a.b>b.t),
-    'pinos '+a.id+' e '+b.id+' nao devem se cobrir');
-}
-assert.match(planejamento,/organizarPinosVisiveis/);
-assert.match(navegacao,/organizarPinosVisiveis/);
+const mapaPinos = ambienteMarcadores.window.PacoteEMatoMarcadores;
+assert.equal(typeof mapaPinos.organizarPinosVisiveis, 'undefined',
+  'distribuicao artificial dos pinos removida');
+assert.doesNotMatch(planejamento, /organizarPinosVisiveis|mapa\.on\('moveend', \(\) => \{ if \(pronto\) renderizarMarcadores/,
+  'planejamento nao redistribui marcadores ao mover mapa');
+assert.doesNotMatch(navegacao, /organizarPinosVisiveis/,
+  'navegacao nao redistribui marcadores ao mover mapa');
+assert.match(planejamento, /stackIndex, markerOffset: \[0,0\]/,
+  'planejamento ancora o pino na coordenada original');
+assert.match(navegacao, /stackIndex,markerOffset:\[0,0\]/,
+  'navegacao ancora o pino na coordenada original');
+assert.ok(html.includes('js/mapa/marcadores.js?v=20261108-pinos-fixos-15'));
+assert.ok(html.includes('js/mapa/mapa.js?v=20261108-pinos-fixos-15'));
+assert.ok(html.includes('js/navegacao/navegacao.js?v=20261108-pinos-fixos-15'));
 assert.ok(html.includes('js/exportacao/pdf-rota.js?v=20261109-download-circuit-14'));
 assert.ok(html.includes('Baixar PDF da rota'));
-console.log('PASSOU: 56 pinos simples e múltiplos visíveis e PDF em download.');
+console.log('PASSOU: pinos ancorados nos enderecos e PDF preservado.');
