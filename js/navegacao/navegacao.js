@@ -247,7 +247,7 @@
       (mapa.getStyle()?.layers || []).forEach(layer => {
         if (layer?.type === 'fill-extrusion' && mapa.getLayer(layer.id)) mapa.removeLayer(layer.id);
       });
-      if (!navegacaoInternaAtiva()) mapa.setPitch?.(0);
+      // Preserva a inclinação escolhida com dois dedos, inclusive fora da navegação guiada.
     } catch (_) {}
   }
 
