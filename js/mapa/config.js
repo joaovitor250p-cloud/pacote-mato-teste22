@@ -107,7 +107,12 @@
     // baseada em id + source-layer e não depende de um único ID do Liberty.
     // Não engrossar caminhos de pedestres/ciclovias/ferrovias como se fossem ruas.
     if (/(footway|pedestrian|sidewalk|cycleway|bicycle|path|steps|railway|rail|tram|subway|ferry)/i.test(txt)) return '';
-    if (/(motorway|trunk|freeway)/i.test(txt)) return 'rodovia';
+    // Só o eixo principal de rodovias/expressas recebe laranja.
+    // Alças e acessos (motorway_link/trunk_link) ficam neutros.
+    if (/(motorway|trunk|freeway)/i.test(txt)) {
+      if (/(motorway[-_ ]?link|trunk[-_ ]?link|ramp|slip)/i.test(txt)) return 'secondary';
+      return 'rodovia';
+    }
     if (/(primary)/i.test(txt)) return 'primary';
     if (/(secondary)/i.test(txt)) return 'secondary';
     if (/(tertiary)/i.test(txt)) return 'tertiary';
@@ -119,7 +124,7 @@
     const extra = navegacaoAtiva ? 0.28 : 0;
     const tabela = {
       // HOTFIX FINAL 7: malha mais definida sem transformar o mapa em desenho pesado.
-      rodovia:   [10,2.1,13,4.2,16,8.4,19,15.0],
+      rodovia:   [10,1.7,13,3.3,16,6.6,19,11.0],
       primary:   [10,1.8,13,3.7,16,7.4,19,13.0],
       secondary: [10,1.5,13,3.2,16,6.8,19,12.0],
       tertiary:  [10,1.3,13,2.9,16,6.2,19,11.0],
@@ -134,11 +139,11 @@
 
   function coresViaClean(categoria, casing) {
     const cores = {
-      rodovia:   {base:'#f1c68f', borda:'#e2af79'},
-      primary:   {base:'#f4d2a5', borda:'#e7bf8d'},
-      secondary: {base:'#f6dfbd', borda:'#ebcda7'},
-      tertiary:  {base:'#e6e8ea', borda:'#d3d7db'},
-      local:     {base:'#e1e5e9', borda:'#d2d7dd'}
+      rodovia:   {base:'#f2d2a8', borda:'#e5bb8e'},
+      primary:   {base:'#dce1e6', borda:'#cdd4db'},
+      secondary: {base:'#dfe3e8', borda:'#d1d7dd'},
+      tertiary:  {base:'#e3e7eb', borda:'#d5dbe0'},
+      local:     {base:'#e6e9ed', borda:'#d8dee4'}
     };
     const c = cores[categoria] || cores.local;
     return casing ? c.borda : c.base;
