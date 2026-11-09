@@ -134,11 +134,11 @@
 
   function coresViaClean(categoria, casing) {
     const cores = {
-      rodovia:   {base:'#c6d6e6', borda:'#a8bed2'},
-      primary:   {base:'#ccdbe9', borda:'#b0c3d6'},
-      secondary: {base:'#d0deeb', borda:'#b6c7d8'},
-      tertiary:  {base:'#d3e0ec', borda:'#bdcddb'},
-      local:     {base:'#d7e2ed', borda:'#c2d0dd'}
+      rodovia:   {base:'#f1c68f', borda:'#e2af79'},
+      primary:   {base:'#f4d2a5', borda:'#e7bf8d'},
+      secondary: {base:'#f6dfbd', borda:'#ebcda7'},
+      tertiary:  {base:'#e6e8ea', borda:'#d3d7db'},
+      local:     {base:'#e1e5e9', borda:'#d2d7dd'}
     };
     const c = cores[categoria] || cores.local;
     return casing ? c.borda : c.base;
@@ -320,22 +320,22 @@
       const txt = textoLayer(layer);
 
       if (layer.type === 'background') {
-        setPaintSeguro(mapa, layer, 'background-color', '#f9f9fb');
+        setPaintSeguro(mapa, layer, 'background-color', '#f8f8f9');
         setPaintSeguro(mapa, layer, 'background-opacity', 1);
         return;
       }
 
       if (layer.type === 'fill') {
         if (/(water|ocean|lake|river|waterway)/i.test(txt)) {
-          setPaintSeguro(mapa, layer, 'fill-color', '#dceaf3');
+          setPaintSeguro(mapa, layer, 'fill-color', '#dceaf6');
           setPaintSeguro(mapa, layer, 'fill-opacity', 0.94);
         } else if (/(park|grass|wood|forest|green|nature|landcover)/i.test(txt)) {
           // Parques permanecem identificáveis, mas sem dominar a malha urbana.
-          setPaintSeguro(mapa, layer, 'fill-color', '#f0f2f1');
-          setPaintSeguro(mapa, layer, 'fill-opacity', 0.78);
+          setPaintSeguro(mapa, layer, 'fill-color', '#e8f2e2');
+          setPaintSeguro(mapa, layer, 'fill-opacity', 0.88);
         } else if (/(building)/i.test(txt)) {
           // Casas visíveis sem preenchimento pesado: contorno cinza suave.
-          setPaintSeguro(mapa, layer, 'fill-color', '#f1f3f5');
+          setPaintSeguro(mapa, layer, 'fill-color', '#f1f2f4');
           setPaintSeguro(mapa, layer, 'fill-opacity', ['interpolate', ['linear'], ['zoom'], 13, 0.45, 15, 0.76, 17, 0.94, 19, 1]);
           setPaintSeguro(mapa, layer, 'fill-outline-color', '#cdd5de');
         } else if (/(landuse|industrial|commercial|retail|residential-area)/i.test(txt)) {
@@ -351,6 +351,12 @@
       }
 
       if (layer.type === 'line') {
+        // Ferrovias e trilhos eram as linhas finas pretas sobre o mapa.
+        // Ocultar apenas a cartografia ferroviária, sem tocar nas rotas calculadas.
+        if (/(railway|railroad|rail[-_ ]?track|train[-_ ]?track|subway[-_ ]?track|tram[-_ ]?track)/i.test(txt)) {
+          setLayoutSeguro(mapa, layer, 'visibility', 'none');
+          return;
+        }
         if (/(building|building_outline)/i.test(txt)) {
           setPaintSeguro(mapa, layer, 'line-color', '#cdd5de');
           setPaintSeguro(mapa, layer, 'line-opacity', 0.45);
@@ -477,9 +483,9 @@
       }
     });
 
-    // Desenhar as vias uniformemente por cima das ruas heterogêneas da base,
-    // mantendo rótulos legíveis e sem alterar dados de roteirização.
-    garantirRuasAzuisUniformes(mapa, navegacaoAtiva);
+    // A camada de ruas azuis uniformes foi desativada: o mapa agora usa
+    // a hierarquia cinza/laranja suave, como na referência enviada.
+    // As rotas e os pinos pemato-* continuam preservados.
     // Evitar duas camadas de setas sobre a mesma via. Se não for possível
     // criar a nossa camada, as setas originais seguem disponíveis.
     const setasNacionais = garantirSetasRuasBrasil(mapa);
