@@ -46,6 +46,7 @@
     <link rel="stylesheet" href="css/navegacao.css?v=20261017-v81-hotfix-final-7">
     <link rel="stylesheet" href="css/theme-v15.css?v=20261017-v81-enderecos-navegacao-final">
     <link rel="stylesheet" href="css/operacoes-pacotes.css?v=20261017-v81-enderecos-navegacao-final">
+    <link rel="stylesheet" href="css/partilhar-paradas.css?v=20261109-partilha-1">
     <link rel="stylesheet" href="css/pemato-identidade.css?v=20261108-limpeza-13">
 
 
@@ -914,7 +915,7 @@
           </button>
           <button id="routingPackagesMenuBtn" class="routing-action-row" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h5M8 13h4M16 9v6M13 12h6"></path></svg>
-            <span><strong>Pacotes da rota</strong><small>Adicionar ou remover pacotes por planilha + bipagem</small></span>
+            <span><strong>Partilhar paradas</strong><small>Enviar ou receber paradas por QR Code e link</small></span>
           </button>
           <button id="routingNewRouteBtn" class="routing-action-row" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14M4 4h16v16H4z"></path></svg>
@@ -974,10 +975,10 @@
     <div id="routingPackagesChooserBackdrop" class="routing-actions-backdrop" style="display:none;z-index:12346">
       <section class="routing-actions-menu routing-bipagem-chooser" role="dialog" aria-modal="true" aria-labelledby="routingPackagesChooserTitle">
         <div class="routing-actions-grabber"></div>
-        <div class="routing-actions-head"><div><strong id="routingPackagesChooserTitle">Pacotes da rota</strong><span>Escolha o que deseja fazer</span></div><button id="routingPackagesChooserClose" class="routing-actions-close" type="button" aria-label="Fechar">×</button></div>
+        <div class="routing-actions-head"><div><strong id="routingPackagesChooserTitle">Partilhar paradas</strong><span>Escolha o que deseja fazer</span></div><button id="routingPackagesChooserClose" class="routing-actions-close" type="button" aria-label="Fechar">×</button></div>
         <div class="routing-action-list routing-package-choice-list">
-          <button id="routingAddPackagesBtn" class="routing-action-row routing-package-choice add" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h5M8 13h4M17 9v6M14 12h6"></path></svg><span><strong>Adicionar à rota</strong><small>Importe uma planilha e bipe somente os pacotes que realmente recebeu</small></span></button>
-          <button id="routingRemovePackagesBtn" class="routing-action-row routing-package-choice remove" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h5M8 13h4M14 12h6"></path></svg><span><strong>Remover da rota</strong><small>Importe uma planilha e bipe somente os pacotes que saíram da sua responsabilidade</small></span></button>
+          <button id="routingShareSendBtn" class="routing-action-row routing-package-choice add" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h5M8 13h4M17 9v6M14 12h6"></path></svg><span><strong>Partilhar paradas</strong><small>Escolha as paradas e gere QR Code ou link</small></span></button>
+          <button id="routingShareReceiveBtn" class="routing-action-row routing-package-choice remove" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h5M8 13h4M14 12h6"></path></svg><span><strong>Receber paradas</strong><small>Leia um QR Code ou abra um link de partilha</small></span></button>
         </div>
       </section>
     </div>
@@ -1078,7 +1079,7 @@
             </div>
             <div class="routing-action-list">
               <button id="navActionImport" class="routing-action-row" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5"></path></svg><span><strong>Importar planilha</strong><small>XLSX, XLS ou CSV</small></span></button>
-              <button id="navActionPackages" class="routing-action-row" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h5M8 13h4M16 9v6M13 12h6"></path></svg><span><strong>Pacotes da rota</strong><small>Adicionar ou remover pacotes por bipagem</small></span></button>
+              <button id="navActionPackages" class="routing-action-row" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h5M8 13h4M16 9v6M13 12h6"></path></svg><span><strong>Partilhar paradas</strong><small>Transferir paradas por QR Code ou link</small></span></button>
               <button id="navActionNewRoute" class="routing-action-row" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14M4 4h16v16H4z"></path></svg><span><strong>Nova rota</strong><small>Começar outra rota sem misturar com a atual</small></span></button>
               <button id="navActionClearRoutes" class="routing-action-row danger" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V5h6v2M8 10v8M12 10v8M16 10v8M7 7l1 14h8l1-14"></path></svg><span><strong>Remover todas as rotas</strong><small>Limpar as rotas carregadas do mapa</small></span></button>
               <button id="navActionAddStop" class="routing-action-row" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg><span><strong>Adicionar parada</strong><small>Criar uma parada manualmente</small></span></button>
@@ -1118,9 +1119,9 @@
 
     <div id="navPackagesChooserBackdrop" class="nav-route-actions-backdrop" style="display:none;z-index:12410">
       <section class="nav-route-actions-card nav-package-chooser" role="dialog" aria-modal="true">
-        <div class="nav-route-actions-head"><div><strong>Pacotes da rota</strong><small>Escolha a operação</small></div><button id="navPackagesChooserClose" type="button">×</button></div>
-        <button id="navAddPackagesBtn" type="button"><strong>Adicionar à rota</strong><span>Planilha + bipagem dos pacotes recebidos</span></button>
-        <button id="navRemovePackagesBtn" type="button"><strong>Remover da rota</strong><span>Planilha + bipagem dos pacotes retirados</span></button>
+        <div class="nav-route-actions-head"><div><strong>Partilhar paradas</strong><small>Escolha a operação</small></div><button id="navPackagesChooserClose" type="button">×</button></div>
+        <button id="navShareSendBtn" type="button"><strong>Partilhar paradas</strong><span>Selecionar paradas e gerar QR Code ou link</span></button>
+        <button id="navShareReceiveBtn" type="button"><strong>Receber paradas</strong><span>Escanear QR Code ou colar link</span></button>
       </section>
     </div>
 
@@ -1485,6 +1486,7 @@
   <script src="js/native-integracao.js?v=20261019-v81-login-whatsapp-test2"></script>
   <script src="js/ui/location-onboarding.js?v=20261017-v81-enderecos-navegacao-final"></script>
   <script src="js/ui/app-shell.js?v=20261017-v81-enderecos-navegacao-final"></script>
+  <script src="js/partilhas/partilhar-paradas.js?v=20261109-partilha-1"></script>
 
   <script src="js/google-vinculo-v81.js?v=20261019-v81-google-login-fase2b-confirmacao-local"></script>
   <script src="js/diagnostico-sessao-v81.js?v=20261019-diag-coldstart-1"></script>
