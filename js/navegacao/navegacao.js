@@ -189,9 +189,18 @@
   function proximaFixaAposTratar(ordenadas, idAtivoAntes, idTratado) {
     const lista = Array.isArray(ordenadas) ? ordenadas : [];
     const idAtual = String(idAtivoAntes || '');
+    const indiceAtivo = lista.findIndex(p => String(p.id) === idAtual);
+    const indiceTratado = lista.findIndex(p => String(p.id) === String(idTratado || ''));
     const aindaAtiva = lista.find(p => String(p.id) === idAtual && !paradaFinalizada(p));
+    // Se o entregador pulou a 4 e concluiu a 5 (logo depois do cursor),
+    // a sequência prossegue para a 6, sem exigir concluir a 4.
+    if (aindaAtiva && indiceAtivo >= 0 && indiceTratado === indiceAtivo + 1) {
+      const seguinte = lista.slice(indiceTratado + 1).find(p => !paradaFinalizada(p));
+      if (seguinte) return seguinte;
+    }
+    // Consultar ou concluir uma parada distante (ex.: 8) não rouba a
+    // marcação da próxima ativa (6).
     if (aindaAtiva) return aindaAtiva;
-    // Só avança na ordem quando a própria próxima foi concluída.
     const indice = lista.findIndex(p => String(p.id) === String(idAtivoAntes || idTratado || ''));
     if (indice >= 0) {
       for (let i = indice + 1; i < lista.length; i++) {
