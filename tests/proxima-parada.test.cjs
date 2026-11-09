@@ -32,6 +32,39 @@ assert.equal(proxima.highlighted,true);
 assert.equal(outra.selected,true);
 assert.equal(outra.highlighted,true);
 
+// A ordem de entrega avança para frente, mesmo com a 4 ainda pendente.
+const inicio = nav.indexOf('  function paradaFinalizada(');
+const fim = nav.indexOf('\n  function animarCardParada(',inicio);
+const blocoStatus = nav.slice(inicio,fim);
+const proximaInicio = nav.indexOf('  function proximaFixaAposTratar(');
+const proximaFim = nav.indexOf('\n  function destinoFinalDaRota()',proximaInicio);
+assert.ok(inicio>=0 && proximaInicio>=0 && proximaFim>proximaInicio);
+const ambienteSequencia={resultado:null};
+vm.runInNewContext(blocoStatus+'\n'+nav.slice(proximaInicio,proximaFim)+'\nresultado = proximaFixaAposTratar;',ambienteSequencia,
+  {filename:'sequencia-proxima.js'});
+const escolherProxima = ambienteSequencia.resultado;
+const criar = (id, finalizada=false) => ({
+  id:String(id),statusEntrega:finalizada?'entregue':'pendente'
+});
+// 4 ficou sem entrega, 5 entregue -> cursor vai para 6, não volta para 4.
+const depoisDa5=[criar(4),criar(5,true),criar(6),criar(7),criar(8)];
+assert.equal(escolherProxima(depoisDa5,'5','5').id,'6');
+// Abrir ou concluir a 8 fora de ordem não rouba o destaque permanente da 6.
+const depoisDa8=[criar(4),criar(5,true),criar(6),criar(7),criar(8,true)];
+assert.equal(escolherProxima(depoisDa8,'6','8').id,'6');
+// Quando a própria próxima (6) é entregue, avança para a 7.
+const depoisDa6=[criar(4),criar(5,true),criar(6,true),criar(7),criar(8,true)];
+assert.equal(escolherProxima(depoisDa6,'6','6').id,'7');
+// Pula a 7 caso também já esteja concluída e avança adiante.
+const pulandoConcluidas=[criar(4),criar(5,true),criar(6,true),criar(7,true),criar(8)];
+assert.equal(escolherProxima(pulandoConcluidas,'6','6').id,'8');
+// Ao terminar o trecho sequencial, preserva a pendência antiga para revisita.
+const apenasAntiga=[criar(4),criar(5,true),criar(6,true),criar(7,true)];
+assert.equal(escolherProxima(apenasAntiga,'6','6').id,'4');
+assert.match(nav,/const idAtivoAntes = proxima\(\)\?\.id \|\| null/);
+assert.match(nav,/const proximaDepois=proximaFixaAposTratar\(paradasPorOrdem\(\), idAtivoAntes, idTratado\)/);
+assert.match(nav,/proximaParadaId:rota\.proximaParadaId/);
+
 // Mesma coordenada compartilhada: ativa e consultada convivem no grupo.
 const grupo = calcular(['2','5'],'2','5');
 assert.equal(grupo.current,true);
@@ -49,5 +82,5 @@ assert.match(nav,/const \{current,selected,highlighted\} = destaquesNoMapa/);
 assert.match(nav,/cartaoSelecionadoId=proximaDepois\?\.id \|\| idTratado/);
 assert.match(nav,/rota\.proximaParadaId=proximaDepois\?\.id\|\|null/);
 assert.doesNotMatch(nav,/organizarPinosVisiveis/,'nao pode redistribuir pinos');
-assert.ok(html.includes('js/navegacao/navegacao.js?v=20261109-proxima-16'));
+assert.ok(html.includes('js/navegacao/navegacao.js?v=20261109-cursor-fixo-17'));
 console.log('PASSOU: proxima entrega sempre destacada, consulta independente e avancos de status.');
