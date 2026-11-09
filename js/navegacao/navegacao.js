@@ -528,10 +528,6 @@
       mapa.touchZoomRotate?.enableRotation?.();
       ['dragstart','zoomstart','rotatestart','pitchstart'].forEach(nome => mapa.on(nome, explorarMapa));
       mapa.on('zoomend', () => { atualizarProgressoVisual(nearestOnRoute(ultimaPosicao,{visual:true})); });
-      // Recalcula o desvio visual dos pinos no overview após zoom ou arrasto.
-      mapa.on('moveend', () => {
-        if (mapReady && !navegacaoInternaAtiva()) atualizarFontesPontos();
-      });
 
       const ready = () => {
         mapReady = true;
@@ -784,12 +780,11 @@
       const permitidos = new Set([p?.id, proximaDepois?.id, cartaoSelecionadoId].filter(Boolean).map(String));
       featuresVisiveis = features.filter(feature => String(feature?.properties?.ids || feature?.properties?.id || '').split(',').some(id => permitidos.has(String(id))));
     }
-    global.PacoteEMatoMarcadores?.organizarPinosVisiveis?.(mapa, featuresVisiveis, { planejamento: false });
     prepararIconesParadasV12(featuresVisiveis);
     const assinatura = `${modoMapaNavegacao}|` + featuresVisiveis.map(f => {
       const p = f.properties || {};
       const c = f.geometry?.coordinates || [];
-      return `${p.id}:${p.order}:${p.multi}:${p.status||''}:${p.current?1:0}:${p.selected?1:0}:${p.highlighted?1:0}:${p.iconV12||''}:${(p.markerOffset||[]).join(',')}:${c[0]}:${c[1]}`;
+      return `${p.id}:${p.order}:${p.multi}:${p.status||''}:${p.current?1:0}:${p.selected?1:0}:${p.highlighted?1:0}:${p.iconV12||''}:${c[0]}:${c[1]}`;
     }).join('|');
     if (assinatura !== assinaturaParadasV11) {
       assinaturaParadasV11 = assinatura;
