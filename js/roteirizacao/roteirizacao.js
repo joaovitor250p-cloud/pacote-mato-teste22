@@ -924,7 +924,7 @@
       headline.textContent = rotaAtual.precisaRecalculo
         ? 'Rota alterada · recalcule o trajeto'
         : (rotaAtual.horarioTerminoEstimado
-          ? `Término: ${horaLocal(rotaAtual.horarioTerminoEstimado)}`
+          ? `Previsão de término: ${horaLocal(rotaAtual.horarioTerminoEstimado)}`
           : (rotaAtual.rotaOtimizada ? 'Rota pronta' : 'Rota em planejamento'));
     }
     if (meta) {
