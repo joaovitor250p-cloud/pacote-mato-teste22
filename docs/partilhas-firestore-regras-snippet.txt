@@ -1,0 +1,52 @@
+// REGRAS ADICIONAIS PARA PARTILHAR PARADAS — TESTE22
+// Insira APENAS este bloco DENTRO do seu match /databases/{database}/documents.
+// NÃO substitua as regras já existentes do Firebase pelos trechos abaixo.
+// Não dê permissão de leitura/listagem nas coleções de rotas privadas.
+//
+// As partilhas contêm endereços, códigos BR e observações: são visíveis
+// SOMENTE por GET a contas autenticadas que conhecem o ID aleatório do link.
+// O link expira em 7 dias; nenhuma listagem da coleção é permitida.
+// Use regras oficiais do Firestore e teste com Firebase Rules Playground.
+//
+// match /partilhasParadas/{partilhaId} {
+  allow list: if false;
+
+  allow get: if request.auth != null
+    && resource.data.expiraEm is timestamp
+    && resource.data.expiraEm > request.time
+    && resource.data.status in ['pendente', 'recebida'];
+
+  allow create: if request.auth != null
+    && request.resource.data.keys().hasOnly([
+      'versao','criadorUid','criadorNome','origemRotaId','origemParadasIds',
+      'modoRemocao','paradasPayload','status','criadoEm','expiraEm'
+    ])
+    && request.resource.data.versao == 1
+    && request.resource.data.criadorUid == request.auth.uid
+    && request.resource.data.criadorNome is string
+    && request.resource.data.origemRotaId is string
+    && request.resource.data.origemParadasIds is list
+    && request.resource.data.paradasPayload is list
+    && request.resource.data.paradasPayload.size() > 0
+    && request.resource.data.paradasPayload.size() <= 150
+    && request.resource.data.origemParadasIds.size() == request.resource.data.paradasPayload.size()
+    && request.resource.data.modoRemocao in ['manter','retirar']
+    && request.resource.data.status == 'pendente'
+    && request.resource.data.criadoEm == request.time
+    && request.resource.data.expiraEm is timestamp
+    && request.resource.data.expiraEm > request.time
+    && request.resource.data.expiraEm <= request.time + duration.value(7, 'd');
+
+  allow update: if request.auth != null
+    && request.auth.uid != resource.data.criadorUid
+    && resource.data.status == 'pendente'
+    && resource.data.expiraEm > request.time
+    && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+      'status','recebedorUid','recebidoEm'
+    ])
+    && request.resource.data.status == 'recebida'
+    && request.resource.data.recebedorUid == request.auth.uid
+    && request.resource.data.recebidoEm == request.time;
+
+  allow delete: if false;
+// }
