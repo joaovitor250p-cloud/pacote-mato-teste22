@@ -35,8 +35,8 @@ assert.match(config, /const camadaPedestre/);
 assert.match(config, /garantirRuasAzuisUniformes\(mapa, navegacaoAtiva\)/);
 assert.match(config, /'pemato-streets-solid'/);
 assert.ok(html.includes('js/mapa/marcadores.js?v=20261108-pinos-fixos-15'));
-assert.ok(html.includes('js/mapa/mapa.js?v=20261108-pinos-fixos-15'));
-assert.ok(html.includes('js/navegacao/navegacao.js?v=20261108-pinos-fixos-15'));
+assert.ok(html.includes('js/mapa/mapa.js?v=20261109-toque-duplo-19'));
+assert.ok(html.includes('js/navegacao/navegacao.js?v=20261109-toque-duplo-19'));
 assert.doesNotMatch(planejamento + navegacao, /#a6532c|rgba\(166,83,44/i, 'marcador da posição usa o verde da marca');
 
 assert.match(planejamento, /abrirDetalhesPacotes/);
@@ -178,8 +178,8 @@ assert.match(planejamento, /stackIndex, markerOffset: \[0,0\]/,
 assert.match(navegacao, /stackIndex,markerOffset:\[0,0\]/,
   'navegacao ancora o pino na coordenada original');
 assert.ok(html.includes('js/mapa/marcadores.js?v=20261108-pinos-fixos-15'));
-assert.ok(html.includes('js/mapa/mapa.js?v=20261108-pinos-fixos-15'));
-assert.ok(html.includes('js/navegacao/navegacao.js?v=20261108-pinos-fixos-15'));
+assert.ok(html.includes('js/mapa/mapa.js?v=20261109-toque-duplo-19'));
+assert.ok(html.includes('js/navegacao/navegacao.js?v=20261109-toque-duplo-19'));
 assert.ok(html.includes('js/exportacao/pdf-rota.js?v=20261109-download-circuit-14'));
 assert.ok(html.includes('Baixar PDF da rota'));
 console.log('PASSOU: pinos ancorados nos enderecos e PDF preservado.');
