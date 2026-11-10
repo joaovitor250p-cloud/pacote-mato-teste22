@@ -108,6 +108,9 @@
     for (const r of resultados) {
       if (!coordenadasValidas(r.lat, r.lon)) continue;
 
+      if (/^(street|suburb|district|city|county|state|country|postcode)$/i.test(r.result_type || '')) continue;
+      if (parada.cidade && r.city && normalizarTexto(parada.cidade) !== normalizarTexto(r.city)) continue;
+
       const numeroRetornado = numeroComparavel(r.housenumber || '');
       if (!numeroRetornado || numeroRetornado !== numeroEsperado) continue;
 
@@ -161,6 +164,19 @@
     }
 
     return { status: 'ok', resultado: primeiro };
+  }
+
+  function sugestaoConfirmaImovel(sugestao, parada) {
+    if (!sugestao || !coordenadasValidas(sugestao.lat, sugestao.lon)) return false;
+    const esperado = numeroSolicitado(parada);
+    if (!esperado || numeroComparavel(sugestao.housenumber) !== esperado) return false;
+    // Rua, bairro e cidade representam centros aproximados, não o imóvel.
+    if (/^(street|suburb|district|city|county|state|country|postcode)$/i.test(sugestao.resultType || sugestao.result_type || '')) return false;
+    const rua = parada?.logradouro || parada?.enderecoConsulta || parada?.enderecoOriginal;
+    if (rua && similaridadeLogradouro(rua, sugestao.street || sugestao.formatted || '') < 0.5) return false;
+    const cidade = normalizarTexto(parada?.cidade);
+    if (cidade && sugestao.city && normalizarTexto(sugestao.city) !== cidade) return false;
+    return true;
   }
 
   function aplicarResultado(parada, validacao, origem) {
@@ -282,7 +298,8 @@
     const cache = global.PacoteEMatoGeoCache;
     if (cache) {
       const registro = await cache.obter(provider, parada.enderecoConsulta);
-      if (registro?.payload) {
+      if (registro?.payload && (registro.payload.status !== 'ok' ||
+          sugestaoConfirmaImovel(registro.payload.resultado, parada))) {
         aplicarResultado(parada, registro.payload, 'cache');
         emitir('pemato:geo:update', { paradaId: parada.id, cache: true });
         return;
@@ -670,6 +687,7 @@
   global.PacoteEMatoGeocodificacao = Object.freeze({
     limparEnderecoParaConsulta,
     avaliarResultados,
+    sugestaoConfirmaImovel,
     geocodificarParadas,
     geocodificarParada,
     geocodificarEnderecoLivre,

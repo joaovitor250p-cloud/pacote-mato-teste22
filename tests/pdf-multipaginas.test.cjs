@@ -13,14 +13,14 @@ const contexto = { Set, Error };
 vm.createContext(contexto);
 vm.runInContext([
   extrair('normalizarCodigoPacoteBr'),
-  extrair('extrairCodigosCircuitNotasFragmentadasV109'),
-  extrair('extrairCodigosCircuitNotasPrefixo11V110'),
+  extrair('extrairCodigosManifestoNotasFragmentadasV109'),
+  extrair('extrairCodigosManifestoNotasPrefixo11V110'),
   // Isola a conferência da página do restante do parser de endereços.
-  'function extrairAncorasCodigoPdfV73(itens) { return itens.filter(i=>i.codigo); }',
+  'function extrairAncorasCodigoPdfV73(itens) { return itens.filter(i=>i.codigo).map(i=>({codigos:[i.codigo]})); }',
   extrair('conferirPaginaPdfCompleta')
 ].join('\n'), contexto);
-const v109 = contexto.extrairCodigosCircuitNotasFragmentadasV109;
-const v110 = contexto.extrairCodigosCircuitNotasPrefixo11V110;
+const v109 = contexto.extrairCodigosManifestoNotasFragmentadasV109;
+const v110 = contexto.extrairCodigosManifestoNotasPrefixo11V110;
 const conferir = contexto.conferirPaginaPdfCompleta;
 assert.equal(v109([{str:'BR26973763',x:450,y:600},{str:'7885K;',x:450,y:590}],600)[0].codigo,'BR269737637885K');
 assert.equal(v110([{str:'BR26995226227',x:450,y:600},{str:'88;',x:450,y:590}],600)[0].codigo,'BR2699522622788');
@@ -33,4 +33,4 @@ assert.throws(()=>conferir([{str:'BR26973763',x:450,y:600}],[],600,5),/PAGINA_PD
 conferir([],[],600,6);
 assert.match(source,/pagina <= pdf.numPages/);
 assert.match(source,/conferirPaginaPdfCompleta\(itens, escolhidosPaginaV73, width, pagina\)/);
-console.log('PASSOU: códigos Circuit em duas linhas, conferência até a página 6 e bloqueio de páginas incompletas.');
+console.log('PASSOU: códigos Manifesto em duas linhas, conferência até a página 6 e bloqueio de páginas incompletas.');

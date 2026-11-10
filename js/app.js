@@ -3916,12 +3916,12 @@ document.getElementById('cardRetomarRota').style.display = 'none';
     }
 
 
-    // V109 - Circuit (Notes em duas linhas): BR + 8 digitos na primeira
+    // V109 - Manifesto (Notes em duas linhas): BR + 8 digitos na primeira
     // linha, 4 digitos + verificador na segunda. Exemplo:
     // BR26973763 + 7885K; => BR269737637885K.
     // A montagem exige a MESMA coluna Notes e o final logo abaixo. Nunca
     // usa numero de parada, ETA ou texto da entrega seguinte como sufixo.
-    function extrairCodigosCircuitNotasFragmentadasV109(itensOriginais, larguraPagina) {
+    function extrairCodigosManifestoNotasFragmentadasV109(itensOriginais, larguraPagina) {
       const itens = (Array.isArray(itensOriginais) ? itensOriginais : [])
         .map((item, indice) => ({
           str: String(item?.str || '').toUpperCase().trim(),
@@ -3957,18 +3957,18 @@ document.getElementById('cardRetomarRota').style.display = 'none';
           codigo,
           x: prefixo.x,
           y: (prefixo.y + candidato.item.y) / 2,
-          origem: 'circuit-notes-fragmentadas-v109'
+          origem: 'pdf-notes-fragmentadas-v109'
         });
       }
       return saida;
     }
 
-    // V110 - Circuit atual: Notes divide o codigo em BR + 11 digitos
+    // V110 - Manifesto atual: Notes divide o codigo em BR + 11 digitos
     // na primeira linha e 2 caracteres (digito + verificador) na segunda.
     // Exemplo: BR26995226227 + 88; => BR2699522622788.
     // A reconstrução exige a mesma coluna Notes e proximidade vertical curta.
     // Não altera as regras de bipagem: apenas entrega o código completo ao leitor.
-    function extrairCodigosCircuitNotasPrefixo11V110(itensOriginais, larguraPagina) {
+    function extrairCodigosManifestoNotasPrefixo11V110(itensOriginais, larguraPagina) {
       const itens = (Array.isArray(itensOriginais) ? itensOriginais : [])
         .map((item, indice) => ({
           str: String(item?.str || '').toUpperCase().trim(),
@@ -4005,7 +4005,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
           codigo,
           x: prefixo.x,
           y: (prefixo.y + candidato.item.y) / 2,
-          origem: 'circuit-notes-fragmentadas-v110'
+          origem: 'pdf-notes-fragmentadas-v110'
         });
       }
       return saida;
@@ -4074,6 +4074,9 @@ document.getElementById('cardRetomarRota').style.display = 'none';
 
       // Remove identificadores de lote/rota e códigos de pacote sem tocar no endereço.
       t = t
+        .replace(/\b(Rua|R|Av|Avenida|Travessa|Tv)\s*:\s*/gi, '$1 ')
+        .replace(/\bS\s+ã\s+o\b/gi, 'São')
+        .replace(/\s+[—–]\s*$/g, '')
         .replace(/\bAT[A-Z0-9]{8,30}\s*;?/gi, ' ')
         .replace(/B[\s._-]*R[\s._-]*(?:\d[\s._-]*){12}[A-Z0-9]\s*;?/gi, ' ')
         .replace(/B[\s._-]*R[\s._-]*(?:\d[\s._-]*){12}(?![A-Z0-9])\s*;?/gi, ' ')
@@ -4773,14 +4776,14 @@ document.getElementById('cardRetomarRota').style.display = 'none';
         }
       });
 
-      // V109: terceiro formato de Notes do Circuit. O sufixo aqui tem
+      // V109: terceiro formato de Notes do Manifesto. O sufixo aqui tem
       // CINCO caracteres (4 digitos + verificador), e nao apenas um.
-      extrairCodigosCircuitNotasFragmentadasV109(itens, larguraPagina).forEach(a => {
+      extrairCodigosManifestoNotasFragmentadasV109(itens, larguraPagina).forEach(a => {
         registrar(a.codigo, a.y, a.x, a.origem);
       });
 
-      // V110: formato Circuit com prefixo BR+11 digitos e sufixo de 2 caracteres.
-      extrairCodigosCircuitNotasPrefixo11V110(itens, larguraPagina).forEach(a => {
+      // V110: formato Manifesto com prefixo BR+11 digitos e sufixo de 2 caracteres.
+      extrairCodigosManifestoNotasPrefixo11V110(itens, larguraPagina).forEach(a => {
         registrar(a.codigo, a.y, a.x, a.origem);
       });
 
@@ -4806,11 +4809,11 @@ document.getElementById('cardRetomarRota').style.display = 'none';
     function conferirPaginaPdfCompleta(itens, registros, largura, pagina) {
       const lidos = new Set((registros || []).flatMap(r => r.codigos || []));
       const ancoras = extrairAncorasCodigoPdfV73(itens, largura);
-      const faltantes = ancoras.filter(a => !lidos.has(a.codigo));
+      const faltantes = ancoras.flatMap(a => a.codigos || (a.codigo ? [a.codigo] : [])).filter(codigo => !lidos.has(codigo));
       const prefixos = itens.filter(i => /^BR(?:\d{8}|\d{11})$/i.test(i.str) && i.x >= largura * 0.65);
       const reconstruidos = [
-        ...extrairCodigosCircuitNotasFragmentadasV109(itens, largura),
-        ...extrairCodigosCircuitNotasPrefixo11V110(itens, largura)
+        ...extrairCodigosManifestoNotasFragmentadasV109(itens, largura),
+        ...extrairCodigosManifestoNotasPrefixo11V110(itens, largura)
       ];
       if (faltantes.length || reconstruidos.length < prefixos.length) {
         throw new Error(`PAGINA_PDF_INCOMPLETA|${pagina}|${lidos.size}`);

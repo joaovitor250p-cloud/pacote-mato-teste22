@@ -1671,6 +1671,14 @@
       detalhe = bruto.slice(detalheMatch.index).trim().replace(/^[,;\-\s]+/, '');
       bruto = bruto.slice(0, detalheMatch.index).trim().replace(/[,;\-\s]+$/, '');
     }
+    // O número após a vírgula prevalece sobre datas no nome da rua e CEP.
+    const numeroComVirgula = bruto.match(/,\s*([0-9]+[A-Za-z]?)(?=$|[\s,;])/);
+    if (numeroComVirgula) {
+      const inicio = numeroComVirgula.index;
+      const fim = inicio + numeroComVirgula[0].length;
+      return { logradouro: bruto.slice(0, inicio).trim(), numero: numeroComVirgula[1],
+        detalhe: [bruto.slice(fim).trim().replace(/^[,;\-\s]+/, ''), detalhe].filter(Boolean).join(' ') };
+    }
     const encontrados = [...bruto.matchAll(/(?:^|[\s,])([0-9]+[A-Za-z]?)(?=$|[\s,;\-])/g)];
     const ultimo = encontrados.at(-1);
     if (!ultimo) return { logradouro: bruto, numero: '', detalhe };
@@ -1685,7 +1693,7 @@
     if (!item) return;
     const mapa = {
       logradouro: item.street,
-      numero: item.housenumber,
+      numero: item.housenumber || item.numeroDigitado,
       bairro: item.suburb,
       cidade: item.city,
       estado: item.state,
@@ -1740,6 +1748,7 @@
       const itens = await global.PacoteEMatoGeocodificacao.consultarSugestoesEndereco(termo);
       if (seq !== buscaEditorSeq) return;
       renderizarSugestoesEm(box, itens, item => {
+        item = { ...item, numeroDigitado: separarEnderecoDigitado(termo).numero };
         sugestaoEditorSelecionada = item;
         preencherCamposEnderecoSugestao(item);
         esconderSugestoesEm('routeEditAddressSuggestions');
@@ -1803,6 +1812,7 @@
         secundario.textContent = textoSecundarioSugestao(item) || String(item.formatted || '');
         btn.append(principal, secundario);
         btn.addEventListener('click', () => {
+          item = { ...item, numeroDigitado: separarEnderecoDigitado(termo).numero };
           sugestaoEnderecoSelecionada = item;
           const input = $('routingStopSearch');
           if (input) input.value = String(item.formatted || textoPrimarioSugestao(item));
@@ -1895,7 +1905,7 @@
     let detalheDigitado = '';
     if (sugestaoEnderecoSelecionada) {
       dados.logradouro = String(sugestaoEnderecoSelecionada.street || textoPrimarioSugestao(sugestaoEnderecoSelecionada) || '').trim();
-      dados.numero = String(sugestaoEnderecoSelecionada.housenumber || '').trim();
+      dados.numero = String(sugestaoEnderecoSelecionada.housenumber || sugestaoEnderecoSelecionada.numeroDigitado || dados.numero || '').trim();
       dados.bairro = String(sugestaoEnderecoSelecionada.suburb || dados.bairro || '').trim();
       dados.cidade = String(sugestaoEnderecoSelecionada.city || dados.cidade || '').trim();
       dados.estado = String(sugestaoEnderecoSelecionada.state || dados.estado || '').trim();
@@ -1945,7 +1955,7 @@
         p.alteradoEm = Date.now();
       }
       p.enderecoOriginal = enderecoDaParada(p);
-      const sugestaoAplicavel = sugestaoEnderecoSelecionada && coordenadaValida(sugestaoEnderecoSelecionada.lat, sugestaoEnderecoSelecionada.lon);
+      const sugestaoAplicavel = global.PacoteEMatoGeocodificacao?.sugestaoConfirmaImovel?.(sugestaoEnderecoSelecionada, p) === true;
       if (sugestaoAplicavel) {
         p.latitude = Number(sugestaoEnderecoSelecionada.lat);
         p.longitude = Number(sugestaoEnderecoSelecionada.lon);
@@ -2063,7 +2073,7 @@
     const textoUnico = String($('routeEdit_fullAddress')?.value || '').trim();
     if (sugestaoEditorSelecionada) {
       dados.logradouro = String(sugestaoEditorSelecionada.street || textoPrimarioSugestao(sugestaoEditorSelecionada) || '').trim();
-      dados.numero = String(sugestaoEditorSelecionada.housenumber || '').trim();
+      dados.numero = String(sugestaoEditorSelecionada.housenumber || sugestaoEditorSelecionada.numeroDigitado || dados.numero || '').trim();
       dados.bairro = String(sugestaoEditorSelecionada.suburb || dados.bairro || '').trim();
       dados.cidade = String(sugestaoEditorSelecionada.city || dados.cidade || '').trim();
       dados.estado = String(sugestaoEditorSelecionada.state || dados.estado || '').trim();
@@ -2106,7 +2116,7 @@
     }
     p.quantidadePacotes = p.pacotes.length;
     p.enderecoOriginal = enderecoDaParada(p);
-    const sugestaoAplicavel = sugestaoEditorSelecionada && coordenadaValida(sugestaoEditorSelecionada.lat, sugestaoEditorSelecionada.lon);
+    const sugestaoAplicavel = global.PacoteEMatoGeocodificacao?.sugestaoConfirmaImovel?.(sugestaoEditorSelecionada, p) === true;
     if (sugestaoAplicavel) {
       p.latitude = Number(sugestaoEditorSelecionada.lat);
       p.longitude = Number(sugestaoEditorSelecionada.lon);
@@ -2416,9 +2426,9 @@
     return true;
   }
 
-  async function exportarPdf() {
+  async function exportarPdf(opcoes = {}) {
     if (!rotaAtual) return;
-    try { await global.PacoteEMatoPDF?.exportar?.(rotaAtual); }
+    try { await global.PacoteEMatoPDF?.exportar?.(rotaAtual, opcoes); }
     catch (erro) { global.PacoteEMatoTelemetria?.registrarProblema?.('exportacao_pdf', erro?.message || 'Falha ao exportar PDF', { modulo: 'roteirizacao' }); notificar(erro?.message || 'Não foi possível gerar o PDF.'); }
   }
 
@@ -2452,6 +2462,7 @@
     $('routingMainOptimizeBtn')?.addEventListener('click', otimizarRota);
     $('routingInvertBtn')?.addEventListener('click', () => { fecharMenuAcoes(); inverterRota(); });
     $('routingExportPdfBtn')?.addEventListener('click', () => { fecharMenuAcoes(); exportarPdf(); });
+    $('routingExportPdfLongBtn')?.addEventListener('click', () => { fecharMenuAcoes(); exportarPdf({ paginaContinua: true }); });
     $('routingStartNavBtn')?.addEventListener('click', () => { fecharMenuAcoes(); abrirNavegacao(); });
     $('routingPackagesMenuBtn')?.addEventListener('click', abrirEscolhaPacotes);
     $('routingPackagesChooserClose')?.addEventListener('click', fecharEscolhaPacotes);

@@ -84,7 +84,7 @@
       if (chave) return String(chave);
     } catch (_) {}
     const lat = Number(p?.latitude), lon = Number(p?.longitude);
-    if (Number.isFinite(lat) && Number.isFinite(lon)) return `coord:${lat.toFixed(5)}|${lon.toFixed(5)}`;
+    if (p?.latitude != null && p?.longitude != null && String(p.latitude).trim() && String(p.longitude).trim() && Number.isFinite(lat) && Number.isFinite(lon)) return `coord:${lat.toFixed(5)}|${lon.toFixed(5)}`;
     return `id:${String(p?.id || index)}`;
   }
 
@@ -195,7 +195,7 @@
     return linhas;
   }
 
-  async function exportar(rota) {
+  async function exportar(rota, opcoes = {}) {
     if (!global.jspdf?.jsPDF) throw new Error('Biblioteca de PDF não carregada.');
     if (!rota) throw new Error('Nenhuma rota disponível para exportar.');
 
@@ -238,7 +238,9 @@
     const alturaLinhas = linhas.reduce((total, item) =>
       total + medirLinha(item.endereco, item.codigo, item.obs).altura, 0);
     const alturaFinal = pontoFinal ? medirLinha(pontoFinal.descricao || 'Destino final', '', 'Destino final da rota').altura : 0;
-    pageH = Math.min(5080, Math.max(297, Math.ceil(58 + alturaLinhas + alturaFinal + 14)));
+    pageH = opcoes.paginaContinua === true
+      ? Math.min(5080, Math.max(297, Math.ceil(58 + alturaLinhas + alturaFinal + 14)))
+      : 297;
     doc.internal.pageSize.setHeight(pageH);
     let y = 0, pagina = 0;
 
@@ -368,7 +370,8 @@
     rodapePagina();
     const nomeRota = limparNome(rota.nome || 'Rota');
     const dataNome = limparNome(String(rota.data || '').replaceAll('/', '-'));
-    return salvarDocumento(doc, APP_NAME + ' - ' + nomeRota + (dataNome && dataNome !== 'Rota' ? ' - ' + dataNome : '') + '.pdf');
+    const formato = opcoes.paginaContinua === true ? ' - pagina longa' : ' - A4';
+    return salvarDocumento(doc, APP_NAME + ' - ' + nomeRota + (dataNome && dataNome !== 'Rota' ? ' - ' + dataNome : '') + formato + '.pdf');
   }
 
   global.PacoteEMatoPDF = Object.freeze({ exportar });

@@ -72,6 +72,17 @@
     p.enderecoGeocodificado = String(p.enderecoGeocodificado || '');
     p.geocodificadoEm = p.geocodificadoEm || null;
     p.fonteCoordenada = p.fonteCoordenada || null;
+    // Revalida sugestões antigas que podiam ser apenas o centro da rua/cidade.
+    if (p.fonteCoordenada === 'sugestao-geocodificacao' &&
+        typeof global.PacoteEMatoGeocodificacao?.sugestaoConfirmaImovel === 'function' &&
+        !global.PacoteEMatoGeocodificacao.sugestaoConfirmaImovel(p.geocodificacao, p)) {
+      p.latitude = null;
+      p.longitude = null;
+      p.statusGeocodificacao = 'pendente';
+      p.precisaoGeocodificacao = null;
+      p.enderecoGeocodificado = '';
+    }
+
     p.statusEntrega = ['pendente', 'parcial', 'concluida', 'entregue', 'nao_entregue'].includes(p.statusEntrega)
       ? p.statusEntrega
       : 'pendente';

@@ -64,7 +64,7 @@ vm.runInNewContext(code,{window,document:documento,navigator:navegador,URL:url,
   for (const total of [101, 150, 300, 600]) {
     const paradas = Array.from({length:total}, (_,i)=>({id:String(i+1),
       enderecoOriginal:'Rua Teste, '+(i+1),pacotes:['BRTESTE'+String(i+1).padStart(6,'0')]}));
-    await window.PacoteEMatoPDF.exportar({nome:'Rota extensa',ordem:paradas.map(p=>p.id),paradas});
+    await window.PacoteEMatoPDF.exportar({nome:'Rota extensa',ordem:paradas.map(p=>p.id),paradas}, {paginaContinua:true});
     const pdf=documentos.at(-1);
     assert.equal(pdf.textos.filter(t=>t.startsWith('BRTESTE')).length,total);
     assert.ok(pdf.textos.includes(String(total)), 'Última entrega preservada');
@@ -72,5 +72,10 @@ vm.runInNewContext(code,{window,document:documento,navigator:navegador,URL:url,
     if (total<=300) assert.equal(pdf.paginas,1, total+' linhas na mesma página');
     else assert.ok(pdf.paginas>1, 'Rotas acima do limite continuam sem perder entregas');
   }
+  const paradasA4 = Array.from({length:150},(_,i)=>({id:String(i+1),enderecoOriginal:'Rua das Acácias, '+i,pacotes:['BR'+String(2697376300000+i)]}));
+  await window.PacoteEMatoPDF.exportar({nome:'A4',paradas:paradasA4,ordem:paradasA4.map(p=>p.id)});
+  assert.equal(documentos.at(-1).altura,297);
+  assert.ok(documentos.at(-1).paginas>1);
+  assert.equal(documentos.at(-1).textos.filter(t=>/^BR\d{13}$/.test(t)).length,150);
   console.log('PASSOU: download direto, BR repetido, 101/150/300 linhas em página única e 600 sem truncamento.');
 })().catch(erro => { console.error(erro); process.exitCode=1; });

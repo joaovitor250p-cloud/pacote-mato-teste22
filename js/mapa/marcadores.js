@@ -77,9 +77,12 @@
 
   function chaveFisicaMarcador(parada) {
     const chave = chaveMultiplo(parada);
-    if (chave) return `end:${chave}`;
+    if (chave) {
+      const local = [parada?.cidade, parada?.estado].map(v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()).join('|');
+      return `end:${chave}|${local}`;
+    }
     const lat = Number(parada?.latitude), lon = Number(parada?.longitude);
-    if (Number.isFinite(lat) && Number.isFinite(lon)) return `coord:${lat.toFixed(5)}|${lon.toFixed(5)}`;
+    if (parada?.latitude != null && parada?.longitude != null && String(parada.latitude).trim() && String(parada.longitude).trim() && Number.isFinite(lat) && Number.isFinite(lon)) return `coord:${lat.toFixed(5)}|${lon.toFixed(5)}`;
     return `id:${String(parada?.id || '')}`;
   }
 
