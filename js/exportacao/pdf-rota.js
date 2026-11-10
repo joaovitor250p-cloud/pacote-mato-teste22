@@ -195,183 +195,103 @@
     return linhas;
   }
 
-  async function exportar(rota, opcoes = {}) {
+  async function exportar(rota) {
     if (!global.jspdf?.jsPDF) throw new Error('Biblioteca de PDF não carregada.');
     if (!rota) throw new Error('Nenhuma rota disponível para exportar.');
 
     const doc = new global.jspdf.jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true });
-    doc.setProperties({
-      title: APP_NAME + ' - ' + String(rota.nome || 'Rota'),
-      subject: 'Lista de entregas, endereços, previsão de chegada e códigos BR',
-      author: APP_NAME,
-      creator: APP_NAME,
-      keywords: 'Pacote É Mato, rota, pacotes, entregas'
-    });
-    const pageW = 210, margin = 10, contentW = pageW - margin * 2;
-    let pageH = 297;
-    // Colunas correspondem à referência do Circuit, adaptadas ao português.
-    const cols = { numero: 11, endereco: 100, eta: 22, notas: 57 };
-    const ordenadas = ordenar(rota);
-    const gruposFisicos = agruparParadasFisicas(ordenadas);
-    const etas = construirEtas(rota, gruposFisicos);
-    const linhas = linhasDaRota(ordenadas, etas);
-    const pontoFinal = rota.pontoFinal && Number.isFinite(Number(rota.pontoFinal.lat)) &&
-      Number.isFinite(Number(rota.pontoFinal.lon)) ? rota.pontoFinal
-      : rota.retornarAoInicio === true ? rota.pontoInicial : null;
+    doc.setProperties({ title: APP_NAME + ' - ' + String(rota.nome || 'Rota'),
+      subject: 'Route export: Address, Estimated Arrival Time, Notes',
+      author: APP_NAME, creator: APP_NAME });
+    // Mesma estrutura tabular da referência: A4, margens estreitas,
+    // cabeçalho em inglês, observações no endereço e código na coluna Notes.
+    const pageW = 210, pageH = 297, margin = 4.233;
+    const cols = { numero: 10.3, endereco: 143, eta: 26.3, notas: pageW - margin * 2 - 179.6 };
+    const contentW = pageW - margin * 2;
+    const BLUE = [30, 112, 249], STRIPE = [229, 239, 255], BORDER = [89, 145, 255];
+    const ordenadas = ordenar(rota), grupos = agruparParadasFisicas(ordenadas);
+    const linhas = linhasDaRota(ordenadas, construirEtas(rota, grupos));
+    let y = 0;
 
-    // Página contínua: mede todas as linhas antes de desenhar, mantendo letras
-    // legíveis em rotas com mais de 100 entregas. O PDF limita cada dimensão
-    // a 14.400 pontos; rotas excepcionais continuam em outra página.
-    function medirLinha(endereco, codigo, obs) {
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(7.6);
-      const enderecoLinhas = doc.splitTextToSize(String(endereco || '—'), cols.endereco - 4);
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(7.1);
-      const codigoLinhas = doc.splitTextToSize(String(codigo || 'BR não informado'), cols.notas - 4);
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(6.8);
-      const obsLinhas = obs ? doc.splitTextToSize(String(obs), cols.notas - 4) : [];
-      const altura = Math.max(9.2, 3.8 * Math.max(enderecoLinhas.length, codigoLinhas.length + obsLinhas.length, 1) + 3.5);
-      return { enderecoLinhas, codigoLinhas, obsLinhas, altura };
+    function medirLinha(item) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.25);
+      const endereco = [item.endereco, item.obs].filter(Boolean).join(', ');
+      const enderecoLinhas = doc.splitTextToSize(endereco || '—', cols.endereco - 4.8);
+      const codigo = String(item.codigo || '').trim();
+      // A referência usa BR + oito dígitos e o restante na linha abaixo.
+      // O ponto e vírgula termina o código; nenhum caractere é removido.
+      const notas = /^BR\d{12}[A-Z0-9]$/i.test(codigo)
+        ? [codigo.slice(0, 10), codigo.slice(10) + ';']
+        : codigo ? doc.splitTextToSize(codigo + ';', cols.notas - 4.8) : [];
+      const altura = Math.max(11.377, Math.max(enderecoLinhas.length, notas.length, 1) * 3.44 + 3);
+      return { enderecoLinhas, notas, altura };
     }
-    const alturaLinhas = linhas.reduce((total, item) =>
-      total + medirLinha(item.endereco, item.codigo, item.obs).altura, 0);
-    const alturaFinal = pontoFinal ? medirLinha(pontoFinal.descricao || 'Destino final', '', 'Destino final da rota').altura : 0;
-    pageH = opcoes.paginaContinua === true
-      ? Math.min(5080, Math.max(297, Math.ceil(58 + alturaLinhas + alturaFinal + 14)))
-      : 297;
-    doc.internal.pageSize.setHeight(pageH);
-    let y = 0, pagina = 0;
 
     function cabecalhoTabela() {
-      const altura = 9;
-      doc.setFillColor(...GREEN_DARK);
+      const altura = 11.377;
+      doc.setFillColor(...BLUE);
       doc.rect(margin, y, contentW, altura, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(7.4);
-      let x = margin;
-      doc.text('#', x + cols.numero/2, y + 5.7, {align:'center'}); x += cols.numero;
-      doc.text('ENDEREÇO', x + 2, y + 5.7); x += cols.endereco;
-      doc.text('CHEGADA', x + cols.eta/2, y + 5.7, {align:'center'}); x += cols.eta;
-      doc.text('BR / OBSERVAÇÕES', x + 2, y + 5.7);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8.25);
+      doc.setTextColor(255,255,255);
+      doc.text('#', margin + cols.numero / 2, y + 6.8, {align:'center'});
+      doc.text('Address', margin + cols.numero + cols.endereco / 2, y + 6.8, {align:'center'});
+      const chegada = margin + cols.numero + cols.endereco + cols.eta / 2;
+      doc.text('Estimated', chegada, y + 4.95, {align:'center'});
+      doc.text('Arrival Time', chegada, y + 8.39, {align:'center'});
+      doc.text('Notes', pageW - margin - cols.notas / 2, y + 6.8, {align:'center'});
+      grade(y, altura);
       y += altura;
     }
 
-    function cabecalhoPagina() {
-      pagina++;
-      // Identidade própria: cabeçalho branco, faixa verde e resumo em três blocos.
-      doc.setFillColor(...GREEN_DARK);
-      doc.rect(margin, 8, 1.5, 17, 'F');
-      doc.setTextColor(...GREEN_DARK);
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(15);
-      doc.text(APP_NAME, margin + 5, 14);
-      doc.setFontSize(7);
-      doc.setTextColor(...MUTED);
-      doc.text('MANIFESTO DE ENTREGAS', margin + 5, 19);
-      doc.setFont('helvetica','normal');
-      doc.text(dataBr(rota.data), pageW - margin, 13, {align:'right'});
-      doc.text('Página ' + pagina, pageW - margin, 18, {align:'right'});
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(9);
-      doc.setTextColor(...TEXT);
-      const titulo = doc.splitTextToSize(String(rota.nome || 'Lista de entregas'), contentW - 8).slice(0, 2);
-      doc.text(titulo, margin + 5, 24);
-
-      const resumos = [
-        ['TEMPO TOTAL', formatarTempo(rota.duracaoTotalSegundos)],
-        ['DISTÂNCIA', formatarDistancia(rota.distanciaTotalMetros)],
-        ['ENTREGAS / PARADAS', linhas.length + ' / ' + gruposFisicos.length]
-      ];
-      const larguraResumo = (contentW - 6) / 3;
-      resumos.forEach(([rotulo, valor], i) => {
-        const x = margin + i * (larguraResumo + 3);
-        doc.setFillColor(...GREEN_LIGHT);
-        doc.rect(x, 33, larguraResumo, 12, 'F');
-        doc.setFont('helvetica','normal');
-        doc.setFontSize(6);
-        doc.setTextColor(...MUTED);
-        doc.text(rotulo, x + 3, 37);
-        doc.setFont('helvetica','bold');
-        doc.setFontSize(9);
-        doc.setTextColor(...GREEN_DARK);
-        doc.text(String(valor), x + 3, 42);
+    function grade(topo, altura) {
+      doc.setDrawColor(...BORDER);
+      doc.setLineWidth(.15);
+      doc.rect(margin, topo, contentW, altura);
+      let x = margin;
+      [cols.numero, cols.endereco, cols.eta].forEach(w => {
+        x += w; doc.line(x, topo, x, topo + altura);
       });
-      y = 49;
-      cabecalhoTabela();
     }
 
-    function novaPaginaSePreciso(altura) {
-      if (y + altura <= pageH - 13) return;
-      rodapePagina();
-      doc.addPage([pageW, pageH], 'portrait');
-      cabecalhoPagina();
-    }
+    // Título e totais só na primeira página; as seguintes repetem a tabela.
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(0,0,0);
+    doc.setFontSize(15);
+    const titulo = dataBr(rota.data).replaceAll('/', '-') + ' ' + String(rota.nome || 'Rota') + ' - ' + APP_NAME;
+    const tituloLinhas = doc.splitTextToSize(titulo, contentW);
+    doc.text(tituloLinhas, margin, 9.25);
+    const totalY = 9.25 + tituloLinhas.length * 6.35 + 3.2;
+    doc.setFontSize(12);
+    doc.text('Tempo total: ' + formatarTempo(rota.duracaoTotalSegundos) +
+      ' Distância total: ' + formatarDistancia(rota.distanciaTotalMetros), margin, totalY);
+    y = Math.max(30.4, totalY + 9.5);
+    cabecalhoTabela();
 
-    function rodapePagina() {
-      doc.setDrawColor(...LINE);
-      doc.setLineWidth(.25);
-      doc.line(margin, pageH - 11, pageW - margin, pageH - 11);
-      doc.setTextColor(...MUTED);
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(7.3);
-      doc.text('Gerado pelo ' + APP_NAME, margin, pageH - 7);
-      doc.text('Página ' + pagina, pageW - margin, pageH - 7, {align:'right'});
-    }
-
-    function linhaTabela(numero, endereco, eta, codigo, obs, indice) {
-      const { enderecoLinhas, codigoLinhas, obsLinhas, altura } = medirLinha(endereco, codigo, obs);
-      novaPaginaSePreciso(altura);
-
-      // Faixas suaves e divisórias horizontais deixam o endereço em destaque.
-      if (indice % 2 === 1) {
-        doc.setFillColor(...GREEN_LIGHT);
-        doc.rect(margin, y, contentW, altura, 'F');
+    linhas.forEach((item, indice) => {
+      const { enderecoLinhas, notas, altura } = medirLinha(item);
+      if (y + altura > pageH - .5) {
+        doc.addPage(); y = 0; cabecalhoTabela();
       }
-      doc.setDrawColor(...LINE);
-      doc.setLineWidth(.20);
-      doc.line(margin, y + altura, pageW - margin, y + altura);
-      let x = margin;
-
-      doc.setTextColor(...TEXT);
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(7.4);
-      doc.text(String(numero), margin + cols.numero / 2, y + 5.2, {align:'center'});
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(7.6);
-      doc.text(enderecoLinhas, margin + cols.numero + 2, y + 5.1);
-      doc.setFontSize(7.1);
-      doc.text(String(eta || '—'), margin + cols.numero + cols.endereco + cols.eta/2, y + 5.2, {align:'center'});
-      x = margin + cols.numero + cols.endereco + cols.eta;
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(7.1);
-      doc.text(codigoLinhas, x + 2, y + 5.1);
-      if (obsLinhas.length) {
-        doc.setFont('helvetica','normal');
-        doc.setTextColor(...MUTED);
-        doc.setFontSize(6.8);
-        doc.text(obsLinhas, x + 2, y + 5.1 + 3.8 * codigoLinhas.length);
+      if (indice % 2 === 1) {
+        doc.setFillColor(...STRIPE); doc.rect(margin, y, contentW, altura, 'F');
+      }
+      grade(y, altura);
+      doc.setTextColor(0,0,0);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.25);
+      const centro = y + altura / 2 + 1;
+      doc.text(String(indice + 1), margin + 2.4, centro);
+      const enderecoY = y + (altura - (enderecoLinhas.length - 1) * 3.44) / 2 + 1;
+      doc.text(enderecoLinhas, margin + cols.numero + 2.4, enderecoY, {lineHeightFactor: 1.182});
+      doc.text(String(item.eta || '—'), margin + cols.numero + cols.endereco + 2.4, centro);
+      if (notas.length) {
+        const notasY = y + (altura - (notas.length - 1) * 3.44) / 2 + 1;
+        doc.text(notas, pageW - margin - cols.notas + 2.4, notasY, {lineHeightFactor: 1.182});
       }
       y += altura;
-    }
-
-    cabecalhoPagina();
-    linhas.forEach((item, i) => {
-      linhaTabela(i + 1, item.endereco, item.eta, item.codigo, item.obs, i);
     });
-
-    if (pontoFinal) {
-      const fim = etas.has('__FINAL__') ? hora(etas.get('__FINAL__')) : '—';
-      linhaTabela('F', pontoFinal.descricao || 'Destino final', fim, '', 'Destino final da rota', linhas.length);
-    }
-
-    rodapePagina();
-    const nomeRota = limparNome(rota.nome || 'Rota');
-    const dataNome = limparNome(String(rota.data || '').replaceAll('/', '-'));
-    const formato = opcoes.paginaContinua === true ? ' - pagina longa' : ' - A4';
-    return salvarDocumento(doc, APP_NAME + ' - ' + nomeRota + (dataNome && dataNome !== 'Rota' ? ' - ' + dataNome : '') + formato + '.pdf');
+    return salvarDocumento(doc, APP_NAME + ' - ' + limparNome(rota.nome || 'Rota') + '.pdf');
   }
 
   global.PacoteEMatoPDF = Object.freeze({ exportar });

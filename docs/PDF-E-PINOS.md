@@ -2,11 +2,15 @@
 
 ## Exportação
 
-- **Baixar PDF A4**: páginas de 210 × 297 mm, cabeçalho repetido, texto selecionável e uma linha por pacote. É o formato recomendado para compartilhar, imprimir e experimentar a importação em outro sistema.
-- **Baixar PDF em página longa**: mantém todas as entregas em rolagem contínua, até o limite de dimensão do formato PDF. Quando esse limite é excedido, continua em outra página sem cortar entregas.
-- Os códigos BR permanecem como texto completo na coluna própria; não são imagens.
-- Um leitor de documentos PDF e um importador de rotas têm funções diferentes. Shopee e Rota Ninja podem exigir formatos específicos; a importação nesses aplicativos não foi validada.
-- Pacotes sem código não recebem BR inventado. A bipagem depende de códigos existentes e válidos.
+Existe uma única opção: **Baixar PDF da rota**.
+
+O arquivo usa a estrutura do PDF de referência enviado pelo usuário: A4 retrato, margens estreitas, tabela azul com linhas alternadas, colunas `#`, `Address`, `Estimated Arrival Time` e `Notes`. O título e os totais ficam na primeira página; as seguintes repetem apenas o cabeçalho da tabela. O documento mantém o nome Pacote É Mato.
+
+Cada pacote ocupa uma linha. As observações acompanham o endereço. Códigos BR válidos são divididos em `BR + oito dígitos` e `cinco caracteres + ;`, como na referência. Nenhum código é inventado. A paginação continua até a última entrega, sem limite de 22 registros no documento inteiro.
+
+Com endereços curtos, 132 entregas geram seis páginas: 22 registros na primeira e até 25 nas seguintes. Conteúdo maior pode aumentar a altura das linhas e a quantidade de páginas.
+
+A leitura de volta no próprio app foi validada com PDF.js e com Chromium. Shopee e Rota Ninja podem ter regras internas adicionais; o teste nesses aplicativos ainda é necessário. Esta implementação reproduz a estrutura da tabela e não usa o software do Circuit.
 
 ## Localização
 
@@ -35,4 +39,4 @@ PEMATO_PDFJS_WORKER_PATH=/caminho/pdf.worker.min.js \
 node tests/pdf-roundtrip.test.cjs
 ```
 
-Use jsPDF 2.5.1 e PDF.js 2.16.105. O teste confere 150 códigos, endereços longos e observações com outro endereço, nos formatos A4 e longo. A quantidade de páginas varia conforme o conteúdo.
+Use jsPDF 2.5.1 e PDF.js 2.16.105. O teste confere 150 códigos, endereços longos e observações com outro endereço, no formato A4 da referência. A quantidade de páginas varia conforme o conteúdo.

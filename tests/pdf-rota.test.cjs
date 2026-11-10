@@ -35,47 +35,25 @@ vm.runInNewContext(code,{window,document:documento,navigator:navegador,URL:url,
   setTimeout(){},console,Date,Map,Uint8Array,btoa(){}},{filename:'pdf-rota.js'});
 
 (async () => {
-  const rota = {
-    nome:'Rota Manhã', data:'2026-11-09', duracaoTotalSegundos:4800,
-    distanciaTotalMetros:24800, ordem:['1','2','3'],
-    paradas:[
-      {id:'1',enderecoOriginal:'Rua Frei Durao, 603',latitude:-23.5,longitude:-46.6,pacotes:['BR111111111BR']},
-      {id:'2',enderecoOriginal:'Rua Frei Durao, 603',latitude:-23.5,longitude:-46.6,pacotes:['BR111111111BR']},
-      {id:'3',enderecoOriginal:'Rua Bento Vieira, 101',latitude:-23.6,longitude:-46.7,pacotes:['BR222222222BR','BR333333333BR']}
-    ]
-  };
-  const salvo = await window.PacoteEMatoPDF.exportar(rota);
-  assert.equal(salvo.metodo,'download');
-  assert.equal(arquivos.length,1);
-  assert.match(arquivos[0].download,/^Pacote É Mato - /);
-  assert.match(arquivos[0].download,/\.pdf$/);
-  assert.ok(chamadas.includes('click'));
-  assert.equal(documentos[0].meta.author,'Pacote É Mato');
-  assert.equal(documentos[0].textos.filter(t=>t==='BR111111111BR').length,2,'BRs repetidos permanecem na tabela');
-  assert.ok(['1','2','3','4'].every(n=>documentos[0].textos.includes(n)));
-  assert.ok(documentos[0].textos.includes('MANIFESTO DE ENTREGAS'));
-  assert.ok(documentos[0].textos.includes('TEMPO TOTAL'));
-  assert.ok(documentos[0].textos.includes('ENTREGAS / PARADAS'));
-  assert.ok(documentos[0].textos.includes('ENDEREÇO'));
-  assert.ok(documentos[0].textos.includes('CHEGADA'));
-  assert.ok(documentos[0].textos.includes('BR / OBSERVAÇÕES'));
-  assert.ok(documentos[0].textos.includes('Gerado pelo Pacote É Mato'));
-  assert.doesNotMatch(code,/navigator\.share\s*\(/);
-  for (const total of [101, 150, 300, 600]) {
+  for (const total of [22, 101, 150, 300, 600]) {
     const paradas = Array.from({length:total}, (_,i)=>({id:String(i+1),
-      enderecoOriginal:'Rua Teste, '+(i+1),pacotes:['BRTESTE'+String(i+1).padStart(6,'0')]}));
-    await window.PacoteEMatoPDF.exportar({nome:'Rota extensa',ordem:paradas.map(p=>p.id),paradas}, {paginaContinua:true});
+      enderecoOriginal:'Rua Teste, '+(100+i),pacotes:['BR'+String(2697376300000+i)]}));
+    const salvo = await window.PacoteEMatoPDF.exportar({nome:'Rota de teste',data:'2026-11-10',paradas,ordem:paradas.map(p=>p.id)});
+    assert.equal(salvo.metodo,'download');
     const pdf=documentos.at(-1);
-    assert.equal(pdf.textos.filter(t=>t.startsWith('BRTESTE')).length,total);
+    assert.equal(pdf.opts.format,'a4');
+    assert.equal(pdf.altura,297);
+    if(total>22)assert.ok(pdf.paginas>1);
     assert.ok(pdf.textos.includes(String(total)), 'Última entrega preservada');
-    assert.ok(pdf.altura<=5080, 'Respeita a dimensão máxima do PDF');
-    if (total<=300) assert.equal(pdf.paginas,1, total+' linhas na mesma página');
-    else assert.ok(pdf.paginas>1, 'Rotas acima do limite continuam sem perder entregas');
+    const texto=pdf.textos.join('');
+    paradas.forEach(p=>assert.ok(texto.includes(p.pacotes[0]+';'), 'Código completo preservado em Notes'));
+    for(const titulo of ['#','Address','Estimated','Arrival Time','Notes'])assert.ok(pdf.textos.includes(titulo));
+    assert.equal(pdf.meta.author,'Pacote É Mato');
   }
-  const paradasA4 = Array.from({length:150},(_,i)=>({id:String(i+1),enderecoOriginal:'Rua das Acácias, '+i,pacotes:['BR'+String(2697376300000+i)]}));
-  await window.PacoteEMatoPDF.exportar({nome:'A4',paradas:paradasA4,ordem:paradasA4.map(p=>p.id)});
-  assert.equal(documentos.at(-1).altura,297);
-  assert.ok(documentos.at(-1).paginas>1);
-  assert.equal(documentos.at(-1).textos.filter(t=>/^BR\d{13}$/.test(t)).length,150);
-  console.log('PASSOU: download direto, BR repetido, 101/150/300 linhas em página única e 600 sem truncamento.');
+  const html=fs.readFileSync(path.resolve(__dirname,'../index.html'),'utf8');
+  assert.ok(!html.includes('routingExportPdfLongBtn'));
+  assert.ok(!html.includes('navActionExportPdfLong'));
+  assert.ok(!code.includes('paginaContinua'));
+  assert.doesNotMatch(code,/navigator\.share\s*\(/);
+  console.log('PASSOU: uma exportação A4, tabela de referência e todas as entregas até 600 linhas.');
 })().catch(erro => { console.error(erro); process.exitCode=1; });

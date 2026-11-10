@@ -1885,7 +1885,7 @@
   function fecharAcoesRota(){const el=$('navRouteActionsBackdrop');if(el)el.style.display='none';}
   async function abrirRefinoDaNavegacao(){fecharAcoesRota();global.PacoteEMatoAppShell?.abrirModulo?.('roteirizacao');setTimeout(()=>{global.PacoteEMatoRoteirizacao?.abrirRevisaoOtimizacao?.();setTimeout(()=>$('routingReviewRefineBtn')?.click?.(),80);},140);}
   async function abrirBipagemDaNavegacao(){fecharAcoesRota();global.PacoteEMatoAppShell?.abrirModulo?.('roteirizacao');setTimeout(()=>global.PacoteEMatoRoteirizacao?.abrirEscolhaBipagem?.(),140);}
-  async function exportarPdfNavegacao(opcoes = {}){fecharAcoesRota();if(rota)await global.PacoteEMatoPDF?.exportar?.(rota, opcoes);}
+  async function exportarPdfNavegacao(){fecharAcoesRota();if(rota)await global.PacoteEMatoPDF?.exportar?.(rota);}
 
   function definirPainelNav(estado){
     estadoPainelNav=['expanded','intermediate','collapsed'].includes(estado)?estado:'collapsed';
@@ -1968,7 +1968,6 @@
     $('navActionRefine')?.addEventListener('click',abrirRefinoDaNavegacao);
     $('navActionBipagem')?.addEventListener('click',abrirBipagemDaNavegacao);
     $('navActionExportPdf')?.addEventListener('click',()=>exportarPdfNavegacao());
-    $('navActionExportPdfLong')?.addEventListener('click',()=>exportarPdfNavegacao({ paginaContinua:true }));
     $('navActionSettings')?.addEventListener('click',()=>{fecharAcoesRota();global.PacoteEMatoAppShell?.abrirModulo?.('configuracoes');});
     $('navActionRecalculate')?.addEventListener('click',()=>{fecharAcoesRota();recalcular('manual');});
     $('navActionClearRoutes')?.addEventListener('click',()=>{fecharAcoesRota();global.PacoteEMatoAppShell?.abrirModulo?.('roteirizacao');setTimeout(()=>global.PacoteEMatoRoteirizacao?.removerTodasRotas?.(),140);});

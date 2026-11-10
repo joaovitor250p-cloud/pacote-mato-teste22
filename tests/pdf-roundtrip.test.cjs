@@ -14,10 +14,10 @@ const win={jspdf:{jsPDF},Android:{salvarPdfBase64(nome,base64){bytes=Buffer.from
 vm.runInNewContext(fs.readFileSync(path.join(root,'js/exportacao/pdf-rota.js'),'utf8'),{window:win,console,Date,Map,Uint8Array,btoa:s=>Buffer.from(s,'binary').toString('base64')});
 (async()=>{
  const paradas=Array.from({length:150},(_,i)=>({id:String(i+1),enderecoOriginal:(i%5===0?'Avenida Engenheiro Doutor Francisco de Albuquerque e Vasconcelos':'Rua das Acácias')+', '+(100+i)+', São Paulo',pacotes:['BR'+String(2697376300000+i)],observacao:i%7===0?'Entregar pela Rua das Rosas, 999, portão dos fundos':''}));
- for(const paginaContinua of [false,true]){
-  await win.PacoteEMatoPDF.exportar({nome:'Teste de leitura',data:'2026-11-10',paradas,ordem:paradas.map(p=>p.id)},{paginaContinua});
+ {
+  await win.PacoteEMatoPDF.exportar({nome:'Teste de leitura',data:'2026-11-10',paradas,ordem:paradas.map(p=>p.id)});
   const doc=await pdfjs.getDocument({data:new Uint8Array(bytes),useSystemFonts:true}).promise;
-  assert.ok(paginaContinua?doc.numPages===1:doc.numPages>1);
+  assert.ok(doc.numPages>1);
   const registros=[];
   for(let pagina=1;pagina<=doc.numPages;pagina++){
    const page=await doc.getPage(pagina),text=await page.getTextContent();
@@ -35,7 +35,7 @@ vm.runInNewContext(fs.readFileSync(path.join(root,'js/exportacao/pdf-rota.js'),'
    const lido=parser.decomporEnderecoFisicoPdfV71(r.endereco);
    assert.equal(lido.chave,esperado.chave,'Endereço da entrega '+(i+1));
   });
-  console.log('PASSOU: exportar e reimportar 150 entregas, '+doc.numPages+' página(s), modo '+(paginaContinua?'longo':'A4'));
+  console.log('PASSOU: exportar e reimportar 150 entregas, '+doc.numPages+' página(s), modo '+'A4 de referência');
   await doc.destroy();
  }
 })().catch(e=>{console.error(e);process.exitCode=1;});

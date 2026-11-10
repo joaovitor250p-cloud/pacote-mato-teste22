@@ -2426,9 +2426,9 @@
     return true;
   }
 
-  async function exportarPdf(opcoes = {}) {
+  async function exportarPdf() {
     if (!rotaAtual) return;
-    try { await global.PacoteEMatoPDF?.exportar?.(rotaAtual, opcoes); }
+    try { await global.PacoteEMatoPDF?.exportar?.(rotaAtual); }
     catch (erro) { global.PacoteEMatoTelemetria?.registrarProblema?.('exportacao_pdf', erro?.message || 'Falha ao exportar PDF', { modulo: 'roteirizacao' }); notificar(erro?.message || 'Não foi possível gerar o PDF.'); }
   }
 
@@ -2462,7 +2462,6 @@
     $('routingMainOptimizeBtn')?.addEventListener('click', otimizarRota);
     $('routingInvertBtn')?.addEventListener('click', () => { fecharMenuAcoes(); inverterRota(); });
     $('routingExportPdfBtn')?.addEventListener('click', () => { fecharMenuAcoes(); exportarPdf(); });
-    $('routingExportPdfLongBtn')?.addEventListener('click', () => { fecharMenuAcoes(); exportarPdf({ paginaContinua: true }); });
     $('routingStartNavBtn')?.addEventListener('click', () => { fecharMenuAcoes(); abrirNavegacao(); });
     $('routingPackagesMenuBtn')?.addEventListener('click', abrirEscolhaPacotes);
     $('routingPackagesChooserClose')?.addEventListener('click', fecharEscolhaPacotes);
