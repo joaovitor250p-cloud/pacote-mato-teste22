@@ -53,6 +53,9 @@ vm.runInNewContext(code,{window,document:documento,navigator:navegador,URL:url,
   assert.equal(documentos[0].meta.author,'Pacote É Mato');
   assert.equal(documentos[0].textos.filter(t=>t==='BR111111111BR').length,2,'BRs repetidos permanecem na tabela');
   assert.ok(['1','2','3','4'].every(n=>documentos[0].textos.includes(n)));
+  assert.ok(documentos[0].textos.includes('MANIFESTO DE ENTREGAS'));
+  assert.ok(documentos[0].textos.includes('TEMPO TOTAL'));
+  assert.ok(documentos[0].textos.includes('ENTREGAS / PARADAS'));
   assert.ok(documentos[0].textos.includes('ENDEREÇO'));
   assert.ok(documentos[0].textos.includes('CHEGADA'));
   assert.ok(documentos[0].textos.includes('BR / OBSERVAÇÕES'));

@@ -210,7 +210,7 @@
     const pageW = 210, margin = 10, contentW = pageW - margin * 2;
     let pageH = 297;
     // Colunas correspondem à referência do Circuit, adaptadas ao português.
-    const cols = { numero: 11, endereco: 90, eta: 30, notas: 59 };
+    const cols = { numero: 11, endereco: 100, eta: 22, notas: 57 };
     const ordenadas = ordenar(rota);
     const gruposFisicos = agruparParadasFisicas(ordenadas);
     const etas = construirEtas(rota, gruposFisicos);
@@ -226,7 +226,11 @@
       doc.setFont('helvetica','normal');
       doc.setFontSize(7.6);
       const enderecoLinhas = doc.splitTextToSize(String(endereco || '—'), cols.endereco - 4);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(7.1);
       const codigoLinhas = doc.splitTextToSize(String(codigo || 'BR não informado'), cols.notas - 4);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(6.8);
       const obsLinhas = obs ? doc.splitTextToSize(String(obs), cols.notas - 4) : [];
       const altura = Math.max(9.2, 3.8 * Math.max(enderecoLinhas.length, codigoLinhas.length + obsLinhas.length, 1) + 3.5);
       return { enderecoLinhas, codigoLinhas, obsLinhas, altura };
@@ -234,7 +238,7 @@
     const alturaLinhas = linhas.reduce((total, item) =>
       total + medirLinha(item.endereco, item.codigo, item.obs).altura, 0);
     const alturaFinal = pontoFinal ? medirLinha(pontoFinal.descricao || 'Destino final', '', 'Destino final da rota').altura : 0;
-    pageH = Math.min(5080, Math.max(297, Math.ceil(48 + alturaLinhas + alturaFinal + 14)));
+    pageH = Math.min(5080, Math.max(297, Math.ceil(58 + alturaLinhas + alturaFinal + 14)));
     doc.internal.pageSize.setHeight(pageH);
     let y = 0, pagina = 0;
 
@@ -255,32 +259,45 @@
 
     function cabecalhoPagina() {
       pagina++;
+      // Identidade própria: cabeçalho branco, faixa verde e resumo em três blocos.
       doc.setFillColor(...GREEN_DARK);
-      doc.rect(0, 0, pageW, 22, 'F');
-      doc.setTextColor(255,255,255);
+      doc.rect(margin, 8, 1.5, 17, 'F');
+      doc.setTextColor(...GREEN_DARK);
       doc.setFont('helvetica','bold');
-      doc.setFontSize(14);
-      doc.text(APP_NAME.toUpperCase(), margin, 10);
-      doc.setFontSize(8.4);
-      doc.text(String(rota.nome || 'Lista de entregas'), margin, 16);
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(8);
-      doc.text('Página ' + pagina, pageW - margin, 16, { align:'right' });
-
-      y = 28;
-      doc.setTextColor(...TEXT);
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(8.5);
-      doc.text('Data: ' + dataBr(rota.data), margin, y);
-      doc.text('Tempo total: ' + formatarTempo(rota.duracaoTotalSegundos), margin + 59, y);
-      doc.text('Distância: ' + formatarDistancia(rota.distanciaTotalMetros), margin + 127, y);
-      y += 6;
-
-      doc.setFont('helvetica','normal');
+      doc.setFontSize(15);
+      doc.text(APP_NAME, margin + 5, 14);
+      doc.setFontSize(7);
       doc.setTextColor(...MUTED);
-      doc.setFontSize(7.4);
-      doc.text(gruposFisicos.length + ' paradas físicas  |  ' + linhas.length + ' entregas listadas', margin, y);
-      y += 5;
+      doc.text('MANIFESTO DE ENTREGAS', margin + 5, 19);
+      doc.setFont('helvetica','normal');
+      doc.text(dataBr(rota.data), pageW - margin, 13, {align:'right'});
+      doc.text('Página ' + pagina, pageW - margin, 18, {align:'right'});
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(9);
+      doc.setTextColor(...TEXT);
+      const titulo = doc.splitTextToSize(String(rota.nome || 'Lista de entregas'), contentW - 8).slice(0, 2);
+      doc.text(titulo, margin + 5, 24);
+
+      const resumos = [
+        ['TEMPO TOTAL', formatarTempo(rota.duracaoTotalSegundos)],
+        ['DISTÂNCIA', formatarDistancia(rota.distanciaTotalMetros)],
+        ['ENTREGAS / PARADAS', linhas.length + ' / ' + gruposFisicos.length]
+      ];
+      const larguraResumo = (contentW - 6) / 3;
+      resumos.forEach(([rotulo, valor], i) => {
+        const x = margin + i * (larguraResumo + 3);
+        doc.setFillColor(...GREEN_LIGHT);
+        doc.rect(x, 33, larguraResumo, 12, 'F');
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(6);
+        doc.setTextColor(...MUTED);
+        doc.text(rotulo, x + 3, 37);
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...GREEN_DARK);
+        doc.text(String(valor), x + 3, 42);
+      });
+      y = 49;
       cabecalhoTabela();
     }
 
@@ -306,26 +323,24 @@
       const { enderecoLinhas, codigoLinhas, obsLinhas, altura } = medirLinha(endereco, codigo, obs);
       novaPaginaSePreciso(altura);
 
-      // Tabela gradeada e listras suaves, como o modelo de exportação fornecido.
+      // Faixas suaves e divisórias horizontais deixam o endereço em destaque.
       if (indice % 2 === 1) {
         doc.setFillColor(...GREEN_LIGHT);
         doc.rect(margin, y, contentW, altura, 'F');
       }
       doc.setDrawColor(...LINE);
       doc.setLineWidth(.20);
-      doc.rect(margin, y, contentW, altura);
+      doc.line(margin, y + altura, pageW - margin, y + altura);
       let x = margin;
-      [cols.numero, cols.endereco, cols.eta].forEach(w => {
-        x += w;
-        doc.line(x, y, x, y + altura);
-      });
 
       doc.setTextColor(...TEXT);
       doc.setFont('helvetica','bold');
       doc.setFontSize(7.4);
       doc.text(String(numero), margin + cols.numero / 2, y + 5.2, {align:'center'});
       doc.setFont('helvetica','normal');
+      doc.setFontSize(7.6);
       doc.text(enderecoLinhas, margin + cols.numero + 2, y + 5.1);
+      doc.setFontSize(7.1);
       doc.text(String(eta || '—'), margin + cols.numero + cols.endereco + cols.eta/2, y + 5.2, {align:'center'});
       x = margin + cols.numero + cols.endereco + cols.eta;
       doc.setFont('helvetica','bold');
