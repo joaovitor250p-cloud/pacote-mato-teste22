@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const code = fs.readFileSync(path.resolve(__dirname,'../js/exportacao/pdf-rota.js'),'utf8');
 const chamadas = [], arquivos = [], documentos = [];
 class PdfTeste {
-  constructor(opts) { this.opts=opts; this.textos=[]; this.paginas=1; documentos.push(this); }
+  constructor(opts) { this.opts=opts; this.textos=[]; this.paginas=1; this.altura=297; this.internal={pageSize:{setHeight: h=>{this.altura=h;}}}; documentos.push(this); }
   setProperties(meta) { this.meta=meta; }
   setFillColor() {}
   rect() {}
@@ -58,5 +58,16 @@ vm.runInNewContext(code,{window,document:documento,navigator:navegador,URL:url,
   assert.ok(documentos[0].textos.includes('BR / OBSERVAÇÕES'));
   assert.ok(documentos[0].textos.includes('Gerado pelo Pacote É Mato'));
   assert.doesNotMatch(code,/navigator\.share\s*\(/);
-  console.log('PASSOU: PDF tabular por pacote, marca no nome e download direto.');
+  for (const total of [101, 150, 300, 600]) {
+    const paradas = Array.from({length:total}, (_,i)=>({id:String(i+1),
+      enderecoOriginal:'Rua Teste, '+(i+1),pacotes:['BRTESTE'+String(i+1).padStart(6,'0')]}));
+    await window.PacoteEMatoPDF.exportar({nome:'Rota extensa',ordem:paradas.map(p=>p.id),paradas});
+    const pdf=documentos.at(-1);
+    assert.equal(pdf.textos.filter(t=>t.startsWith('BRTESTE')).length,total);
+    assert.ok(pdf.textos.includes(String(total)), 'Última entrega preservada');
+    assert.ok(pdf.altura<=5080, 'Respeita a dimensão máxima do PDF');
+    if (total<=300) assert.equal(pdf.paginas,1, total+' linhas na mesma página');
+    else assert.ok(pdf.paginas>1, 'Rotas acima do limite continuam sem perder entregas');
+  }
+  console.log('PASSOU: download direto, BR repetido, 101/150/300 linhas em página única e 600 sem truncamento.');
 })().catch(erro => { console.error(erro); process.exitCode=1; });

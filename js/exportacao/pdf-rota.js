@@ -207,13 +207,35 @@
       creator: APP_NAME,
       keywords: 'Pacote É Mato, rota, pacotes, entregas'
     });
-    const pageW = 210, pageH = 297, margin = 10, contentW = pageW - margin * 2;
+    const pageW = 210, margin = 10, contentW = pageW - margin * 2;
+    let pageH = 297;
     // Colunas correspondem à referência do Circuit, adaptadas ao português.
     const cols = { numero: 11, endereco: 90, eta: 30, notas: 59 };
     const ordenadas = ordenar(rota);
     const gruposFisicos = agruparParadasFisicas(ordenadas);
     const etas = construirEtas(rota, gruposFisicos);
     const linhas = linhasDaRota(ordenadas, etas);
+    const pontoFinal = rota.pontoFinal && Number.isFinite(Number(rota.pontoFinal.lat)) &&
+      Number.isFinite(Number(rota.pontoFinal.lon)) ? rota.pontoFinal
+      : rota.retornarAoInicio === true ? rota.pontoInicial : null;
+
+    // Página contínua: mede todas as linhas antes de desenhar, mantendo letras
+    // legíveis em rotas com mais de 100 entregas. O PDF limita cada dimensão
+    // a 14.400 pontos; rotas excepcionais continuam em outra página.
+    function medirLinha(endereco, codigo, obs) {
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(7.6);
+      const enderecoLinhas = doc.splitTextToSize(String(endereco || '—'), cols.endereco - 4);
+      const codigoLinhas = doc.splitTextToSize(String(codigo || 'BR não informado'), cols.notas - 4);
+      const obsLinhas = obs ? doc.splitTextToSize(String(obs), cols.notas - 4) : [];
+      const altura = Math.max(9.2, 3.8 * Math.max(enderecoLinhas.length, codigoLinhas.length + obsLinhas.length, 1) + 3.5);
+      return { enderecoLinhas, codigoLinhas, obsLinhas, altura };
+    }
+    const alturaLinhas = linhas.reduce((total, item) =>
+      total + medirLinha(item.endereco, item.codigo, item.obs).altura, 0);
+    const alturaFinal = pontoFinal ? medirLinha(pontoFinal.descricao || 'Destino final', '', 'Destino final da rota').altura : 0;
+    pageH = Math.min(5080, Math.max(297, Math.ceil(48 + alturaLinhas + alturaFinal + 14)));
+    doc.internal.pageSize.setHeight(pageH);
     let y = 0, pagina = 0;
 
     function cabecalhoTabela() {
@@ -265,7 +287,7 @@
     function novaPaginaSePreciso(altura) {
       if (y + altura <= pageH - 13) return;
       rodapePagina();
-      doc.addPage();
+      doc.addPage([pageW, pageH], 'portrait');
       cabecalhoPagina();
     }
 
@@ -281,13 +303,7 @@
     }
 
     function linhaTabela(numero, endereco, eta, codigo, obs, indice) {
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(7.6);
-      const enderecoLinhas = doc.splitTextToSize(String(endereco || '—'), cols.endereco - 4);
-      const codigoLinhas = doc.splitTextToSize(String(codigo || 'BR não informado'), cols.notas - 4);
-      const obsLinhas = obs ? doc.splitTextToSize(String(obs), cols.notas - 4) : [];
-      const numeroLinhas = Math.max(enderecoLinhas.length, codigoLinhas.length + obsLinhas.length, 1);
-      const altura = Math.max(9.2, 3.8 * numeroLinhas + 3.5);
+      const { enderecoLinhas, codigoLinhas, obsLinhas, altura } = medirLinha(endereco, codigo, obs);
       novaPaginaSePreciso(altura);
 
       // Tabela gradeada e listras suaves, como o modelo de exportação fornecido.
@@ -329,9 +345,6 @@
       linhaTabela(i + 1, item.endereco, item.eta, item.codigo, item.obs, i);
     });
 
-    const pontoFinal = rota.pontoFinal && Number.isFinite(Number(rota.pontoFinal.lat)) &&
-      Number.isFinite(Number(rota.pontoFinal.lon)) ? rota.pontoFinal
-      : rota.retornarAoInicio === true ? rota.pontoInicial : null;
     if (pontoFinal) {
       const fim = etas.has('__FINAL__') ? hora(etas.get('__FINAL__')) : '—';
       linhaTabela('F', pontoFinal.descricao || 'Destino final', fim, '', 'Destino final da rota', linhas.length);

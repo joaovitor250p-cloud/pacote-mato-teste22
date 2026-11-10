@@ -3916,6 +3916,102 @@ document.getElementById('cardRetomarRota').style.display = 'none';
     }
 
 
+    // V109 - Circuit (Notes em duas linhas): BR + 8 digitos na primeira
+    // linha, 4 digitos + verificador na segunda. Exemplo:
+    // BR26973763 + 7885K; => BR269737637885K.
+    // A montagem exige a MESMA coluna Notes e o final logo abaixo. Nunca
+    // usa numero de parada, ETA ou texto da entrega seguinte como sufixo.
+    function extrairCodigosCircuitNotasFragmentadasV109(itensOriginais, larguraPagina) {
+      const itens = (Array.isArray(itensOriginais) ? itensOriginais : [])
+        .map((item, indice) => ({
+          str: String(item?.str || '').toUpperCase().trim(),
+          x: Number(item?.x || 0),
+          y: Number(item?.y || 0),
+          indice
+        }))
+        .filter(i => i.str);
+
+      const largura = Number(larguraPagina || 600);
+      const minXNotas = largura * 0.65;
+      const prefixos = itens.filter(i => /^BR\d{8}$/.test(i.str) && i.x >= minXNotas);
+      const finais = itens.filter(i => /^\d{4}[A-Z0-9]\s*;?$/.test(i.str) && i.x >= minXNotas);
+      const usados = new Set();
+      const saida = [];
+
+      for (const prefixo of prefixos) {
+        const candidato = finais
+          .filter(f => !usados.has(f.indice) && f.indice !== prefixo.indice)
+          .map(f => ({
+            item: f,
+            dx: Math.abs(f.x - prefixo.x),
+            dy: prefixo.y - f.y
+          }))
+          .filter(f => f.dx <= 12 && f.dy >= 2 && f.dy <= 18)
+          .sort((a, b) => (a.dy + 2 * a.dx) - (b.dy + 2 * b.dx))[0];
+
+        if (!candidato) continue;
+        const codigo = normalizarCodigoPacoteBr(prefixo.str + candidato.item.str.replace(/;$/, '').trim());
+        if (!codigo) continue;
+        usados.add(candidato.item.indice);
+        saida.push({
+          codigo,
+          x: prefixo.x,
+          y: (prefixo.y + candidato.item.y) / 2,
+          origem: 'circuit-notes-fragmentadas-v109'
+        });
+      }
+      return saida;
+    }
+
+    // V110 - Circuit atual: Notes divide o codigo em BR + 11 digitos
+    // na primeira linha e 2 caracteres (digito + verificador) na segunda.
+    // Exemplo: BR26995226227 + 88; => BR2699522622788.
+    // A reconstrução exige a mesma coluna Notes e proximidade vertical curta.
+    // Não altera as regras de bipagem: apenas entrega o código completo ao leitor.
+    function extrairCodigosCircuitNotasPrefixo11V110(itensOriginais, larguraPagina) {
+      const itens = (Array.isArray(itensOriginais) ? itensOriginais : [])
+        .map((item, indice) => ({
+          str: String(item?.str || '').toUpperCase().trim(),
+          x: Number(item?.x || 0),
+          y: Number(item?.y || 0),
+          indice
+        }))
+        .filter(i => i.str);
+
+      const largura = Number(larguraPagina || 600);
+      const minXNotas = largura * 0.65;
+      const prefixos = itens.filter(i => /^BR\d{11}$/.test(i.str) && i.x >= minXNotas);
+      const finais = itens.filter(i => /^\d[A-Z0-9]\s*[;:,.]?$/.test(i.str) && i.x >= minXNotas);
+      const usados = new Set();
+      const saida = [];
+
+      for (const prefixo of prefixos) {
+        const candidato = finais
+          .filter(f => !usados.has(f.indice) && f.indice !== prefixo.indice)
+          .map(f => ({
+            item: f,
+            dx: Math.abs(f.x - prefixo.x),
+            dy: prefixo.y - f.y
+          }))
+          .filter(f => f.dx <= 12 && f.dy >= 2 && f.dy <= 18)
+          .sort((a, b) => (a.dy + 2 * a.dx) - (b.dy + 2 * b.dx))[0];
+
+        if (!candidato) continue;
+        const sufixo = candidato.item.str.replace(/[;:,.]\s*$/, '').trim();
+        const codigo = normalizarCodigoPacoteBr(prefixo.str + sufixo);
+        if (!codigo) continue;
+        usados.add(candidato.item.indice);
+        saida.push({
+          codigo,
+          x: prefixo.x,
+          y: (prefixo.y + candidato.item.y) / 2,
+          origem: 'circuit-notes-fragmentadas-v110'
+        });
+      }
+      return saida;
+    }
+
+
     // ============================================================
     // V71 - LEITOR ESTRUTURAL DE PDF PARA BIPAGEM
     // ============================================================
@@ -4677,6 +4773,17 @@ document.getElementById('cardRetomarRota').style.display = 'none';
         }
       });
 
+      // V109: terceiro formato de Notes do Circuit. O sufixo aqui tem
+      // CINCO caracteres (4 digitos + verificador), e nao apenas um.
+      extrairCodigosCircuitNotasFragmentadasV109(itens, larguraPagina).forEach(a => {
+        registrar(a.codigo, a.y, a.x, a.origem);
+      });
+
+      // V110: formato Circuit com prefixo BR+11 digitos e sufixo de 2 caracteres.
+      extrairCodigosCircuitNotasPrefixo11V110(itens, larguraPagina).forEach(a => {
+        registrar(a.codigo, a.y, a.x, a.origem);
+      });
+
       // Agrupa codigos que pertencem visualmente a mesma linha/entrega.
       const ancoras = [...porCodigo.values()].sort((a,b) => b.y - a.y);
       const grupos = [];
@@ -4692,6 +4799,22 @@ document.getElementById('cardRetomarRota').style.display = 'none';
       });
 
       return grupos.sort((a,b) => b.y - a.y);
+    }
+
+    // Confere cada página antes de liberar a rota inteira. Uma página posterior
+    // com códigos não associados não pode desaparecer da contagem final.
+    function conferirPaginaPdfCompleta(itens, registros, largura, pagina) {
+      const lidos = new Set((registros || []).flatMap(r => r.codigos || []));
+      const ancoras = extrairAncorasCodigoPdfV73(itens, largura);
+      const faltantes = ancoras.filter(a => !lidos.has(a.codigo));
+      const prefixos = itens.filter(i => /^BR(?:\d{8}|\d{11})$/i.test(i.str) && i.x >= largura * 0.65);
+      const reconstruidos = [
+        ...extrairCodigosCircuitNotasFragmentadasV109(itens, largura),
+        ...extrairCodigosCircuitNotasPrefixo11V110(itens, largura)
+      ];
+      if (faltantes.length || reconstruidos.length < prefixos.length) {
+        throw new Error(`PAGINA_PDF_INCOMPLETA|${pagina}|${lidos.size}`);
+      }
     }
 
     function extrairRegistrosPdfV73PorCodigo(itensOriginais, pagina, larguraPagina) {
@@ -5465,6 +5588,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
               porHorarioV73
             );
 
+            conferirPaginaPdfCompleta(itens, escolhidosPaginaV73, width, pagina);
             escolhidosPaginaV73.forEach(registro => registrosBrutosV73.push(registro));
 
             diagnosticoPaginasV73.push({
@@ -5910,7 +6034,10 @@ document.getElementById('cardRetomarRota').style.display = 'none';
           let mensagemErro =
             'Não conseguimos conferir este PDF com segurança. Nenhuma rota foi liberada.';
 
-          if (msg.startsWith('LEITURA_INCOMPLETA|')) {
+          if (msg.startsWith('PAGINA_PDF_INCOMPLETA|')) {
+            const pagina = msg.split('|')[1];
+            mensagemErro = `A página ${pagina} contém códigos que não puderam ser lidos por completo. O PDF não foi importado parcialmente. Confira o arquivo e tente novamente.`;
+          } else if (msg.startsWith('LEITURA_INCOMPLETA|')) {
             mensagemErro =
               'A leitura ficou incompleta. Para evitar uma contagem errada, a rota não foi liberada. Escolha o PDF novamente.';
           } else if (msg.startsWith('CONTAGEM_PDF_INCOMPLETA|')) {
