@@ -3932,7 +3932,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
         .filter(i => i.str);
 
       const largura = Number(larguraPagina || 600);
-      const minXNotas = largura * 0.65;
+      const minXNotas = largura * 0.22; // Compatibilidade com PDFs cuja coluna Notes começa antes de 65% da página.
       const prefixos = itens.filter(i => /^BR\d{8}$/.test(i.str) && i.x >= minXNotas);
       const finais = itens.filter(i => /^\d{4}[A-Z0-9]\s*;?$/.test(i.str) && i.x >= minXNotas);
       const usados = new Set();
@@ -3946,7 +3946,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
             dx: Math.abs(f.x - prefixo.x),
             dy: prefixo.y - f.y
           }))
-          .filter(f => f.dx <= 12 && f.dy >= 2 && f.dy <= 18)
+          .filter(f => f.dx <= 20 && f.dy >= 2 && f.dy <= 27)
           .sort((a, b) => (a.dy + 2 * a.dx) - (b.dy + 2 * b.dx))[0];
 
         if (!candidato) continue;
@@ -3979,7 +3979,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
         .filter(i => i.str);
 
       const largura = Number(larguraPagina || 600);
-      const minXNotas = largura * 0.65;
+      const minXNotas = largura * 0.22; // Compatibilidade com PDFs cuja coluna Notes começa antes de 65% da página.
       const prefixos = itens.filter(i => /^BR\d{11}$/.test(i.str) && i.x >= minXNotas);
       const finais = itens.filter(i => /^\d[A-Z0-9]\s*[;:,.]?$/.test(i.str) && i.x >= minXNotas);
       const usados = new Set();
@@ -3993,7 +3993,7 @@ document.getElementById('cardRetomarRota').style.display = 'none';
             dx: Math.abs(f.x - prefixo.x),
             dy: prefixo.y - f.y
           }))
-          .filter(f => f.dx <= 12 && f.dy >= 2 && f.dy <= 18)
+          .filter(f => f.dx <= 20 && f.dy >= 2 && f.dy <= 27)
           .sort((a, b) => (a.dy + 2 * a.dx) - (b.dy + 2 * b.dx))[0];
 
         if (!candidato) continue;
