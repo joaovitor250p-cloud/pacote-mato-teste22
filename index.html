@@ -1187,6 +1187,9 @@
         <div class="settings-card-head"><strong>Voz</strong><span>Feedback sonoro do aplicativo</span></div>
         <label>Voz do sistema</label>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px"><button class="segmented-btn active" id="voice_navegacao_feminina" onclick="salvarVoz('navegacao_feminina', true)">Navegação</button><button class="segmented-btn" id="voice_mudo" onclick="salvarVoz('mudo', false)">Silencioso</button></div>
+        <label for="navVoiceVolume" style="display:block;margin-top:12px">Volume das orientações (navegador)</label>
+        <input id="navVoiceVolume" type="range" min="0" max="100" value="100" step="10" aria-label="Volume das orientações faladas" style="width:100%">
+        <small>Na versão Android com voz nativa, ajuste o volume de mídia do aparelho.</small>
       </section>
 
       <section class="settings-card settings-card-wide">
@@ -1482,7 +1485,7 @@
   <script src="js/bipagem/bipagem-area.js?v=20261017-v81-enderecos-navegacao-final"></script>
   <script src="js/bipagem/rota-ativa-bridge.js?v=20261017-v81-enderecos-navegacao-final"></script>
   <script src="js/bipagem/operacoes-pacotes.js?v=20261017-v81-enderecos-navegacao-final"></script>
-  <script src="js/navegacao/voz-navegacao.js?v=20261019-v81-login-whatsapp-test2"></script>
+  <script src="js/navegacao/voz-navegacao.js?v=20261113-nav-volume-1"></script>
   <script src="js/navegacao/navegacao.js?v=20261113-setas-gps-2d3d-1"></script>
   <script src="js/native-integracao.js?v=20261019-v81-login-whatsapp-test2"></script>
   <script src="js/ui/location-onboarding.js?v=20261017-v81-enderecos-navegacao-final"></script>
