@@ -35,6 +35,7 @@
   let ultimaAtualizacaoCameraFrame = 0;
   let velocidadeVisualMs = 0;
   let modoMapaNavegacao = 'overview';
+  let perspectivaNavegacao = (function(){try{return localStorage.getItem('pemato_nav_perspectiva')==='2d'?'2d':'3d';}catch(_){return '3d';}})();
   let ultimaAssinaturaGeometriaDiagnostico = '';
   let distanciaProximaManobra = Infinity;
   let ultimoIndiceVisualRota = null;
@@ -603,6 +604,8 @@
     }
     atualizarBotaoVoz();
     atualizarBotaoFollow();
+    const btnPerspectiva=$('navPerspectiveBtn');
+    if(btnPerspectiva){btnPerspectiva.hidden=!navegacaoInternaAtiva();btnPerspectiva.textContent=perspectivaNavegacao==='3d'?'3D':'2D';}
     atualizarFontesPontos();
   }
 
@@ -1401,6 +1404,17 @@
     return [lon2*180/Math.PI,lat2*180/Math.PI];
   }
 
+  function alternarPerspectivaNavegacao() {
+    perspectivaNavegacao=perspectivaNavegacao==='3d'?'2d':'3d';
+    try{localStorage.setItem('pemato_nav_perspectiva',perspectivaNavegacao);}catch(_){}
+    const btn=$('navPerspectiveBtn');
+    if(btn){btn.textContent=perspectivaNavegacao==='3d'?'3D':'2D';btn.setAttribute('aria-label',perspectivaNavegacao==='3d'?'Alternar para mapa 2D':'Alternar para perspectiva 3D');btn.setAttribute('aria-pressed',perspectivaNavegacao==='3d'?'true':'false');}
+    if(navegacaoInternaAtiva()){
+      if(seguirPosicao) acompanharCamera(250);
+      else if(mapa){try{mapa.easeTo({pitch:perspectivaNavegacao==='3d'?56:0,duration:250});}catch(_){}}
+    }
+  }
+
   function acompanharCamera(duracao=0) {
     if(!seguirPosicao || !mapa || !mapReady) return;
     const interna=navegacaoInternaAtiva();
@@ -1413,7 +1427,7 @@
     const opcoes={
       center,
       zoom:interna?zoomNavegacaoInterna():16,
-      pitch:interna?56:0,
+      pitch:interna?(perspectivaNavegacao==='3d'?56:0):0,
       bearing,
       offset:interna?offsetCameraInterna():[0,0]
     };
@@ -2029,6 +2043,7 @@
       acompanharCamera(180);
       iniciarGPS();
     });
+    $('navPerspectiveBtn')?.addEventListener('click',alternarPerspectivaNavegacao);
     $('navVoiceBtn')?.addEventListener('click',()=>{
       if(!navegacaoInternaAtiva())return;
       vozAtiva=!vozAtiva;
