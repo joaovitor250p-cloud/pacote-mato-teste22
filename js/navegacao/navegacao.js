@@ -2043,6 +2043,11 @@
       acompanharCamera(180);
       iniciarGPS();
     });
+    const campoVolume=$('navVoiceVolume');
+    if(campoVolume){
+      campoVolume.value=String(Math.round((moduloVozNavegacao()?.obterVolume?.() ?? 1)*100));
+      campoVolume.addEventListener('input',()=>moduloVozNavegacao()?.definirVolume?.(Number(campoVolume.value)/100));
+    }
     $('navPerspectiveBtn')?.addEventListener('click',alternarPerspectivaNavegacao);
     $('navVoiceBtn')?.addEventListener('click',()=>{
       if(!navegacaoInternaAtiva())return;
