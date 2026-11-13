@@ -2,6 +2,7 @@
   'use strict';
 
   const STORAGE_KEY = 'pemato_nav_voice_enabled_v81';
+  const STORAGE_VOLUME = 'pemato_nav_voice_volume';
   const MAX_RETRY = 3;
   const WATCHDOG_MS = 1000;
   const RETRY_DELAY_MS = 260;
@@ -10,6 +11,8 @@
   const falasFalhadas = new Set();
 
   let ativa = true;
+  let volumeFala = 1;
+  try {const salvo=Number(global.localStorage?.getItem(STORAGE_VOLUME)); if(Number.isFinite(salvo)&&salvo>=0&&salvo<=1)volumeFala=salvo;}catch(_){}
   let desbloqueada = false;
   let contextoProvider = null;
   let instructionIdAtual = '';
@@ -59,6 +62,16 @@
   function persistirPreferencia() {
     try { global.localStorage?.setItem(STORAGE_KEY, ativa ? '1' : '0'); } catch (_) {}
   }
+
+  function definirVolume(valor) {
+    const n=Number(valor);
+    if(!Number.isFinite(n))return volumeFala;
+    volumeFala=Math.max(0,Math.min(1,n));
+    try{global.localStorage?.setItem(STORAGE_VOLUME,String(volumeFala));}catch(_){}
+    atualizarDiagnostico({volumeConfigurado:volumeFala,volumeNativoControladoPeloSistema:vozNativaDisponivel()});
+    return volumeFala;
+  }
+  function obterVolume(){return volumeFala;}
 
   function escolherVoz() {
     if (vozNativaDisponivel() || !global.speechSynthesis) return null;
@@ -282,7 +295,7 @@
       u.lang = 'pt-BR';
       u.rate = 1.02;
       u.pitch = 1.0;
-      u.volume = 1.0;
+      u.volume = volumeFala;
       const v = escolherVoz(); if (v) u.voice = v;
       utteranceAtual = u;
 
@@ -461,6 +474,8 @@
     disponivel,
     estaAtiva,
     definirAtiva,
+    definirVolume,
+    obterVolume,
     definirInstrucaoAtual,
     podeFalarNavegacao,
     falarInstrucaoNavegacao,
