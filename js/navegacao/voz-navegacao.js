@@ -12,7 +12,7 @@
 
   let ativa = true;
   let volumeFala = 1;
-  try {const salvo=Number(global.localStorage?.getItem(STORAGE_VOLUME)); if(Number.isFinite(salvo)&&salvo>=0&&salvo<=1)volumeFala=salvo;}catch(_){}
+  try {const valor=global.localStorage?.getItem(STORAGE_VOLUME);if(valor!==null&&valor!==undefined&&valor!==''){const salvo=Number(valor);if(Number.isFinite(salvo)&&salvo>=0&&salvo<=1)volumeFala=salvo;}}catch(_){}
   let desbloqueada = false;
   let contextoProvider = null;
   let instructionIdAtual = '';
